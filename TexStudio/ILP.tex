@@ -1,0 +1,101 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{LP Modeling}
+\author{Bjarne Jehn}
+
+\newcommand{\percKmers}{p_K}
+
+\newcommand{\levelI}{{L_i}}
+\newcommand{\levelOne}{{L_1}}
+\newcommand{\levelTwo}{{L_2}}
+\newcommand{\levelThree}{{L_3}}
+\newcommand{\hash}{{H}}
+
+\newcommand{\noam}{noam} %numberOfAppearingMinimizers
+
+\begin{document}
+	
+\maketitle
+\newpage
+
+\section*{Lookup}
+\subsection*{Runtime}
+
+minimize: nicht linear!\\
+\[
+\begin{array}{llll}
+	t_R^\levelOne 	&+ \percKmers^\levelOne*t_l^\levelOne 				&							&\\
+			&+ (1-\percKmers^\levelOne) * \Bigg( t_R^\levelTwo &+ p_K^\levelTwo*t_l^\levelTwo 				&\\
+			&							&+ (1-\percKmers^\levelTwo) * \Big( t_R^\levelThree	&+ \percKmers^\levelThree*t_l^\levelThree \\
+			&							&							&+ (1-\percKmers^\levelThree) * t^\hash \Big) \Bigg)
+\end{array}
+\]
+\\
+TODO: linearise
+\\
+\\
+\begin{tabular}{ l | l }
+	variable	& meaning \\
+	\hline
+	$\percKmers^\levelI$		& probability of a kmer belonging to level i \\
+	$t_R^\levelI$		& time to check presence of a bit in vector R of level i \\
+	$t_l^\levelI$		& time to lookup a k-mer on level i \\
+\end{tabular}
+\\
+\\
+for: \textbf{eines muss ne summe sein!}
+\[\percKmers^\levelI = \prod_{m \in M} \left( sm_m^\levelI \prod_{t \in T} st_t^\levelI * p_{m-empiric}^\levelI(m, t)\right)\]
+\\
+\\
+TODO: linearise
+\\
+\\
+
+\begin{tabular}{ l | l }
+	variable	& meaning \\
+	\hline
+	$sm_m^\levelI$	& selector for minimizer length m in level i\\
+	$st_t^\levelI$	& selector for threshold of t in level i\\
+	$p_{m-empiric}^\levelI(m, t)$ &empirically estimated value for a kmer with a minimizer \\
+				& of length m to have a frequency less than t \\
+	$M$			& Set of all minimizer length to be considered \\
+	$T$			& Set of thresholds to be considered \\
+\end{tabular}
+\\
+\\
+selectors for m and t must be mutually exclusive:
+\[\sum_{m \in M} sm_m^\levelI = 1\]
+\[\sum_{t \in T} st_t^\levelI = 1\]
+
+\newpage
+\subsection*{Space Consumption}
+Using Elias Fano Coding a Bitvector of length $U$ with $n$ bits set to 1 can be encoded using $n \lceil log \frac{U}{n} \rceil + 3n$.\\
+\\
+Let $\noam$ be the number of appearing minimizers (minimizers with a frequency greater than zero).
+\subsubsection*{Level 1}
+$R$ - Presence of k-mers:\\
+\textbf{probably not relevant}
+$R^\levelOne$ has length $4^{sm_m^\levelOne}$ and contains $p_M^\levelOne * \noam$ many 1s.\\
+
+\begin{align*}
+	s_R^\levelOne 
+	&= p_M^\levelOne * \noam \lceil log \frac{4^{sm_m^\levelOne}}{p_M^\levelOne * \noam} \rceil + 3 * p_M^\levelOne *  \noam\\
+	&= p_M^\levelOne * \noam \left( \lceil log \frac{4^{sm_m^\levelOne}}{p_M^\levelOne * \noam} \rceil + 3 \right)
+\end{align*}
+\\
+\\
+$S$ - Offset Boundaries:\\
+$S$ is a bitvector of length $|O| + 1$ and is \textbf{probably not relevant} for the optimization of $m$ and $t$.
+\\
+\\
+$O$ - Offsets:\\
+$O^\levelOne$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $^\leq t^\levelOne$ in $T$.\\
+\[|O| = log_2|T| * \sum_{m=1}^{t^\levelOne} m * \text{(number of minimizers with frequenzy m)} \]
+Every minimizer of length $m$ covers an average of $\frac{k-m+2}{2}$ consecutive k-mers.\\
+\[bpk_O^\levelOne = \frac{2}{k-m^\levelOne+2} * p_K^\levelOne log |T| \]
+
+
+\end{document}
