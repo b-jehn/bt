@@ -6,13 +6,6 @@
 \title{LP Modeling}
 \author{Bjarne Jehn}
 
-\newcommand{\percKmers}{p_K}
-
-\newcommand{\levelI}{{L_i}}
-\newcommand{\levelOne}{{L_1}}
-\newcommand{\levelTwo}{{L_2}}
-\newcommand{\levelThree}{{L_3}}
-\newcommand{\hash}{{H}}
 
 \newcommand{\noam}{noam} %numberOfAppearingMinimizers
 
@@ -22,15 +15,32 @@
 \newpage
 
 \section*{Lookup}
+
+Constants: Capital Letters
+\newcommand{\timeForCheckInR}{{T_R}} 20ns
+\newcommand{\timeForLookup}{{T_L}}
+\newcommand{\timeForHashtable}{{T_H}} 40ns
+
+
+Variables: bold
+\newcommand{\percKmers}{\textbf{p}_\textbf{K}}
+
+Levels:
+\newcommand{\levelI}{{L_i}}
+\newcommand{\levelOne}{{L_1}}
+\newcommand{\levelTwo}{{L_2}}
+\newcommand{\levelThree}{{L_3}}
 \subsection*{Runtime}
 
 minimize: nicht linear!\\
+
+
 \[
 \begin{array}{llll}
-	t_R^\levelOne 	&+ \percKmers^\levelOne*t_l^\levelOne 				&							&\\
-			&+ (1-\percKmers^\levelOne) * \Bigg( t_R^\levelTwo &+ p_K^\levelTwo*t_l^\levelTwo 				&\\
-			&							&+ (1-\percKmers^\levelTwo) * \Big( t_R^\levelThree	&+ \percKmers^\levelThree*t_l^\levelThree \\
-			&							&							&+ (1-\percKmers^\levelThree) * t^\hash \Big) \Bigg)
+	\timeForCheckInR^\levelOne 	&+ \percKmers^\levelOne*\timeForLookup^\levelOne 				&							&\\
+			&+ (1-\percKmers^\levelOne) * \Bigg( \timeForCheckInR^\levelTwo &+ \percKmers^\levelTwo*\timeForLookup^\levelTwo 				&\\
+			&							&+ (1-\percKmers^\levelTwo) * \Big( \timeForCheckInR^\levelThree	&+ \percKmers^\levelThree*\timeForLookup^\levelThree \\
+			&							&							&+ (1-\percKmers^\levelThree) * \timeForHashtable \Big) \Bigg)
 \end{array}
 \]
 \\
@@ -41,7 +51,7 @@ TODO: linearise
 	variable	& meaning \\
 	\hline
 	$\percKmers^\levelI$		& probability of a kmer belonging to level i \\
-	$t_R^\levelI$		& time to check presence of a bit in vector R of level i \\
+	$\timeForCheckInR^\levelI$		& time to check presence of a bit in vector R of level i \\
 	$t_l^\levelI$		& time to lookup a k-mer on level i \\
 \end{tabular}
 \\
