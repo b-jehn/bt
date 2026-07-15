@@ -1,6 +1,6 @@
 import subprocess
 
-for m in range(15,25):
+for m in range(5, 15):
     with open("stats_m" + str(m) + ".csv", "w") as outfile:
         subprocess.run(
             [

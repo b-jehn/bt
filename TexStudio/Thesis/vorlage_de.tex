@@ -1,12 +1,12 @@
-\documentclass[a4paper,titlepage,onecolumn,twoside,12pt,ngerman,titlepage=firstiscover]{scrbook}
+\documentclass[a4paper,titlepage,onecolumn,oneside,12pt,ngerman,titlepage=firstiscover]{scrbook}
 % Um während der Entwurfsphase weniger leere Seiten zu haben, kann man oben "twoside" durch "oneside" ersetzen.
 
-\usepackage[english]{babel} % language
+\usepackage[ngerman]{babel} % language
 \usepackage[utf8]{inputenc} % encoding
 \usepackage{amsmath,amsfonts,amssymb,amsthm} % mathematical expression, symbols, fonts, and the whole theorem environment engine
 \usepackage{xcolor,graphicx} % graphics and colorings
 \usepackage{tabularx,booktabs,multirow} % all about tables: booktabs gives the standard formatting, multirow allows cells to span over multiple rows.
-\usepackage{scrextend} % super powerful tool that helps a bit with everything
+%\usepackage{scrextend} % super powerful tool that helps a bit with everything
 \usepackage[margin=0pt]{subcaption} % specific form for captions
 \usepackage[autostyle]{csquotes} % helper for quoting
 
@@ -37,8 +37,8 @@
 
 % please fill in the following data:
 \newcommand{\mytitle}{My cool title}
-\newcommand{\myname}{Bjarne David Jehn}
-\newcommand{\thesisType}{Bachelor's Thesis}
+\newcommand{\myname}{Max Muster}
+\newcommand{\thesisType}{Bachelorarbeit/Masterarbeit}
 
 \usepackage[pdfdisplaydoctitle,menucolor=orange!40!black,filecolor=magenta!40!black,urlcolor=blue!40!black,linkcolor=red!40!black,citecolor=green!40!black,colorlinks]{hyperref}
 \hypersetup{pdftitle={\mytitle}, pdfauthor={\myname}}
@@ -150,20 +150,20 @@ Algorithmik und Komplexitätstheorie (AKT)
 \vspace{3.5cm}
 }
 
-\title{\mytitle}
+\title{Title}
 \subtitle{(Subtitle)\vspace*{3cm}}
 
 \author{
 	\Large{\textbf{\thesisType{}}}\vspace{0.1cm}\\
-	\textbf{\large{of \myname}}\vspace{0.1cm}\\
-	\large{zur Erlangung des Grades \glqq Bachelor of Science\grqq~(B. Sc.)}\\
+	\textbf{\large{von Mira Musterfrau}}\vspace{0.1cm}\\
+	\large{zur Erlangung des Grades \glqq Master of Science\grqq~(M. Sc.)}\\
 	\large{im Studiengang Computer Science (Informatik)}
 	\vspace*{3cm}\\
 		\small{
 			\begin{tabular}{rl}
-			    First Reviewer:& Prof. Dr. Knut Reinert\\
-			    \hspace{2cm}Second Reviewer:& Prof. Dr. Staphan Kreutzer\\
-			    Supervisor:& Jonas Schulte-Mattler
+			    Erstgutachter:& Prof. Dr. Rolf Niedermeier\\
+			    \hspace{2cm}Zweitgutachter:& Prof. Dr. Paulchen Panther\\
+			    Betreuer:& A. Andersen, B. Betreuer, Prof. Dr. Rolf Niedermeier
 			\end{tabular}
 		}
 	\vspace*{1cm}
@@ -183,18 +183,11 @@ Aktuelle Information dazu sollten in der Studien- bzw.\ Pr\"ufungsordung eingeho
 Ein Beispiel f\"ur eine eidesstattliche Versicherung ist wie folgt.}
 
 \noindent
+Hiermit erkl\"are ich, dass ich die vorliegende Arbeit selbstständig und eigenhändig sowie ohne unerlaubte fremde Hilfe und ausschließlich unter Verwendung der aufgef\"uhrten Quellen und Hilfsmittel angefertigt habe.
 
-Declaration of authorship\\
-I hereby declare that the thesis submitted is my own, unaided work, completed without any external help.\\ Only the sources and resources listed were used. All passages taken from the sources and aids used, either
-unchanged or paraphrased, have been marked as such.\\
-Where generative AI tools were used, I have indicated the product name, manufacturer, the software version
-used, as well as the respective purpose (e.g. checking and improving language in the texts, systematic
-research). I am fully responsible for the selection, adoption, and all results of the AI-generated output I use.\\
-I have taken note of the Principles for Ensuring Good Research Practice at TU Berlin dated 15 February 2023.
-\url{https://www.static.tu.berlin/fileadmin/www/10002457/K3-AMBl/Amtsblatt_2023/Amtliches_Mitteilungsblatt_Nr._16_vom_30.05.2023.pdf}\\
-I further declare that I have not submitted the thesis in the same or similar form to any other examination
-authority.
-
+\vspace{1cm}
+\noindent
+Die selbstst\"andige und eigenh\"andige Ausfertigung versichert an Eides statt\\
 \vspace{1cm}\\
 \begin{tabular}[h]{lll} Berlin, den & \underline{\hspace{5cm}} & \underline{\hspace{7cm}}\\
  & \small{Datum} & \small{Unterschrift}
@@ -527,6 +520,6 @@ Wir habe dieses tolle Ergebnis.
 Allerdings blieb diese andere tolle Frage offen.
 Wir vermuten, dass die Frage positive zu beantworten ist wegen diesem tollen Argument.
 
-%\printbibliography[heading=bibintoc,title={Literatur}]
+\printbibliography[heading=bibintoc,title={Literatur}]
 
 \end{document}

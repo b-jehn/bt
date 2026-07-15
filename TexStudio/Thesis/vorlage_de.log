@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  8 JUL 2026 15:11
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  8 JUL 2026 16:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -53,6 +53,12 @@ Class scrbook Info: You've used standard option `onecolumn'.
 (scrbook)           If you'd like to set the option with \KOMAoptions,
 (scrbook)           you'd have to use `twocolumn=false' there
 (scrbook)           instead of `onecolumn', too.
+Class scrbook Info: You've used standard option `oneside'.
+(scrbook)           This is correct!
+(scrbook)           Internally I'm using `twoside=false'.
+(scrbook)           If you'd like to set the option with \KOMAoptions,
+(scrbook)           you'd have to use `twoside=false' there
+(scrbook)           instead of `oneside', too.
 Package scrbook Info: You've used standard option `12pt'.
 (scrbook)             This is correct!
 (scrbook)             Internally I'm using `fontsize=12pt'.
@@ -84,6 +90,12 @@ Package typearea Info: You've used standard option `onecolumn'.
 (typearea)             If you'd like to set the option with \KOMAoptions,
 (typearea)             you'd have to use `twocolumn=false' there
 (typearea)             instead of `onecolumn', too.
+Package typearea Info: You've used standard option `oneside'.
+(typearea)             This is correct!
+(typearea)             Internally I'm using `twoside=false'.
+(typearea)             If you'd like to set the option with \KOMAoptions,
+(typearea)             you'd have to use `twoside=false' there
+(typearea)             instead of `oneside', too.
 \ta@hblk=\skip51
 \ta@vblk=\skip52
 \ta@temp=\skip53
@@ -94,8 +106,8 @@ Package typearea Info: These are the values describing the layout:
 (typearea)             \paperwidth      = 597.50793pt
 (typearea)              \textwidth      = 448.13095pt
 (typearea)              DIV departure   = -6%
-(typearea)              \evensidemargin = 27.31467pt
-(typearea)              \oddsidemargin  = -22.47766pt
+(typearea)              \evensidemargin = 2.4185pt
+(typearea)              \oddsidemargin  = 2.4185pt
 (typearea)             \paperheight     = 845.04694pt
 (typearea)              \textheight     = 635.5pt
 (typearea)              \topmargin      = -41.72441pt
@@ -196,8 +208,6 @@ File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
 )
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/invalid\
 babel-ngerman.tex)
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel
--english.tex)
 Package babel Info: Importing font and identification data for 'ngerman'
 (babel)             from babel-de.ini. Reported on input line 4380.
 
@@ -208,24 +218,13 @@ Language: ngerman
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/babel-german\babel-germ
 an.def
 Package babel Info: Making " an active character on input line 500.
-))
-Package babel Info: Importing font and identification data for 'english'
-(babel)             from babel-en.ini. Reported on input line 4380.
-
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.l
-df
-Language: english 2017/06/06 v3.3r English support from the babel system
-Package babel Info: Hyphen rules for 'canadian' set to \l@english
-(babel)             (\language0). Reported on input line 102.
-Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
-(babel)             (\language73). Reported on input line 105.
-Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
-(babel)             (\language73). Reported on input line 108.
-)) (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+)))
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
 Package: inputenc 2024/02/08 v1.3d Input encoding file
 \inpenc@prehook=\toks18
 \inpenc@posthook=\toks19
-) (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+)
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2026/05/19 v2.18d AMS math features
 \@mathmargin=\skip66
 
@@ -422,16 +421,6 @@ Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
 \multirow@dima=\skip75
 \bigstrutjot=\dimen183
 )
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/koma-script\scrextend.s
-ty
-
-Package scrextend Warning: This package was made to extend other classes but
-(scrextend)                KOMA-Script classes by some features of the
-(scrextend)                KOMA-Script classes.
-(scrextend)                It should never be used with a KOMA-Script class.
-(scrextend)                Loading of the package will be aborted.
-
-)
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
 Package: subcaption 2023/07/28 v1.6b Sub-captions (AR)
 
@@ -455,34 +444,12 @@ Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 )
 \c@caption@flags=\count308
 \c@continuedfloat=\count309
-Package caption Info: scrextend package is loaded.
-
-
-! Package caption Error: For a successful cooperation we need at least version
-(caption)                `2002/07/01 v3.0' of package scrextend,
-(caption)                but only version
-(caption)                `'
-(caption)                is available.
-
-See the caption package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.1324   }{}
-            %
-If you do not understand this error, please take a closer look
-at the documentation of the `caption' package, especially the
-section about errors.
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
 )
 Package caption Info: New subtype `subfigure' on input line 238.
 \c@subfigure=\count310
 Package caption Info: New subtype `subtable' on input line 238.
 \c@subtable=\count311
-)
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
+) (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
 Package: csquotes 2026-05-19 v5.2p context-sensitive quotations (JAW)
 \csq@reset=\count312
 \csq@gtype=\count313
@@ -1602,7 +1569,7 @@ File: bkm-pdftex.def 2026-05-21 v1.32 bookmark driver for pdfTeX (HO)
 \BKM@id=\count517
 )) (vorlage_de.aux
 Package babel Info: 'ngerman' activates 'german' shorthands.
-(babel)             Reported on input line 15.
+(babel)             Reported on input line 14.
 )
 \openout1 = `vorlage_de.aux'.
 
@@ -1624,16 +1591,6 @@ LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 173.
 LaTeX Font Info:    ... okay on input line 173.
 LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 173.
 LaTeX Font Info:    ... okay on input line 173.
-Package scrbase Info: activating english \partname on input line 173.
-Package scrbase Info: activating english \chaptername on input line 173.
-Package scrbase Info: activating english \appendixname on input line 173.
-Package scrbase Info: activating english \figurename on input line 173.
-Package scrbase Info: activating english \tablename on input line 173.
-Package scrbase Info: activating english \contentsname on input line 173.
-Package scrbase Info: activating english \listfigurename on input line 173.
-Package scrbase Info: activating english \listtablename on input line 173.
-Package scrbase Info: activating english \bibname on input line 173.
-Package scrbase Info: activating english \indexname on input line 173.
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
 ii
@@ -1673,13 +1630,6 @@ Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: rotating package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package biblatex Info: Trying to load language 'english'...
-Package biblatex Info: ... file 'english.lbx' found.
-
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lb
-x
-File: english.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
-)
 Package biblatex Info: Trying to load language 'ngerman'...
 Package biblatex Info: ... file 'ngerman.lbx' found.
 
@@ -1707,28 +1657,17 @@ Package biblatex Info: Data encoding 'utf8' specified.
 \openout3 = `vorlage_de-blx.bib'.
 
 Package biblatex Info: Trying to load bibliographic data...
+Package biblatex Info: ... file 'vorlage_de.bbl' not found.
 
-
-Package biblatex Warning: File 'vorlage_de.bbl' is wrong format version - expec
-ted 3.3.
-
-Package biblatex Info: ... file 'vorlage_de.bbl' found.
-(vorlage_de.bbl
-Overfull \hbox (116.99643pt too wide) in paragraph at lines 30--58
-[]\OT1/cmr/m/n/12 author2hash=GMRfamily=Garey, fam-i-lyi=G., given=Michael R., 
-giveni=M. R., hash=JDSfamily=Johnson,
- []
-
-
-Overfull \hbox (132.97552pt too wide) in paragraph at lines 60--92
-[]\OT1/cmr/m/n/12 author2hash=KCfamily=Komusiewicz, fam-i-lyi=K., given=Christi
-an, giveni=C., hash=NRfamily=Niedermeier,
- []
-
-)
+No file vorlage_de.bbl.
 Package biblatex Info: Reference section=0 on input line 173.
 Package biblatex Info: Reference segment=0 on input line 173.
 Package hyperref Info: Link coloring ON on input line 173.
+
+Package todonotes Warning: The length marginparwidth is less than 2cm and will 
+most likely cause issues with the appearance of inserted todonotes. The issue c
+an be solved by adding a line like \setlength {\marginparwidth }{2cm} prior to 
+loading the todonotes package. on input line 173.
 
 
 Package pgfplots Warning: running in backwards compatibility mode (unsuitable t
@@ -1738,21 +1677,13 @@ your preamble.
 
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
-slations-basic-dictionary-english.trsl
-File: translations-basic-dictionary-english.trsl (english translation file `tra
-nslations-basic-dictionary')
-)
-Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `english'. on input line 173.
-
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
 slations-basic-dictionary-german.trsl
 File: translations-basic-dictionary-german.trsl (german translation file `trans
 lations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
 or `german'. on input line 173.
-Package babel Info: Main language set to 'english'.
+Package babel Info: Main language set to 'ngerman'.
 Package cleveref Info: loaded `ngerman' language definitions on input line 175.
 
 LaTeX Font Info:    Trying to load font information for U+msa on input line 178
@@ -1767,162 +1698,134 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 178
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-[1{C:/Users/da200/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}
-
-
-] [2
-
-
-]
-<tu-logo.pdf, id=16, 134.5025pt x 100.375pt>
+<tu-logo.pdf, id=6, 134.5025pt x 100.375pt>
 File: tu-logo.pdf Graphic file (type pdf)
 <use tu-logo.pdf>
 Package pdftex.def Info: tu-logo.pdf  used on input line 178.
-(pdftex.def)             Requested size: 63.73563pt x 47.56374pt.
+(pdftex.def)             Requested size: 71.70259pt x 53.5094pt.
 
-pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.178 
-       [1 <./tu-logo.pdf>]
-pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.179 \cleardoublepage
-                       [2
+[1{C:/Users/da200/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}
 
 
 
-]
+
+ <./tu-logo.pdf>]
 Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
 ine 183.
-
-Overfull \hbox (15.49428pt too wide) in paragraph at lines 187--197
-\OT1/cmtt/m/n/12 K3-[]AMBl / Amtsblatt _ 2023 / Amtliches _ Mitteilungsblatt _ 
-Nr . _16 _ vom _ 30 . 05 . 2023 . pdf$[][] 
- []
+ [2
 
 
-! LaTeX Error: There's no line here to end.
 
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.199 \begin
-            {tabular}[h]{lll} Berlin, den & \underline{\hspace{5cm}} & \unde...
-
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
-[3] [4
-
-
-] [5] [6
+] [3
 
 
 ] (vorlage_de.toc
+Package cleveref Info: loaded `ngerman' language definitions on input line 1.
 Package cleveref Info: loaded `ngerman' language definitions on input line 2.
 )
 \tf@toc=\write5
 \openout5 = `vorlage_de.toc'.
 
- [7] [8
+ [4
 
 
 ]
 chapter 1.
 
-LaTeX Warning: Citation 'Nie06' on page 9 undefined on input line 248.
+LaTeX Warning: Citation 'Nie06' on page 5 undefined on input line 241.
 
 
-LaTeX Warning: Citation 'Nie06' on page 9 undefined on input line 252.
+LaTeX Warning: Citation 'Nie06' on page 5 undefined on input line 245.
 
 
-LaTeX Warning: Citation 'GJ79' on page 9 undefined on input line 252.
+LaTeX Warning: Citation 'GJ79' on page 5 undefined on input line 245.
 
 
-LaTeX Warning: Citation 'KN12' on page 9 undefined on input line 252.
+LaTeX Warning: Citation 'KN12' on page 5 undefined on input line 245.
 
-[9] [10
+[5
 
 
 ]
 chapter 2.
 
-LaTeX Warning: Citation 'Nie06' on page 11 undefined on input line 274.
+LaTeX Warning: Citation 'Nie06' on page 6 undefined on input line 267.
 
-[11] [12
+[6
 
 
 ]
 chapter 3.
-[13]
+[7
+
+
+]
 LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 3
-28.
+21.
  (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\omscmr.fd
 File: omscmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 328.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 321.
 
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
-(Font)              using `OT1/cmr/m/sc' instead on input line 371.
+(Font)              using `OT1/cmr/m/sc' instead on input line 364.
 
 
 LaTeX Warning: cref reference format for label type `observation' undefined on 
-input line 374.
+input line 367.
 
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
-(Font)              using `OT1/cmr/m/sc' instead on input line 377.
+(Font)              using `OT1/cmr/m/sc' instead on input line 370.
 
 Package babel Info: 'ngerman' activates 'german' shorthands.
-(babel)             Reported on input line 395.
-Package cleveref Info: loaded `ngerman' language definitions on input line 395.
+(babel)             Reported on input line 388.
+Package cleveref Info: loaded `ngerman' language definitions on input line 388.
 
-[14]
-<figures/thesis_defense.png, id=143, 441.75038pt x 316.18124pt>
+[8]
+<figures/thesis_defense.png, id=110, 441.75038pt x 316.18124pt>
 File: figures/thesis_defense.png Graphic file (type png)
 <use figures/thesis_defense.png>
-Package pdftex.def Info: figures/thesis_defense.png  used on input line 470.
+Package pdftex.def Info: figures/thesis_defense.png  used on input line 463.
 (pdftex.def)             Requested size: 309.22316pt x 221.32535pt.
 
 
-LaTeX Warning: Citation 'xkcd1403' on page 15 undefined on input line 471.
+LaTeX Warning: Citation 'xkcd1403' on page 9 undefined on input line 464.
 
 
-LaTeX Warning: Citation 'xkcd1403' on page 15 undefined on input line 471.
+LaTeX Warning: Citation 'xkcd1403' on page 9 undefined on input line 464.
 
 PGFPlots: reading {example-data.csv}
 
-Overfull \hbox (2.98914pt too wide) in paragraph at lines 490--491
+Overfull \hbox (2.98914pt too wide) in paragraph at lines 483--484
 [][] 
  []
 
 
-LaTeX Warning: Citation 'algorithmicx' on page 15 undefined on input line 499.
+LaTeX Warning: Citation 'algorithmicx' on page 9 undefined on input line 492.
 
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 504.
-Package cleveref Info: loaded `ngerman' language definitions on input line 521.
+put line 497.
+Package cleveref Info: loaded `ngerman' language definitions on input line 514.
 
-[15]
-Package cleveref Info: loaded `ngerman' language definitions on input line 521.
+[9]
+Package cleveref Info: loaded `ngerman' language definitions on input line 514.
 
- [16 <./figures/thesis_defense.png>]
-Package cleveref Info: loaded `ngerman' language definitions on input line 521.
+ [10 <./figures/thesis_defense.png>]
+Package cleveref Info: loaded `ngerman' language definitions on input line 514.
 
- [17] [18
-
-
-]
+ [11]
 chapter 4.
-[19] (vorlage_de.aux
+
+LaTeX Warning: Empty bibliography on input line 523.
+
+[12
+
+
+] (vorlage_de.aux
+Package cleveref Info: loaded `ngerman' language definitions on input line 14.
 Package cleveref Info: loaded `ngerman' language definitions on input line 15.
 )
  ***********
@@ -1943,10 +1846,10 @@ Package logreq Info: Writing requests to 'vorlage_de.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 56501 strings out of 467510
- 1355648 string characters out of 5408795
- 2353093 words of memory out of 5000000
- 84898 multiletter control sequences out of 15000+600000
+ 56142 strings out of 467510
+ 1340108 string characters out of 5408795
+ 2333707 words of memory out of 5000000
+ 84565 multiletter control sequences out of 15000+600000
  646330 words of font info for 109 fonts, out of 8000000 for 9000
  1143 hyphenation exceptions out of 8191
  108i,13n,108p,11215b,2463s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1972,9 +1875,9 @@ pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users
 /da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
 <C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbo
 ls/msbm10.pfb>
-Output written on vorlage_de.pdf (21 pages, 335152 bytes).
+Output written on vorlage_de.pdf (12 pages, 321618 bytes).
 PDF statistics:
- 310 PDF objects out of 1000 (max. 8388607)
- 60 named destinations out of 1000 (max. 500000)
+ 271 PDF objects out of 1000 (max. 8388607)
+ 53 named destinations out of 1000 (max. 500000)
  111 words of extra memory for PDF output out of 10000 (max. 10000000)
 

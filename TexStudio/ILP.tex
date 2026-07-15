@@ -15,31 +15,53 @@
 \newpage
 
 \section*{Lookup}
-
-Constants: Capital Letters
 \newcommand{\timeForCheckInR}{{T_R}} 20ns
-\newcommand{\timeForLookup}{{T_L}}
+\newcommand{\timeForLookupInS}{{T_{SL}}}
 \newcommand{\timeForHashtable}{{T_H}} 40ns
 
-
-Variables: bold
 \newcommand{\percKmers}{\textbf{p}_\textbf{K}}
+\newcommand{\percKmersEmpiric}{P_{K-empiric}}
 
-Levels:
+\newcommand{\selectorm}{\textbf{sm}}
+\newcommand{\selectort}{\textbf{st}}
+
 \newcommand{\levelI}{{L_i}}
 \newcommand{\levelOne}{{L_1}}
 \newcommand{\levelTwo}{{L_2}}
 \newcommand{\levelThree}{{L_3}}
+
+In the following we will use capital letters for constants and bold letters for variables.\\
+
 \subsection*{Runtime}
+
+\begin{tabular}{ l | l }
+	constant	& meaning \\
+	\hline
+	$\timeForCheckInR^\levelI$		& time to check presence of a bit in vector R of level i \\
+	$\timeForLookupInS^\levelI$		& time to lookup a k-mer in vector S on level i \\
+	variable	&  \\
+	\hline
+	$\timeForHashtable$		& time to lookup a k-mer on level i \\
+	variable	&  \\
+	$\percKmers^\levelI$		& probability of a kmer belonging to level i \\
+\end{tabular}\\
+
+\noindent As a first approach we model the runtime complexity for only one level. In this case the lookup of a query with minimizer m of frequency f(m) would consist of checking the bitvector R in order to determin whether $1 \leq f(m) \leq threshold$. This will be the case for $\percKmers$ of the k-mers, which will then be followed by a lookup in S. If m does not appear at all or has a $f(m) > threshold$, a lookup in the hashtable will follow. The lookup time for one level can thus be modeled as:
+\begin{equation*}
+	\timeForCheckInR + \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
+\end{equation*}
+\\
+
+\noindent
 
 minimize: nicht linear!\\
 
 
 \[
 \begin{array}{llll}
-	\timeForCheckInR^\levelOne 	&+ \percKmers^\levelOne*\timeForLookup^\levelOne 				&							&\\
-			&+ (1-\percKmers^\levelOne) * \Bigg( \timeForCheckInR^\levelTwo &+ \percKmers^\levelTwo*\timeForLookup^\levelTwo 				&\\
-			&							&+ (1-\percKmers^\levelTwo) * \Big( \timeForCheckInR^\levelThree	&+ \percKmers^\levelThree*\timeForLookup^\levelThree \\
+	\timeForCheckInR^\levelOne 	&+ \percKmers^\levelOne*\timeForLookupInS^\levelOne 				&							&\\
+			&+ (1-\percKmers^\levelOne) * \Bigg( \timeForCheckInR^\levelTwo &+ \percKmers^\levelTwo*\timeForLookupInS^\levelTwo 				&\\
+			&							&+ (1-\percKmers^\levelTwo) * \Big( \timeForCheckInR^\levelThree	&+ \percKmers^\levelThree*\timeForLookupInS^\levelThree \\
 			&							&							&+ (1-\percKmers^\levelThree) * \timeForHashtable \Big) \Bigg)
 \end{array}
 \]
@@ -56,8 +78,11 @@ TODO: linearise
 \end{tabular}
 \\
 \\
-for: \textbf{eines muss ne summe sein!}
-\[\percKmers^\levelI = \prod_{m \in M} \left( sm_m^\levelI \prod_{t \in T} st_t^\levelI * p_{m-empiric}^\levelI(m, t)\right)\]
+for: 
+\begin{align*}
+	&\percKmers^\levelI = \sum_{m \in M} \left( \selectorm_m^\levelI \sum_{t \in T} \percKmersEmpiric^\levelI(m, t) * \selectort_t^\levelI\right)\\
+	&\percKmers^\levelI - \sum_{m \in M} \left( \selectorm_m^\levelI \sum_{t \in T} \percKmersEmpiric^\levelI(m, t) * \selectort_t^\levelI\right)= 0
+\end{align*}
 \\
 \\
 TODO: linearise
@@ -67,18 +92,23 @@ TODO: linearise
 \begin{tabular}{ l | l }
 	variable	& meaning \\
 	\hline
-	$sm_m^\levelI$	& selector for minimizer length m in level i\\
-	$st_t^\levelI$	& selector for threshold of t in level i\\
-	$p_{m-empiric}^\levelI(m, t)$ &empirically estimated value for a kmer with a minimizer \\
+	$\selectorm_m^\levelI$	& binary selector for minimizer length m in level i\\
+	$\selectort_t^\levelI$	& binary selector for threshold of t in level i\\
+	$\percKmersEmpiric^\levelI(m, t)$ &empirically estimated value for a kmer with a minimizer \\
 				& of length m to have a frequency less than t \\
 	$M$			& Set of all minimizer length to be considered \\
 	$T$			& Set of thresholds to be considered \\
 \end{tabular}
 \\
 \\
-selectors for m and t must be mutually exclusive:
-\[\sum_{m \in M} sm_m^\levelI = 1\]
-\[\sum_{t \in T} st_t^\levelI = 1\]
+selectors for m and t must be binary amd mutually exclusive:
+\begin{align*}
+	\selectorm_m^\levelI &\in {0,1} ~|~ \forall m \in M \\
+	\selectort_t^\levelI &\in {0,1} ~|~ \forall t \in T \\
+	\sum_{m \in M} \selectorm_m^\levelI &= 1 \\
+	\sum_{t \in T} \selectort_t^\levelI &= 1 \\
+\end{align*}
+
 
 \newpage
 \subsection*{Space Consumption}
