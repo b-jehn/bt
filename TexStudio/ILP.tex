@@ -2,6 +2,7 @@
 \usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{todonotes} % disable this package in final thesis
 
 \title{LP Modeling}
 \author{Bjarne Jehn}
@@ -14,13 +15,16 @@
 \maketitle
 \newpage
 
-\section*{Lookup}
-\newcommand{\timeForCheckInR}{{T_R}} 20ns
+\section*{Runtime}
+\newcommand{\timeForCheckInR}{{T_R}}
 \newcommand{\timeForLookupInS}{{T_{SL}}}
-\newcommand{\timeForHashtable}{{T_H}} 40ns
+\newcommand{\timeForHashtable}{{T_H}}
 
 \newcommand{\percKmers}{\textbf{p}_\textbf{K}}
 \newcommand{\percKmersEmpiric}{P_{K-empiric}}
+
+\newcommand{\possibleMinimizerLength}{\mathcal{M}}
+\newcommand{\possibleThresholds}{\mathcal{T}}
 
 \newcommand{\selectorm}{\textbf{sm}}
 \newcommand{\selectort}{\textbf{st}}
@@ -30,30 +34,84 @@
 \newcommand{\levelTwo}{{L_2}}
 \newcommand{\levelThree}{{L_3}}
 
+
+\subsection*{For Only One Level}
+As a first approach we model the runtime complexity for only one level.\\
 In the following we will use capital letters for constants and bold letters for variables.\\
-
-\subsection*{Runtime}
-
+\\
 \begin{tabular}{ l | l }
-	constant	& meaning \\
+	constants	& meaning \\
 	\hline
-	$\timeForCheckInR^\levelI$		& time to check presence of a bit in vector R of level i \\
-	$\timeForLookupInS^\levelI$		& time to lookup a k-mer in vector S on level i \\
-	variable	&  \\
-	\hline
+	$\timeForCheckInR$		& time to check presence of a bit in vector R of level i \\
+	$\timeForLookupInS$		& time to lookup a k-mer in vector S on level i \\
 	$\timeForHashtable$		& time to lookup a k-mer on level i \\
-	variable	&  \\
+	$\percKmersEmpiric(m, t)$ &empirically estimated value for a kmer with a minimizer \\
+	& of length m to have a frequency less than t \\
+	$\possibleMinimizerLength$			& Set of all minimizer length to be considered \\
+	$\possibleThresholds$			& Set of thresholds to be considered \\
+	\hline
+	\hline
+	variables	&  \\
+	\hline
 	$\percKmers^\levelI$		& probability of a kmer belonging to level i \\
+	$\selectorm_m$	& binary selector for minimizer length m\\
+	$\selectort_t$	& binary selector for threshold of t\\
 \end{tabular}\\
-
-\noindent As a first approach we model the runtime complexity for only one level. In this case the lookup of a query with minimizer m of frequency f(m) would consist of checking the bitvector R in order to determin whether $1 \leq f(m) \leq threshold$. This will be the case for $\percKmers$ of the k-mers, which will then be followed by a lookup in S. If m does not appear at all or has a $f(m) > threshold$, a lookup in the hashtable will follow. The lookup time for one level can thus be modeled as:
+\\
+For one level the lookup of a query with minimizer m of frequency f(m) would consist of checking the bitvector R in order to determin whether $1 \leq f(m) \leq threshold$. This will be the case for $\percKmers$ of the k-mers, which will then be followed by a lookup in S. If m does not appear at all or has a $f(m) > threshold$, a lookup in the hashtable will follow. The lookup time for one level can thus be modeled as:
 \begin{equation*}
 	\timeForCheckInR + \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
 \end{equation*}
 \\
+Let $\possibleMinimizerLength$ be the Set of all minimizer length and $\possibleThresholds$ the set of all thresholds to be considered.\\
+In order to determine $m$ and $t$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLength$ and $t \in \possibleThresholds$.\\
+$\selectorm_m = 
+	\begin{cases}
+		1 & \text{minimizer length is } m\\
+		0 & \text{otherwise}.
+	\end{cases}$\\
+$\selectort_t = 
+\begin{cases}
+	1 & \text{threshold is } t\\
+	0 & \text{otherwise}.
+\end{cases}$\\
+For a fixed minimizer length $m$ and threshold $t$ let $\percKmersEmpiric(m, t)$ be the empirically determined percentage of k-mers that have a minimizer with $frequency < t$.\\
+We can then model $\percKmers$ with:
+\begin{align*}
+	&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
+	\implies &\percKmers - \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)= 0
+\end{align*}
+In order for this to work, the selectors for m and t must be binary and mutually exclusive:
+\begin{align*}
+	&\selectorm_m \in {0,1} ~|~ \forall m \in \possibleMinimizerLength \\
+	&\selectort_t \in {0,1} ~|~ \forall t \in \possibleThresholds \\
+	&\sum_{m \in \possibleMinimizerLength} \selectorm_m = 1 \\
+	&\sum_{t \in \possibleThresholds} \selectort_t = 1
+\end{align*}
+\\
+The above results in the following MINLP (Mixed Integer Non Linear Program):\\
+\\
+MINIMIZE
+\begin{align*}
+	&\timeForCheckInR + \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
+\end{align*}
+SUBJECT TO
+\begin{align*}
+		&\percKmers - \sum_{m \in M} \left( \selectorm_m \sum_{t \in T} \percKmersEmpiric(m, t) * \selectort_t\right) = 0\\
+		&\selectorm_m \in {0,1} ~|~ \forall m \in M \\
+		&\selectort_t \in {0,1} ~|~ \forall t \in T \\
+		&\sum_{m \in M} \selectorm_m = 1 \\
+		&\sum_{t \in T} \selectort_t = 1
+\end{align*}
+\\
+For now we will assume that $\timeForLookupInS \approx 20ns$ and $\timeForHashtable \approx 40ns$.\\
+Solving this MINLP will result in a Solution where the $\selectorm_m$, $\selectort_t$ corresponding to the largest $m \in \possibleMinimizerLength$, $t \in \possibleThresholds$ will be set to one.\\
+This is as expected, since this leads to the highest possible $\percKmers$. This maximizes the k-mers found in the vector $S$ and thus minimizes the lookups in the (slower) Hashtable.\\
+However this also results in a high space consumption, because
+\todo[inline]{explain why}\\
+In order to take that into account, we have to add a constraint modeling the \hyperlink{Space Consumption}{link text}space consumption.
 
-\noindent
-
+\subsection*{Several Levels}
 minimize: nicht linear!\\
 
 
@@ -78,7 +136,8 @@ TODO: linearise
 \end{tabular}
 \\
 \\
-for: 
+
+We can model $\percKmers$ for multiple levels with:
 \begin{align*}
 	&\percKmers^\levelI = \sum_{m \in M} \left( \selectorm_m^\levelI \sum_{t \in T} \percKmersEmpiric^\levelI(m, t) * \selectort_t^\levelI\right)\\
 	&\percKmers^\levelI - \sum_{m \in M} \left( \selectorm_m^\levelI \sum_{t \in T} \percKmersEmpiric^\levelI(m, t) * \selectort_t^\levelI\right)= 0
@@ -109,9 +168,11 @@ selectors for m and t must be binary amd mutually exclusive:
 	\sum_{t \in T} \selectort_t^\levelI &= 1 \\
 \end{align*}
 
+Without further constraints
+
 
 \newpage
-\subsection*{Space Consumption}
+\section*{Space Consumption}
 Using Elias Fano Coding a Bitvector of length $U$ with $n$ bits set to 1 can be encoded using $n \lceil log \frac{U}{n} \rceil + 3n$.\\
 \\
 Let $\noam$ be the number of appearing minimizers (minimizers with a frequency greater than zero).

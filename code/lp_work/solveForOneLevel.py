@@ -1,12 +1,18 @@
 from pyscipopt import Model, quicksum
 import csv
+import sys
+
+T = 255 #max t
 
 T_SL = 1    #time for lookup in S
 T_H = 2     #time for lookup in hashtable
 LEVELS = 1
 
-minimizer_lengths = range(15,25)
-thresholds = [16, 32, 64]
+minimizer_lengths = range(5,25)
+thresholds = [2**i for i in range(1,8)]
+
+if thresholds[-1] >= T:
+    sys.exit(f"maximum threshold t: {thresholds[-1]} has to be smaller than T: {T}")
 
 """
 P_Kempirical[i][j]: 
@@ -16,11 +22,13 @@ the empirically measured percentage of
 """ 
 P_Kempirical = [[] for m in minimizer_lengths] 
 for i, m in enumerate(minimizer_lengths):
-    reader = csv.reader(open(f'stats_m{m}.csv'), delimiter=',')
+    reader = csv.reader(open(f'./minimizer_stats/stats_m{m}_t{T}.csv'), delimiter=',')
     for t, row in enumerate(reader):
         if t not in thresholds:
             continue
         P_Kempirical[i].append(float(row[2]))
+        
+print(P_Kempirical)
 
 scip = Model("Level1")  # scip name is optional
 
@@ -45,13 +53,15 @@ for l in range(LEVELS):
 scip.setObjective(T_SL * p_K + T_H * (1 - p_K), sense="minimize")
 
 #constraints
-scip.addCons(p_K - quicksum(sm + quicksum((st * P_Kempirical[i][j]) for j, st in enumerate(st_vars)) for i, sm in enumerate(sm_vars)) == 1)
+scip.addCons(p_K - quicksum(sm * quicksum((st * P_Kempirical[i][j]) for j, st in enumerate(st_vars)) for i, sm in enumerate(sm_vars)) == 0)
 scip.addCons(quicksum(sm for sm in sm_vars) == 1, name="sm_sum_cons")
 scip.addCons(quicksum(st for st in st_vars) == 1, name="st_sum_cons")
 
 scip.optimize()
 sol = scip.getBestSol()
+print(f"p_K: {format(sol[p_K])}")
 for i, m in enumerate(minimizer_lengths):
     print(f"m_{m}: {format(sol[sm_vars[i]])}")
 for i, t in enumerate(thresholds):
     print(f"t_{t}: {format(sol[st_vars[i]])}")
+    
