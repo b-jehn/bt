@@ -1,10 +1,13 @@
-from pyscipopt import Model, quicksum, log
+from pyscipopt import Model, quicksum
+import math
 import csv
 import sys
 
 K = 31  #kmer length
 T = 255 #max threshold
 TEXT_LENGTH = 681137419
+log_text_length = math.log(TEXT_LENGTH, 2)
+LOAD_FACTOR = 0.75
 
 T_SL = 1    #time for lookup in S
 T_H = 2     #time for lookup in hashtable
@@ -28,7 +31,7 @@ for i, m in enumerate(minimizer_lengths):
     for t, row in enumerate(reader):
         if t not in thresholds:
             continue
-        P_Kempirical[i].append(float(row[2]))
+        P_Kempirical[i].append(float(row[2])/100)   #convert to percentage
         
 print(P_Kempirical)
 
@@ -38,7 +41,8 @@ scip = Model("Level1")  # scip name is optional
 p_K = scip.addVar("p_K")    #percentage of kmers that have minimizers of length m with a frequency < t
 m = scip.addVar("m")        #minimizer length
 t = scip.addVar("t")        #threshold
-bpk = scip.addVar("bpk")    #bits per kmer
+bpk_O = scip.addVar("bpk_O")  #bits per kmer in O
+bpk_H = scip.addVar("bpk_H")  #bits per kmer in O
 
 sm_vars = [scip.addVar(vtype='B', name=f"sm_{m}") for m in minimizer_lengths]   #binary selectors for m
 st_vars = [scip.addVar(vtype='B', name=f"st_{t}") for t in thresholds]          #binary selectors for t
@@ -66,17 +70,25 @@ scip.addCons(quicksum(st for st in st_vars) == 1, name="st__mutually_exclusive")
 scip.addCons(m - quicksum(sm * m for sm, m in zip(sm_vars, minimizer_lengths)) == 0, name="get_m")  #determin m
 scip.addCons(t - quicksum(st * t for st, t in zip(st_vars, thresholds)) == 0, name="get_t")         #determin t
 
-#bits per k-mer
-scip.addCons(bpk - (2/(K-m+2) * p_K * log(TEXT_LENGTH)) == 0)
-scip.addCons(bpk <= 10)
+#bits per k-mer in O
+scip.addCons(bpk_O - (2/(K-m+2) * p_K * log_text_length) == 0)
+scip.addCons(bpk_O <= 10)
+
+#bits per k-mer in H
+scip.addCons(bpk_H - ((LOAD_FACTOR + (1-LOAD_FACTOR)/LOAD_FACTOR) * 2/(K-m+2) * (1-p_K) * log_text_length) == 0)
+scip.addCons(bpk_H <= 10)
 
 #FIND solution
 scip.optimize()
 sol = scip.getBestSol()
+
 print(f"m: {format(sol[m])}")
 print(f"t: {format(sol[t])}\n")
+
 print(f"p_K: {format(sol[p_K])}")
-print(f"bpk: {format(sol[bpk])}\n")
+print(f"bpk_O: {format(sol[bpk_O])}")
+print(f"bpk_H: {format(sol[bpk_H])}\n")
+
 for i, m in enumerate(minimizer_lengths):
     print(f"m_{m}: {format(sol[sm_vars[i]])}")
 for i, t in enumerate(thresholds):
