@@ -4,18 +4,12 @@
 \usepackage{amssymb}
 \usepackage{todonotes} % disable this package in final thesis
 
-\title{LP Modeling}
+\title{MINLP Modeling}
 \author{Bjarne Jehn}
 
 
 \newcommand{\noam}{noam} %numberOfAppearingMinimizers
 
-\begin{document}
-	
-\maketitle
-\newpage
-
-\section*{Runtime}
 \newcommand{\timeForCheckInR}{{T_R}}
 \newcommand{\timeForLookupInS}{{T_{SL}}}
 \newcommand{\timeForHashtable}{{T_H}}
@@ -26,6 +20,9 @@
 \newcommand{\possibleMinimizerLength}{\mathcal{M}}
 \newcommand{\possibleThresholds}{\mathcal{T}}
 
+\newcommand{\minimizerLength}{\textbf{m}}
+\newcommand{\threshold}{\textbf{t}}
+
 \newcommand{\selectorm}{\textbf{sm}}
 \newcommand{\selectort}{\textbf{st}}
 
@@ -34,8 +31,15 @@
 \newcommand{\levelTwo}{{L_2}}
 \newcommand{\levelThree}{{L_3}}
 
+\begin{document}
+	
+\maketitle
+\newpage
 
-\subsection*{For Only One Level}
+
+
+\section*{One Level}
+\subsection*{Runtime}
 As a first approach we model the runtime complexity for only one level.\\
 In the following we will use capital letters for constants and bold letters for variables.\\
 \\
@@ -88,6 +92,11 @@ In order for this to work, the selectors for m and t must be binary and mutually
 	&\sum_{m \in \possibleMinimizerLength} \selectorm_m = 1 \\
 	&\sum_{t \in \possibleThresholds} \selectort_t = 1
 \end{align*}
+We can then model $\minimizerLength$ and $\threshold$ as:
+\begin{align*}
+	\minimizerLength &= \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
+	\threshold &= \sum_{t \in \possibleThresholds} \selectort_t * t
+\end{align*}
 \\
 The above results in the following MINLP (Mixed Integer Non Linear Program):\\
 \\
@@ -101,17 +110,37 @@ SUBJECT TO
 		&\selectorm_m \in {0,1} ~|~ \forall m \in M \\
 		&\selectort_t \in {0,1} ~|~ \forall t \in T \\
 		&\sum_{m \in M} \selectorm_m = 1 \\
-		&\sum_{t \in T} \selectort_t = 1
+		&\sum_{t \in T} \selectort_t = 1 \\
+		&\minimizerLength = \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
+		&\threshold = \sum_{t \in \possibleThresholds} \selectort_t * t
 \end{align*}
 \\
 For now we will assume that $\timeForLookupInS \approx 20ns$ and $\timeForHashtable \approx 40ns$.\\
 Solving this MINLP will result in a Solution where the $\selectorm_m$, $\selectort_t$ corresponding to the largest $m \in \possibleMinimizerLength$, $t \in \possibleThresholds$ will be set to one.\\
 This is as expected, since this leads to the highest possible $\percKmers$. This maximizes the k-mers found in the vector $S$ and thus minimizes the lookups in the (slower) Hashtable.\\
-However this also results in a high space consumption, because
-\todo[inline]{explain why}\\
-In order to take that into account, we have to add a constraint modeling the \hyperlink{Space Consumption}{link text}space consumption.
+\\
+However this also results in a high space consumption, because \todo{explain why}\\
+\\
+In order to take that into account, we have to add a constraint modeling the space consumption.\\
 
-\subsection*{Several Levels}
+\subsection*{Space Consumption}
+The space consumption of the Data Structure used by RSHash can be split into that of the Vectors $R$, $O$ and $S$ as well as the hashtable $H$.
+
+\subsubsection*{Bitvectors $R$ and $S$}
+$R$ and $S$ can likely be disregarded when modeling the space consumption. \todo{explain why}
+
+\subsubsection*{Offsetvector $O$}
+$O$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $^\leq t$ in $T$.\\
+\[s_O = log_2|T| * |O| = log_2|T| * \sum_{m=1}^{t} \minimizerLength * \text{(number of minimizers with frequenzy m)} \]
+Every minimizer of length $\minimizerLength$ covers an average of $\frac{k-\minimizerLength+2}{2}$ consecutive k-mers. We can thus model the bits per k-mer in $O$ as:\\
+\[bpk_O = \frac{2}{k-\minimizerLength+2} * \percKmers * log |T| \]
+
+\subsubsection*{Hashtable $H$}
+
+
+\newpage
+\section*{Several Levels}
+\subsection*{Runtime}
 minimize: nicht linear!\\
 
 
@@ -170,12 +199,12 @@ selectors for m and t must be binary amd mutually exclusive:
 
 Without further constraints
 
+\subsection*{Space Consumption} \label{sec:space}
 
-\newpage
-\section*{Space Consumption}
 Using Elias Fano Coding a Bitvector of length $U$ with $n$ bits set to 1 can be encoded using $n \lceil log \frac{U}{n} \rceil + 3n$.\\
 \\
 Let $\noam$ be the number of appearing minimizers (minimizers with a frequency greater than zero).
+
 \subsubsection*{Level 1}
 $R$ - Presence of k-mers:\\
 \textbf{probably not relevant}
@@ -194,9 +223,9 @@ $S$ is a bitvector of length $|O| + 1$ and is \textbf{probably not relevant} for
 \\
 $O$ - Offsets:\\
 $O^\levelOne$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $^\leq t^\levelOne$ in $T$.\\
-\[|O| = log_2|T| * \sum_{m=1}^{t^\levelOne} m * \text{(number of minimizers with frequenzy m)} \]
+\[s_O = log_2|T| * |O| = log_2|T| * \sum_{m=1}^{t^\levelOne} m * \text{(number of minimizers with frequenzy m)} \]
 Every minimizer of length $m$ covers an average of $\frac{k-m+2}{2}$ consecutive k-mers.\\
-\[bpk_O^\levelOne = \frac{2}{k-m^\levelOne+2} * p_K^\levelOne log |T| \]
+\[bpk_O^\levelOne = \frac{2}{k-m^\levelOne+2} * p_K^\levelOne * log |T| \]
 
 
 \end{document}
