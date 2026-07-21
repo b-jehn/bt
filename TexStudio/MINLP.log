@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  17 JUL 2026 16:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  21 JUL 2026 15:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./ILP.tex
-(ILP.tex
+**./MINLP.tex
+(MINLP.tex
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-06-18>
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
@@ -621,8 +621,8 @@ LaTeX Info: Redefining \addtolength on input line 87.
 tex.def
 File: l3backend-pdftex.def 2026-02-18 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count334
-) (ILP.aux)
-\openout1 = `ILP.aux'.
+) (MINLP.aux)
+\openout1 = `MINLP.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 34.
 LaTeX Font Info:    ... okay on input line 34.
@@ -643,9 +643,9 @@ LaTeX Font Info:    ... okay on input line 34.
 LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 34.
 LaTeX Font Info:    ... okay on input line 34.
 Package hyperref Info: Link coloring OFF on input line 34.
- (ILP.out) (ILP.out)
+ (MINLP.out) (MINLP.out)
 \@outlinefile=\write4
-\openout4 = `ILP.out'.
+\openout4 = `MINLP.out'.
 
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
@@ -814,22 +814,22 @@ Underfull \hbox (badness 10000) in paragraph at lines 233--235
 
  []
 
-[7] [8] (ILP.aux)
+[7] [8] (MINLP.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-06-18>
  ***********
-Package rerunfilecheck Info: File `ILP.out' has not changed.
+Package rerunfilecheck Info: File `MINLP.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
  20859 strings out of 467510
- 391574 string characters out of 5408795
- 784176 words of memory out of 5000000
+ 391614 string characters out of 5408795
+ 784188 words of memory out of 5000000
  49746 multiletter control sequences out of 15000+600000
  631856 words of font info for 56 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 117i,11n,121p,461b,1002s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 117i,11n,121p,463b,1002s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmbx10.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmbx12.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/p
@@ -846,7 +846,7 @@ s/cm/cmr5.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/
 amsfonts/cm/cmr7.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/
 public/amsfonts/cm/cmsy10.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fon
 ts/type1/public/amsfonts/cm/cmsy7.pfb>
-Output written on ILP.pdf (8 pages, 188873 bytes).
+Output written on MINLP.pdf (8 pages, 188737 bytes).
 PDF statistics:
  131 PDF objects out of 1000 (max. 8388607)
  22 named destinations out of 1000 (max. 500000)
