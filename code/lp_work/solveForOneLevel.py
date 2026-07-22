@@ -9,8 +9,8 @@ TEXT_LENGTH = 681137419
 log_text_length = math.log(TEXT_LENGTH, 2)
 LOAD_FACTOR = 0.75
 
-T_SL = 1    #time for lookup in S
-T_H = 2     #time for lookup in hashtable
+T_SL = 2    #time for lookup in S
+T_H = 1     #time for lookup in hashtable
 LEVELS = 1
 
 minimizer_lengths = range(5,25)
