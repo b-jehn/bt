@@ -6,3 +6,4 @@
 /TexStudio/*.pdf
 /TexStudio/*.log
 /TexStudio/*.synctex
+/TexStudio/*.out
