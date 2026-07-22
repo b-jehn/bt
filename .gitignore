@@ -5,5 +5,5 @@
 /TexStudio/*.aux
 /TexStudio/*.pdf
 /TexStudio/*.log
-/TexStudio/*.synctex
+/TexStudio/*.gz
 /TexStudio/*.out
