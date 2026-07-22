@@ -15,7 +15,7 @@
 \newcommand{\timeForHashtable}{{T_H}}
 
 \newcommand{\percKmers}{\textbf{p}_\textbf{K}}
-\newcommand{\percKmersEmpiric}{P_{K-empiric}}
+\newcommand{\percKmersEmpiric}{P_{K}}
 
 \newcommand{\possibleMinimizerLength}{\mathcal{M}}
 \newcommand{\possibleThresholds}{\mathcal{T}}
@@ -46,20 +46,20 @@ In the following we will use capital letters for constants and bold letters for 
 \begin{tabular}{ l | l }
 	constants	& meaning \\
 	\hline
-	$\timeForCheckInR$		& time to check presence of a bit in vector R of level i \\
+	$\timeForCheckInR$		& time to check presence of a bit in vector R \\
 	$\timeForLookupInS$		& time to lookup a k-mer in vector S on level i \\
 	$\timeForHashtable$		& time to lookup a k-mer on level i \\
 	$\percKmersEmpiric(m, t)$ &empirically estimated value for a kmer with a minimizer \\
 	& of length m to have a frequency less than t \\
-	$\possibleMinimizerLength$			& Set of all minimizer length to be considered \\
+	$\possibleMinimizerLength$			& Set of all minimizer lengths to be considered \\
 	$\possibleThresholds$			& Set of thresholds to be considered \\
 	\hline
 	\hline
 	variables	&  \\
 	\hline
-	$\percKmers^\levelI$		& probability of a kmer belonging to level i \\
-	$\selectorm_m$	& binary selector for minimizer length m\\
-	$\selectort_t$	& binary selector for threshold of t\\
+	$\percKmers \in \left[0,1\right]$ & probability of a kmer to have a minimizer with frequency $\leq t$ \\
+	$\selectorm_m \in \left\{0, 1\right\}$	& binary selector for minimizer length m\\
+	$\selectort_t \in \left\{0, 1\right\}$	& binary selector for threshold of t\\
 \end{tabular}\\
 \\
 For one level the lookup of a query with minimizer m of frequency f(m) would consist of checking the bitvector R in order to determin whether $1 \leq f(m) \leq threshold$. This will be the case for $\percKmers$ of the k-mers, which will then be followed by a lookup in S. If m does not appear at all or has a $f(m) > threshold$, a lookup in the hashtable will follow. The lookup time for one level can thus be modeled as:
@@ -80,19 +80,19 @@ $\selectort_t =
 	0 & \text{otherwise}.
 \end{cases}$\\
 For a fixed minimizer length $m$ and threshold $t$ let $\percKmersEmpiric(m, t)$ be the empirically determined percentage of k-mers that have a minimizer with $frequency < t$.\\
-We can then model $\percKmers$ with:
-\begin{align*}
-	&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
-	\implies &\percKmers - \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)= 0
-\end{align*}
-In order for this to work, the selectors for m and t must be binary and mutually exclusive:
+The selectors for m and t must be binary and mutually exclusive:
 \begin{align*}
 	&\selectorm_m \in {0,1} ~|~ \forall m \in \possibleMinimizerLength \\
 	&\selectort_t \in {0,1} ~|~ \forall t \in \possibleThresholds \\
 	&\sum_{m \in \possibleMinimizerLength} \selectorm_m = 1 \\
 	&\sum_{t \in \possibleThresholds} \selectort_t = 1
 \end{align*}
-We can then model $\minimizerLength$ and $\threshold$ as:
+We can then model $\percKmers$ with:
+\begin{align*}
+	&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
+	\implies &\percKmers - \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)= 0
+\end{align*}
+$\minimizerLength$ and $\threshold$ can then be determined by:
 \begin{align*}
 	\minimizerLength &= \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
 	\threshold &= \sum_{t \in \possibleThresholds} \selectort_t * t
