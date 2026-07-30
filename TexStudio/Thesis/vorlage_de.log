@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  16 JUL 2026 13:32
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  30 JUL 2026 15:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -47,12 +47,6 @@ Package: tocbasic 2026/02/02 v3.49.2 KOMA-Script package (handling toc-files)
 Package tocbasic Info: omitting babel extension for `toc'
 (tocbasic)             because of feature `nobabel' available
 (tocbasic)             for `toc' on input line 143.
-Class scrbook Info: You've used standard option `onecolumn'.
-(scrbook)           This is correct!
-(scrbook)           Internally I'm using `twocolumn=false'.
-(scrbook)           If you'd like to set the option with \KOMAoptions,
-(scrbook)           you'd have to use `twocolumn=false' there
-(scrbook)           instead of `onecolumn', too.
 Class scrbook Info: You've used standard option `oneside'.
 (scrbook)           This is correct!
 (scrbook)           Internally I'm using `twoside=false'.
@@ -84,12 +78,6 @@ Package typearea Info: You've used standard option `a4paper'.
 (typearea)             If you'd like to set the option with \KOMAoptions,
 (typearea)             you'd have to use `paper=a4' there
 (typearea)             instead of `a4paper', too.
-Package typearea Info: You've used standard option `onecolumn'.
-(typearea)             This is correct!
-(typearea)             Internally I'm using `twocolumn=false'.
-(typearea)             If you'd like to set the option with \KOMAoptions,
-(typearea)             you'd have to use `twocolumn=false' there
-(typearea)             instead of `onecolumn', too.
 Package typearea Info: You've used standard option `oneside'.
 (typearea)             This is correct!
 (typearea)             Internally I'm using `twoside=false'.
@@ -100,12 +88,18 @@ Package typearea Info: You've used standard option `oneside'.
 \ta@vblk=\skip52
 \ta@temp=\skip53
 \footheight=\skip54
+Package typearea Info: Maybe no optimal type area settings!
+(typearea)             The detected line width is about 40%
+(typearea)             smaller than the heuristically estimated maximum
+(typearea)             limit of typographical good line width.
+(typearea)             You could e.g. increase DIV, decrease fontsize
+(typearea)             or change the papersize.
 Package typearea Info: These are the values describing the layout:
 (typearea)             DIV  = 12
 (typearea)             BCOR = 0.0pt
 (typearea)             \paperwidth      = 597.50793pt
 (typearea)              \textwidth      = 448.13095pt
-(typearea)              DIV departure   = -6%
+(typearea)              DIV departure   = 40%
 (typearea)              \evensidemargin = 2.4185pt
 (typearea)              \oddsidemargin  = 2.4185pt
 (typearea)             \paperheight     = 845.04694pt
@@ -208,6 +202,8 @@ File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
 )
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/invalid\
 babel-ngerman.tex)
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel
+-english.tex)
 Package babel Info: Importing font and identification data for 'ngerman'
 (babel)             from babel-de.ini. Reported on input line 4380.
 
@@ -218,13 +214,24 @@ Language: ngerman
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/babel-german\babel-germ
 an.def
 Package babel Info: Making " an active character on input line 500.
-)))
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+))
+Package babel Info: Importing font and identification data for 'english'
+(babel)             from babel-en.ini. Reported on input line 4380.
+
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.l
+df
+Language: english 2017/06/06 v3.3r English support from the babel system
+Package babel Info: Hyphen rules for 'canadian' set to \l@english
+(babel)             (\language0). Reported on input line 102.
+Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
+(babel)             (\language73). Reported on input line 105.
+Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
+(babel)             (\language73). Reported on input line 108.
+)) (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
 Package: inputenc 2024/02/08 v1.3d Input encoding file
 \inpenc@prehook=\toks18
 \inpenc@posthook=\toks19
-)
-(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+) (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2026/05/19 v2.18d AMS math features
 \@mathmargin=\skip66
 
@@ -1560,37 +1567,44 @@ Class scrbook Info: loading recommended package `bookmark'.
 (scrbook)           `bookmarkpackage=false' before \begin{document} and
 (scrbook)           you can avoid this message adding:
 (scrbook)             \usepackage{bookmark}
-(scrbook)           before \begin{document} on input line 173.
+(scrbook)           before \begin{document} on input line 175.
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/bookmark\bookmark.sty
 Package: bookmark 2026-05-21 v1.32 PDF bookmarks (HO)
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/bookmark\bkm-pdftex.def
 File: bkm-pdftex.def 2026-05-21 v1.32 bookmark driver for pdfTeX (HO)
 \BKM@id=\count517
-)) (vorlage_de.aux
-Package babel Info: 'ngerman' activates 'german' shorthands.
-(babel)             Reported on input line 14.
-)
+)) (vorlage_de.aux)
 \openout1 = `vorlage_de.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 173.
-LaTeX Font Info:    ... okay on input line 173.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 175.
+LaTeX Font Info:    ... okay on input line 175.
+Package scrbase Info: activating english \partname on input line 175.
+Package scrbase Info: activating english \chaptername on input line 175.
+Package scrbase Info: activating english \appendixname on input line 175.
+Package scrbase Info: activating english \figurename on input line 175.
+Package scrbase Info: activating english \tablename on input line 175.
+Package scrbase Info: activating english \contentsname on input line 175.
+Package scrbase Info: activating english \listfigurename on input line 175.
+Package scrbase Info: activating english \listtablename on input line 175.
+Package scrbase Info: activating english \bibname on input line 175.
+Package scrbase Info: activating english \indexname on input line 175.
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
 ii
@@ -1630,6 +1644,13 @@ Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: rotating package is loaded.
 Package caption Info: End \AtBeginDocument code.
+Package biblatex Info: Trying to load language 'english'...
+Package biblatex Info: ... file 'english.lbx' found.
+
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lb
+x
+File: english.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
+)
 Package biblatex Info: Trying to load language 'ngerman'...
 Package biblatex Info: ... file 'ngerman.lbx' found.
 
@@ -1659,22 +1680,30 @@ Package biblatex Info: Data encoding 'utf8' specified.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'vorlage_de.bbl' found.
  (vorlage_de.bbl)
-Package biblatex Info: Reference section=0 on input line 173.
-Package biblatex Info: Reference segment=0 on input line 173.
-Package hyperref Info: Link coloring ON on input line 173.
+Package biblatex Info: Reference section=0 on input line 175.
+Package biblatex Info: Reference segment=0 on input line 175.
+Package hyperref Info: Link coloring ON on input line 175.
 
 
 Package todonotes Warning: The length marginparwidth is less than 2cm and will 
 most likely cause issues with the appearance of inserted todonotes. The issue c
 an be solved by adding a line like \setlength {\marginparwidth }{2cm} prior to 
-loading the todonotes package. on input line 173.
+loading the todonotes package. on input line 175.
 
 
 Package pgfplots Warning: running in backwards compatibility mode (unsuitable t
 ick labels; missing features). Consider writing \pgfplotsset{compat=1.18} into 
 your preamble.
- on input line 173.
+ on input line 175.
 
+
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
+slations-basic-dictionary-english.trsl
+File: translations-basic-dictionary-english.trsl (english translation file `tra
+nslations-basic-dictionary')
+)
+Package translations Info: loading dictionary `translations-basic-dictionary' f
+or `english'. on input line 175.
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
 slations-basic-dictionary-german.trsl
@@ -1682,17 +1711,17 @@ File: translations-basic-dictionary-german.trsl (german translation file `trans
 lations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `german'. on input line 173.
-Package babel Info: Main language set to 'ngerman'.
-Package cleveref Info: loaded `ngerman' language definitions on input line 175.
-
-LaTeX Font Info:    Trying to load font information for U+msa on input line 178
+or `german'. on input line 175.
+Package babel Info: Main language set to 'english'.
+Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
+ine 180.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 180
 .
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 178
+LaTeX Font Info:    Trying to load font information for U+msb on input line 180
 .
 
 (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
@@ -1701,7 +1730,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 <tu-logo.pdf, id=6, 134.5025pt x 100.375pt>
 File: tu-logo.pdf Graphic file (type pdf)
 <use tu-logo.pdf>
-Package pdftex.def Info: tu-logo.pdf  used on input line 178.
+Package pdftex.def Info: tu-logo.pdf  used on input line 180.
 (pdftex.def)             Requested size: 71.70259pt x 53.5094pt.
 
 [1{C:/Users/da200/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}
@@ -1709,125 +1738,323 @@ Package pdftex.def Info: tu-logo.pdf  used on input line 178.
 
 
 
+
  <./tu-logo.pdf>]
-Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
-ine 183.
- [2
+Underfull \hbox (badness 2452) in paragraph at lines 184--188
+\OT1/cmr/m/n/12 is my own, un-aided work, com-pleted
+ []
+
+
+Underfull \hbox (badness 1314) in paragraph at lines 184--188
+\OT1/cmr/m/n/12 with-out any ex-ter-nal help. Only the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 184--188
+
+ []
+
+
+Underfull \hbox (badness 5802) in paragraph at lines 189--192
+\OT1/cmr/m/n/12 I have in-di-cated the prod-uct name,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 189--192
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 193--195
+\OT1/cmtt/m/n/12 / / www . static . tu . berlin / fileadmin /
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 193--195
+\OT1/cmtt/m/n/12 www / 10002457 / K3-[]AMBl / Amtsblatt _
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 193--195
+\OT1/cmtt/m/n/12 2023 / Amtliches _ Mitteilungsblatt _ Nr .
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 193--195
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 196--198
+
+ []
+
+
+Overfull \hbox (204.5491pt too wide) in paragraph at lines 199--203
+[][] 
+ []
+
+[2
+
+
 
 
 
 ] [3
 
 
-] (vorlage_de.toc
-Package cleveref Info: loaded `ngerman' language definitions on input line 1.
-Package cleveref Info: loaded `ngerman' language definitions on input line 2.
-)
+] (vorlage_de.toc)
 \tf@toc=\write5
 \openout5 = `vorlage_de.toc'.
 
  [4
 
 
+
 ]
 chapter 1.
 
-LaTeX Warning: Citation 'Nie06' on page 5 undefined on input line 241.
+LaTeX Warning: Citation 'Nie06' on page 5 undefined on input line 247.
 
 
-LaTeX Warning: Citation 'Nie06' on page 5 undefined on input line 245.
+LaTeX Warning: Citation 'Nie06' on page 5 undefined on input line 251.
 
 
-LaTeX Warning: Citation 'GJ79' on page 5 undefined on input line 245.
+LaTeX Warning: Citation 'GJ79' on page 5 undefined on input line 251.
 
 
-LaTeX Warning: Citation 'KN12' on page 5 undefined on input line 245.
+LaTeX Warning: Citation 'KN12' on page 5 undefined on input line 251.
 
 [5
+
+
 
 
 ]
 chapter 2.
 
-LaTeX Warning: Citation 'Nie06' on page 6 undefined on input line 267.
+Underfull \hbox (badness 1028) in paragraph at lines 263--265
+[]\OT1/cmr/m/n/12 Wenn man viel No-ta-tion einzuf^^?uhren
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 267--268
+[]\OT1/cmr/m/n/12 die \OT1/cmr/m/it/12 Kan-ten-menge \OT1/cmr/m/n/12 von $\OML/
+cmm/m/it/12 G$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 267--268
+\OT1/cmr/m/n/12 mit $\OML/cmm/m/it/12 E\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 G\OT1/
+cmr/m/n/12 ) \OMS/cmsy/m/n/12 ^^R []$\OT1/cmr/m/n/12 ; die
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 267--268
+\OT1/cmr/m/n/12 Knoten $\OML/cmm/m/it/12 u$ \OT1/cmr/m/n/12 und $\OML/cmm/m/it/
+12 v$ \OT1/cmr/m/n/12 einer
+ []
+
+
+Underfull \hbox (badness 2426) in paragraph at lines 267--268
+\OT1/cmr/m/n/12 Kante $\OML/cmm/m/it/12 e \OT1/cmr/m/n/12 = \OMS/cmsy/m/n/12 f\
+OML/cmm/m/it/12 u; v\OMS/cmsy/m/n/12 g 2 \OML/cmm/m/it/12 E\OT1/cmr/m/n/12 (\OM
+L/cmm/m/it/12 G\OT1/cmr/m/n/12 )$
+ []
+
+
+LaTeX Warning: Citation 'Nie06' on page 6 undefined on input line 273.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 273--274
+[] \OT1/cmss/bx/n/12 Parametrisierte Kom-plexit^^?at.[] \OT1/cmr/m/n/12 Wir
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 273--274
+\OT1/cmr/m/n/12 ver-wen-den Stan-dard-no-ta-tion aus der
+ []
 
 [6
 
 
+
 ]
 chapter 3.
-[7
+
+Underfull \hbox (badness 2435) in paragraph at lines 286--290
+[]\OT1/cmr/m/n/12 Mit new-com-mand lassen sich eigene
+ []
 
 
-]
+Underfull \hbox (badness 4378) in paragraph at lines 286--290
+\OT1/cmr/m/n/12 Be-fehle definieren:  Jede su-per-cal-
+ []
+
+
+Underfull \hbox (badness 1496) in paragraph at lines 286--290
+\OT1/cmr/m/n/12 mit einem su-per-cal-ifrag-ilis-tic-ex-pi-aligetis-
+ []
+
 LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 3
-21.
- (C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\omscmr.fd
+27.
+(C:\Users\da200\AppData\Local\Programs\MiKTeX\tex/latex/base\omscmr.fd
 File: omscmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 321.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 327.
+
+Overfull \hbox (123.0909pt too wide) detected at line 331
+[]
+ []
 
 
-LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
-(Font)              using `OT1/cmr/m/sc' instead on input line 364.
+Underfull \vbox (badness 1112) has occurred while \output is active []
+
+ [7
 
 
-LaTeX Warning: cref reference format for label type `observation' undefined on 
-input line 367.
+]
+Underfull \hbox (badness 3407) in paragraph at lines 358--359
+[]\OT1/cmr/bx/n/12 Theorem 3.3 \OT1/cmr/m/n/12 (Robert-son, Sey-mour)\OT1/cmr/b
+x/n/12 .
+ []
+
+
+Underfull \hbox (badness 2460) in paragraph at lines 358--359
+[]\OT1/cmr/m/it/12 Die Menge der endlichen Graphen ist
+ []
+
+
+Overfull \hbox (206.65755pt too wide) in paragraph at lines 367--367
+ [] 
+ []
 
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
 (Font)              using `OT1/cmr/m/sc' instead on input line 370.
 
-Package babel Info: 'ngerman' activates 'german' shorthands.
-(babel)             Reported on input line 388.
-Package cleveref Info: loaded `ngerman' language definitions on input line 388.
 
-[8]
-<figures/thesis_defense.png, id=110, 441.75038pt x 316.18124pt>
+LaTeX Warning: cref reference format for label type `observation' undefined on 
+input line 373.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
+(Font)              using `OT1/cmr/m/sc' instead on input line 376.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 376--377
+[]\OT1/cmr/bx/n/12 Korollar 3.5. []\OT1/cmr/m/sc/12 Ver-tex Cover \OT1/cmr/m/it
+/12 ist
+ []
+
+
+Underfull \hbox (badness 3590) in paragraph at lines 390--392
+\OT1/cmr/m/n/12 Beispiele f^^?ur Graphen sind in [][]Ab-bil-
+ []
+
+
+Underfull \hbox (badness 1769) in paragraph at lines 393--394
+[]\OT1/cmr/m/n/12 Wer zu faul ist, die Bilder in tikz
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 428--428
+[][][]|\OT1/cmr/m/n/12 Beispiele f^^?ur Graphen.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 443--443
+[][][]|\OT1/cmr/m/n/12 Ergeb-nisse der Laufzei-t-ex-
+ []
+
+
+Underfull \hbox (badness 1436) in paragraph at lines 443--443
+\OT1/cmr/m/n/12 per-i-mente. Alle Zeiten sind
+ []
+
+
+Underfull \hbox (badness 1122) in paragraph at lines 443--443
+\OT1/cmr/m/n/12 in Sekun-den angegeben. Im
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 443--443
+\OT1/cmr/m/n/12 Gegen-satz zu Ab-bil-dun-gen,
+ []
+
+
+Overfull \hbox (103.43445pt too wide) in paragraph at lines 447--465
+ [][] 
+ []
+
+<figures/thesis_defense.png, id=102, 441.75038pt x 316.18124pt>
 File: figures/thesis_defense.png Graphic file (type png)
 <use figures/thesis_defense.png>
-Package pdftex.def Info: figures/thesis_defense.png  used on input line 463.
+Package pdftex.def Info: figures/thesis_defense.png  used on input line 469.
 (pdftex.def)             Requested size: 309.22316pt x 221.32535pt.
 
+Overfull \hbox (90.15768pt too wide) in paragraph at lines 469--470
+ [][] 
+ []
 
-LaTeX Warning: Citation 'xkcd1403' on page 9 undefined on input line 464.
+
+LaTeX Warning: Citation 'xkcd1403' on page 8 undefined on input line 470.
 
 
-LaTeX Warning: Citation 'xkcd1403' on page 9 undefined on input line 464.
+LaTeX Warning: Citation 'xkcd1403' on page 8 undefined on input line 470.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 470--470
+[][][]|\OT1/cmr/m/n/12 MY RE-SULTS ARE A
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 470--470
+\OT1/cmr/m/n/12 SIG-NIF-I-CANT IM-PROVE-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 470--470
+\OT1/cmr/m/n/12 THE AAAAAAAAAAAART
+ []
 
 PGFPlots: reading {example-data.csv}
 
-Overfull \hbox (2.98914pt too wide) in paragraph at lines 483--484
+Underfull \hbox (badness 10000) in paragraph at lines 478--478
+[][][]|\OT1/cmr/m/n/12 Bonusta-belle (au-toma-tisch
+ []
+
+
+Overfull \hbox (232.05461pt too wide) in paragraph at lines 489--490
 [][] 
  []
 
 
-LaTeX Warning: Citation 'algorithmicx' on page 9 undefined on input line 492.
+Underfull \hbox (badness 1629) in paragraph at lines 495--497
+[][]\OT1/cmr/m/n/12 Algorithmus 1[][] ist Eu-k-lids Al-go-rith-mus
+ []
+
+
+LaTeX Warning: Citation 'algorithmicx' on page 8 undefined on input line 498.
 
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 497.
-Package cleveref Info: loaded `ngerman' language definitions on input line 514.
+put line 503.
 
-[9]
-Package cleveref Info: loaded `ngerman' language definitions on input line 514.
+Underfull \hbox (badness 1163) in paragraph at lines 506--507
+[]\OT1/cmr/m/n/12 Der gr^^?o^^Yte gemein-same Teiler
+ []
 
- [10 <./figures/thesis_defense.png>]
-Package cleveref Info: loaded `ngerman' language definitions on input line 514.
-
- [11]
+[8] [9 <./figures/thesis_defense.png>]
 chapter 4.
 
-LaTeX Warning: Empty bibliography on input line 523.
+LaTeX Warning: Empty bibliography on input line 529.
 
-[12
+[10
 
 
-] (vorlage_de.aux
-Package cleveref Info: loaded `ngerman' language definitions on input line 14.
-Package cleveref Info: loaded `ngerman' language definitions on input line 15.
-)
+
+] (vorlage_de.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2020/03/25>
@@ -1846,10 +2073,10 @@ Package logreq Info: Writing requests to 'vorlage_de.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 56145 strings out of 467510
- 1340220 string characters out of 5408795
- 2333730 words of memory out of 5000000
- 84566 multiletter control sequences out of 15000+600000
+ 56442 strings out of 467510
+ 1354118 string characters out of 5408795
+ 2361017 words of memory out of 5000000
+ 84851 multiletter control sequences out of 15000+600000
  646330 words of font info for 109 fonts, out of 8000000 for 9000
  1143 hyphenation exceptions out of 8191
  108i,13n,108p,11215b,2463s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1875,9 +2102,9 @@ pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users
 /da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
 <C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbo
 ls/msbm10.pfb>
-Output written on vorlage_de.pdf (12 pages, 321628 bytes).
+Output written on vorlage_de.pdf (10 pages, 326233 bytes).
 PDF statistics:
  271 PDF objects out of 1000 (max. 8388607)
- 53 named destinations out of 1000 (max. 500000)
+ 51 named destinations out of 1000 (max. 500000)
  111 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -60,6 +60,7 @@
       <file>alphabetic.bbx</file>
       <file>alphabetic.cbx</file>
       <file>biblatex.cfg</file>
+      <file>english.lbx</file>
       <file>german.lbx</file>
       <file>ngerman.lbx</file>
     </requires>

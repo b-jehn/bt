@@ -1,7 +1,7 @@
-\documentclass[a4paper,titlepage,onecolumn,oneside,12pt,ngerman,titlepage=firstiscover]{scrbook}
+\documentclass[a4paper,titlepage,twocolumn,oneside,12pt,ngerman,titlepage=firstiscover]{scrbook}
 % Um während der Entwurfsphase weniger leere Seiten zu haben, kann man oben "twoside" durch "oneside" ersetzen.
 
-\usepackage[ngerman]{babel} % language
+\usepackage[english]{babel} % language
 \usepackage[utf8]{inputenc} % encoding
 \usepackage{amsmath,amsfonts,amssymb,amsthm} % mathematical expression, symbols, fonts, and the whole theorem environment engine
 \usepackage{xcolor,graphicx} % graphics and colorings
@@ -37,8 +37,8 @@
 
 % please fill in the following data:
 \newcommand{\mytitle}{My cool title}
-\newcommand{\myname}{Max Muster}
-\newcommand{\thesisType}{Bachelorarbeit/Masterarbeit}
+\newcommand{\myname}{Bjarne David Jehn}
+\newcommand{\thesisType}{Bachelor's Thesis}
 
 \usepackage[pdfdisplaydoctitle,menucolor=orange!40!black,filecolor=magenta!40!black,urlcolor=blue!40!black,linkcolor=red!40!black,citecolor=green!40!black,colorlinks]{hyperref}
 \hypersetup{pdftitle={\mytitle}, pdfauthor={\myname}}
@@ -139,9 +139,11 @@
 \titlehead{
 \begin{minipage}{0.8\textwidth}
 \textbf{Technische Universität Berlin}\\
-Fakultät IV: Elektrotechnik und Informatik\\
-Institut für Softwaretechnik und Theoretische Informatik\\
-Algorithmik und Komplexitätstheorie (AKT)
+Faculty IV: Electrical Engineering and Computer Science\\
+\textbf{Freie Universität Berlin}\\
+Department of Mathematics and Computer Science\\
+Algorithmic Bioinformatics\\
+\todo[inline]{welche uni angeben, welche reihenfolge..?}
 \end{minipage}
 \hfill
 \begin{minipage}{0.16\textwidth}
@@ -150,20 +152,20 @@ Algorithmik und Komplexitätstheorie (AKT)
 \vspace{3.5cm}
 }
 
-\title{Title}
+\title{\mytitle}
 \subtitle{(Subtitle)\vspace*{3cm}}
 
 \author{
 	\Large{\textbf{\thesisType{}}}\vspace{0.1cm}\\
-	\textbf{\large{von Mira Musterfrau}}\vspace{0.1cm}\\
-	\large{zur Erlangung des Grades \glqq Master of Science\grqq~(M. Sc.)}\\
-	\large{im Studiengang Computer Science (Informatik)}
+	\textbf{\large{by \myname}}\vspace{0.1cm}\\
+	\large{to obtain the degree of \grqq Bachelor of Science\grqq~(B. Sc.)}\\
+	\large{in the Computer Science degree studies (Informatik)}
 	\vspace*{3cm}\\
 		\small{
 			\begin{tabular}{rl}
-			    Erstgutachter:& Prof. Dr. Rolf Niedermeier\\
-			    \hspace{2cm}Zweitgutachter:& Prof. Dr. Paulchen Panther\\
-			    Betreuer:& A. Andersen, B. Betreuer, Prof. Dr. Rolf Niedermeier
+			    First Reviewer:& Prof. Dr. Knut Reinert\\
+			    \hspace{2cm}Second Reviewer:& Prof. Dr. Stephan Kreutzer\\
+			    Supervisor:& Jonas Schulte-Mattler
 			\end{tabular}
 		}
 	\vspace*{1cm}
@@ -172,40 +174,44 @@ Algorithmik und Komplexitätstheorie (AKT)
 \date{} % only month and year
 \begin{document}
 
-\selectlanguage{ngerman}
+\selectlanguage{english}
 
 \maketitle
 
 \cleardoublepage
 
-\todo[inline]{Die Arbeit muss eine eidesstattliche Versicherung beinhalten.
-Aktuelle Information dazu sollten in der Studien- bzw.\ Pr\"ufungsordung eingeholt werden.
-Ein Beispiel f\"ur eine eidesstattliche Versicherung ist wie folgt.}
-
+\section*{Declaration of Authorship}
 \noindent
-Hiermit erkl\"are ich, dass ich die vorliegende Arbeit selbstständig und eigenhändig sowie ohne unerlaubte fremde Hilfe und ausschließlich unter Verwendung der aufgef\"uhrten Quellen und Hilfsmittel angefertigt habe.
+I hereby declare that the thesis submitted is my own, unaided work, completed without any external help. Only
+the sources and resources listed were used. All passages taken from the sources and aids used, either
+unchanged or paraphrased, have been marked as such.\\
 
-\vspace{1cm}
-\noindent
-Die selbstst\"andige und eigenh\"andige Ausfertigung versichert an Eides statt\\
-\vspace{1cm}\\
-\begin{tabular}[h]{lll} Berlin, den & \underline{\hspace{5cm}} & \underline{\hspace{7cm}}\\
+Where generative AI tools were used, I have indicated the product name, manufacturer, the software version
+used, as well as the respective purpose (e.g. checking and improving language in the texts, systematic
+research). I am fully responsible for the selection, adoption, and all results of the AI-generated output I use.\\
+
+I have taken note of the Principles for Ensuring Good Research Practice at TU Berlin dated 15 February 2023.
+\url{https://www.static.tu.berlin/fileadmin/www/10002457/K3-AMBl/Amtsblatt\_2023/Amtliches\_Mitteilungsblatt\_Nr.\_16\_vom\_30.05.2023.pdf}\\
+
+I further declare that I have not submitted the thesis in the same or similar form to any other examination
+authority.\\
+
+\begin{tabular}[h]{lll} Berlin, & \underline{\hspace{5cm}} & \underline{\hspace{7cm}}\\
  & \small{Datum} & \small{Unterschrift}
 \end{tabular}
 \normalsize
 \newpage
 
 \chapter*{}\vspace{-4\baselineskip}
-\section*{Zusammenfassung}
-Zusammenfassung.
+\section*{Abstract}
 
 \newpage
 \tableofcontents
 \newpage
 
-\chapter{Einführung}\label{chap:einfuehrung}
+\chapter{Introduction}\label{chap:introduction}
 
-
+%wofür das alles?
 \newcommand{\vehiclecaps}{B}
 \newcommand{\vehiclecap}{\beta}
 \newcommand{\vehicetype}{v}
@@ -511,7 +517,7 @@ Für mehr Informationen zu Pseudocode in \LaTeX, empfiehlt sich ein Blick in die
 \end{algorithm}
 
 
-\chapter{Fazit}
+\chapter{Conclusion}
 
 Ein Fazit is keine Zusammenfassung.
 Grob sollten hier erzielte Ergebnisse diskutiert und ein Ausblick für weitere Forschung gegeben werden.

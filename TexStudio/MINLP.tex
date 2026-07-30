@@ -80,18 +80,15 @@ $\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$.\\
 $\selectort_t$ should be $1$ exactly when the optimal threshold is $t$.\\
 The selectors for $m$ and $t$ must be binary and mutually exclusive:
 \begin{align*}
-	&\selectorm_m \in {0,1} ~|~ \forall m \in \possibleMinimizerLength \\
-	&\selectort_t \in {0,1} ~|~ \forall t \in \possibleThresholds \\
+	&\selectorm_m \in {0,1} \mid \forall m \in \possibleMinimizerLength \\
+	&\selectort_t \in {0,1} \mid \forall t \in \possibleThresholds \\
 	&\sum_{m \in \possibleMinimizerLength} \selectorm_m = 1 \\
 	&\sum_{t \in \possibleThresholds} \selectort_t = 1
 \end{align*}
 
 For a fixed minimizer length $m$ and threshold $t$ let $\percKmersEmpiric(m, t)$ be the empirically determined percentage of k-mers $q$ that have a minimizer with $f(m(q)) < t$.\\
 We can then model $\percKmers$ with:
-\begin{align*}
-	&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
-	\implies &\percKmers - \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)= 0
-\end{align*}
+\[ \percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right) \]
 $\minimizerLength$ and $\threshold$ can then be determined by:
 \begin{align*}
 	\minimizerLength &= \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
@@ -106,9 +103,9 @@ MINIMIZE
 \end{align*}
 SUBJECT TO
 \begin{align*}
-		&\percKmers - \sum_{m \in M} \left( \selectorm_m \sum_{t \in T} \percKmersEmpiric(m, t) * \selectort_t\right) = 0\\
-		&\selectorm_m \in {0,1} ~|~ \forall m \in M \\
-		&\selectort_t \in {0,1} ~|~ \forall t \in T \\
+		&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
+		&\selectorm_m \in {0,1} \mid \forall m \in M \\
+		&\selectort_t \in {0,1} \mid \forall t \in T \\
 		&\sum_{m \in M} \selectorm_m = 1 \\
 		&\sum_{t \in T} \selectort_t = 1 \\
 		&\minimizerLength = \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
@@ -152,7 +149,7 @@ The bits per k-mer required for the hash table can thus be modeled by
 \section*{Several Levels}
 Let
 \begin{table}
-	\caption{Constants and Variables for One Level}
+	\caption{Constants and Variables for Several Level}
 	\begin{tabular}{|| l | l ||}
 		\hline
 		Constants	&  \\
@@ -191,62 +188,32 @@ We can model the lookup time $\lookupTime$ as:
 
 Because $\minimizerLength^l$ and $\threshold^l$ can be different on every level $l$, a different set of binary selector variables $\selectorm^l_m$ and $\selectort^l$ is needed.\\
 The constraints for each level are the same as for one level:
+\[ \begin{array}{ll}
+	\selectorm_m^l \in {0,1} & \mid \forall (l,m) \in (\levels \times \possibleMinimizerLength) \\
+	\selectort_t^l \in {0,1} & \mid \forall (l,t) \in (\levels \times \threshold) \\
+	\sum_{m \in \possibleMinimizerLength} \selectorm_m^l = 1 & \mid \forall l \\
+	\sum_{t \in \possibleThresholds} \selectort_t^l = 1 & \mid \forall l
+\end{array} \]
+
+For every level $l$ $\percKmers^l, \minimizerLength^l$ and $\threshold^l$ can also be modeled analogously to having only one level:
 \begin{align*}
-	&\selectorm_m^l \in {0,1} ~|~ \forall (l,m) \in (\levels \times \possibleMinimizerLength) \\
-	&\selectort_t^l \in {0,1} ~|~ \forall (l,t) \in (\levels \times \threshold) \\
-	&\sum_{m \in \possibleMinimizerLength} \selectorm_m^l = 1 ~|~ \forall l \\
-	&\sum_{t \in \possibleThresholds} \selectort_t^l = 1 ~|~ \forall l
+	\percKmers^l &= \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m^l \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t^l\right) & \mid \forall l \in \levels\\
+	\minimizerLength^l &= \sum_{m \in \possibleMinimizerLength} \selectorm_m^l * m  & \mid \forall l \in \levels\\
+	\threshold^l &= \sum_{t \in \possibleThresholds} \selectort_t^l * t & \mid \forall l \in \levels
 \end{align*}
 
-\begin{tabular}{ l | l }
-	variable	& meaning \\
-	\hline
-	$\selectorm_m^\levelI$	& binary selector for minimizer length m in level i\\
-	$\selectort_t^\levelI$	& binary selector for threshold of t in level i\\
-	$\percKmersEmpiric^\levelI(m, t)$ &empirically estimated value for a k-mer with a minimizer \\
-				& of length m to have a frequency less than t \\
-	$M$			& Set of all minimizer length to be considered \\
-	$T$			& Set of thresholds to be considered \\
-\end{tabular}
-\\
-\\
-selectors for m and t must be binary amd mutually exclusive:
-\begin{align*}
-	\selectorm_m^\levelI &\in {0,1} ~|~ \forall m \in M \\
-	\selectort_t^\levelI &\in {0,1} ~|~ \forall t \in T \\
-	\sum_{m \in M} \selectorm_m^\levelI &= 1 \\
-	\sum_{t \in T} \selectort_t^\levelI &= 1 \\
-\end{align*}
-
-Without further constraints
 
 \subsection*{Space Consumption} \label{sec:space}
 
-Using Elias Fano Coding a bit vector of length $U$ with $n$ bits set to 1 can be encoded using $n \lceil log \frac{U}{n} \rceil + 3n$.\\
-\\
-Let $\noam$ be the number of appearing minimizers (minimizers with a frequency greater than zero).
+\section{Limitations}
+This approach of solving the constructed model has the advantage (\todo{over what}) of finding optimal results \todo{does it?}.\\
+However for large genomes, finding the empirical values $\percKmersEmpiric(m,t)$ becomes increasingly time consuming and needs a lot of RAM \todo{how much, why?}.\\
+\todo[inline]{paragraph/section about the complexity of finding the solution}\\
 
-\subsubsection*{Level 1}
-$R$ - Presence of k-mers:\\
-\textbf{probably not relevant}
-$R^\levelOne$ has length $4^{sm_m^\levelOne}$ and contains $p_M^\levelOne * \noam$ many 1s.\\
+For these reasons, an approach yielding a solution that is a certain approximation of the optimum but takes less time to find it could be of interest.\\
+An easy adaption  to speed up the search for empirical values would be to only sample part of the genome. By sampling sequences of length \todo{what length} at a large \todo{how lorge} number of random locations, the probability of choosing a bad representation becomes highly unlikely.\\
+By sampling only part of the genome, we can speed up the finding of empirical values by a factor of \todo{factor} / or even "get it down to a constant" (that is for a fixed number of sample locations - regardless of the genomes size. this however results in a growing error for larger genomes).\\
 
-\begin{align*}
-	s_R^\levelOne 
-	&= p_M^\levelOne * \noam \lceil log \frac{4^{sm_m^\levelOne}}{p_M^\levelOne * \noam} \rceil + 3 * p_M^\levelOne *  \noam\\
-	&= p_M^\levelOne * \noam \left( \lceil log \frac{4^{sm_m^\levelOne}}{p_M^\levelOne * \noam} \rceil + 3 \right)
-\end{align*}
-\\
-\\
-$S$ - Offset Boundaries:\\
-$S$ is a bit vector of length $|O| + 1$ and is \textbf{probably not relevant} for the optimization of $m$ and $t$.
-\\
-\\
-$O$ - Offsets:\\
-$O^\levelOne$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $^\leq t^\levelOne$ in $T$.\\
-\[s_O = log_2|T| * |O| = log_2|T| * \sum_{m=1}^{t^\levelOne} m * \text{(number of minimizers with frequenzy m)} \]
-Every minimizer of length $m$ covers an average of $\frac{k-m+2}{2}$ consecutive k-mers.\\
-\[bpk_O^\levelOne = \frac{2}{k-m^\levelOne+2} * p_K^\levelOne * log |T| \]
 
 
 \end{document}
