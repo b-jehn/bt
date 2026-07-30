@@ -1,12 +1,24 @@
 import subprocess
-T = "255"
+import os
 
-for m in range(26,32):
-    with open("stats_m" + str(m) + "_t" + T + ".csv", "w") as outfile:
+T = "255"
+genome = "homo_sapiens"
+
+# checking if the directory demo_folder 
+# exist or not.
+if not os.path.exists(genome):
+    
+    # if the demo_folder directory is not present 
+    # then create it.
+    os.makedirs(genome)
+
+for m in range(17,26):
+    print(f"writing {genome}/stats_m" + str(m) + "_t" + T + ".csv")
+    with open(f"{genome}/stats_m" + str(m) + "_t" + T + ".csv", "w") as outfile:
         subprocess.run(
             [
                 "../../rshash/build/test/ministats",
-                "-i", "../../rshash/DNA_datasets/Gadus_morhua.gadMor3.0.dna.toplevel.fa",
+                "-i", f"../../rshash/DNA_datasets/{genome}.fa",
                 "-k", "31",
                 "-m", str(m),
                 "-t", T,

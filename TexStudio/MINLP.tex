@@ -10,6 +10,8 @@
 
 \newcommand{\noam}{noam} %numberOfAppearingMinimizers
 
+\newcommand{\lookupTime}{T_{lookup}}
+
 \newcommand{\timeForCheckInR}{{T_R}}
 \newcommand{\timeForLookupInS}{{T_{SL}}}
 \newcommand{\timeForHashtable}{{T_H}}
@@ -23,13 +25,15 @@
 \newcommand{\minimizerLength}{\textbf{m}}
 \newcommand{\threshold}{\textbf{t}}
 
-\newcommand{\selectorm}{\textbf{sm}}
-\newcommand{\selectort}{\textbf{st}}
+\newcommand{\selectorm}{\mu}
+\newcommand{\selectort}{\tau}
 
-\newcommand{\levelI}{{L_i}}
-\newcommand{\levelOne}{{L_1}}
-\newcommand{\levelTwo}{{L_2}}
-\newcommand{\levelThree}{{L_3}}
+\newcommand{\levels}{\mathcal{L}}
+
+\newcommand{\levelI}{{l}}
+\newcommand{\levelOne}{1}
+\newcommand{\levelTwo}{2}
+\newcommand{\levelThree}{3}
 
 \begin{document}
 	
@@ -39,54 +43,50 @@
 
 
 \section*{One Level}
+As a first approach we model the runtime and space consumption for only one level.\\
+Let $\possibleMinimizerLength$ be the Set of all minimizer length and $\possibleThresholds$ the set of all thresholds to be considered.
 \subsection*{Runtime}
-As a first approach we model the runtime complexity for only one level.\\
-In the following we will use capital letters for constants and bold letters for variables.\\
-\\
-\begin{tabular}{ l | l }
-	constants	& meaning \\
+\begin{table}
+\caption{Constants and Variables for One Level}
+\begin{tabular}{|| l | l ||}
 	\hline
-	$\timeForCheckInR$		& time to check presence of a bit in vector R \\
-	$\timeForLookupInS$		& time to lookup a k-mer in vector S on level i \\
-	$\timeForHashtable$		& time to lookup a k-mer on level i \\
-	$\percKmersEmpiric(m, t)$ &empirically estimated value for a kmer with a minimizer \\
-	& of length m to have a frequency less than t \\
-	$\possibleMinimizerLength$			& Set of all minimizer lengths to be considered \\
-	$\possibleThresholds$			& Set of thresholds to be considered \\
+	Constants	&  \\
+	\hline
+	$\timeForLookupInS$		& time to lookup a k-mer in vector S \\
+	$\timeForHashtable$		& time to lookup a k-mer in the hash table \\
+	$\percKmersEmpiric(m, t)$ &empirically estimated value for a k-mer with a minimizer \\
+	& of length $m$ to have a frequency less than $t$ \\
 	\hline
 	\hline
-	variables	&  \\
+	Variables	&  \\
 	\hline
-	$\percKmers \in \left[0,1\right]$ & probability of a kmer to have a minimizer with frequency $\leq t$ \\
-	$\selectorm_m \in \left\{0, 1\right\}$	& binary selector for minimizer length m\\
-	$\selectort_t \in \left\{0, 1\right\}$	& binary selector for threshold of t\\
+	$\percKmers \in \left[0,1\right]$ & probability of a k-mer to have a minimizer with frequency $\leq t$ \\
+	$\selectorm_m \in \left\{0, 1\right\}$	& binary selector for every minimizer length $m \in \possibleMinimizerLength$\\
+	$\selectort_t \in \left\{0, 1\right\}$	& binary selector for every threshold $t \in \possibleThresholds$\\
+	\minimizerLength & optimal minimizer length\\
+	\threshold & optimal threshold\\
+	\hline 
 \end{tabular}\\
-\\
-For one level the lookup of a query with minimizer m of frequency f(m) would consist of checking the bitvector R in order to determin whether $1 \leq f(m) \leq threshold$. This will be the case for $\percKmers$ of the k-mers, which will then be followed by a lookup in S. If m does not appear at all or has a $f(m) > threshold$, a lookup in the hashtable will follow. The lookup time for one level can thus be modeled as:
+\end{table}
+
+To lookup a k-mer $q$ with minimizer $m(q)$ of frequency $f(m(q))$ on one level, first the bit vector $R$ is checked in order to determin whether $1 \leq f(m) \leq threshold$. This can be ignored when modeling the lookup runtime as this is practically not influenced by the parameters. \todo{reason}\\
+For $\percKmers$ of the k-mers, the corresponding bit in $R$ will be set, which results in a lookup in $S$. If $m(q)$ does not appear at all or has a $f(m(q)) > t$, a lookup in the hash table will follow. The lookup time $\lookupTime$ for one level can thus be modeled as:
 \begin{equation*}
-	\timeForCheckInR + \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
+	\lookupTime = \timeForLookupInS * \percKmers + \timeForHashtable * (1-\percKmers)
 \end{equation*}
-\\
-Let $\possibleMinimizerLength$ be the Set of all minimizer length and $\possibleThresholds$ the set of all thresholds to be considered.\\
+
 In order to determine $m$ and $t$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLength$ and $t \in \possibleThresholds$.\\
-$\selectorm_m = 
-	\begin{cases}
-		1 & \text{minimizer length is } m\\
-		0 & \text{otherwise}.
-	\end{cases}$\\
-$\selectort_t = 
-\begin{cases}
-	1 & \text{threshold is } t\\
-	0 & \text{otherwise}.
-\end{cases}$\\
-For a fixed minimizer length $m$ and threshold $t$ let $\percKmersEmpiric(m, t)$ be the empirically determined percentage of k-mers that have a minimizer with $frequency < t$.\\
-The selectors for m and t must be binary and mutually exclusive:
+$\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$.\\
+$\selectort_t$ should be $1$ exactly when the optimal threshold is $t$.\\
+The selectors for $m$ and $t$ must be binary and mutually exclusive:
 \begin{align*}
 	&\selectorm_m \in {0,1} ~|~ \forall m \in \possibleMinimizerLength \\
 	&\selectort_t \in {0,1} ~|~ \forall t \in \possibleThresholds \\
 	&\sum_{m \in \possibleMinimizerLength} \selectorm_m = 1 \\
 	&\sum_{t \in \possibleThresholds} \selectort_t = 1
 \end{align*}
+
+For a fixed minimizer length $m$ and threshold $t$ let $\percKmersEmpiric(m, t)$ be the empirically determined percentage of k-mers $q$ that have a minimizer with $f(m(q)) < t$.\\
 We can then model $\percKmers$ with:
 \begin{align*}
 	&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
@@ -102,7 +102,7 @@ The above results in the following MINLP (Mixed Integer Non Linear Program):\\
 \\
 MINIMIZE
 \begin{align*}
-	&\timeForCheckInR + \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
+	\lookupTime = \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
 \end{align*}
 SUBJECT TO
 \begin{align*}
@@ -117,79 +117,93 @@ SUBJECT TO
 \\
 For now we will assume that $\timeForLookupInS \approx 20ns$ and $\timeForHashtable \approx 40ns$.\\
 Solving this MINLP will result in a Solution where the $\selectorm_m$, $\selectort_t$ corresponding to the largest $m \in \possibleMinimizerLength$, $t \in \possibleThresholds$ will be set to one.\\
-This is as expected, since this leads to the highest possible $\percKmers$. This maximizes the k-mers found in the vector $S$ and thus minimizes the lookups in the (slower) Hashtable.\\
+This is as expected, since this leads to the highest possible $\percKmers$. This maximizes the k-mers found in the vector $S$ and thus minimizes the lookups in the (slower) hash table.\\
 \\
 However this also results in a high space consumption, because \todo{explain why}\\
 \\
 In order to take that into account, we have to add a constraint modeling the space consumption.\\
 
 \subsection*{Space Consumption}
-The space consumption of the Data Structure used by RSHash can be split into that of the Vectors $R$, $O$ and $S$ as well as the hashtable $H$.
+The space consumption of the Data Structure used by RSHash can be split into that of the Vectors $R$, $O$ and $S$ as well as the hash table $H$.
 
-\subsubsection*{Bitvectors $R$ and $S$}
+\subsubsection*{Bit Vectors $R$ and $S$}
 $R$ and $S$ can likely be disregarded when modeling the space consumption. \todo{explain why}
 
 \subsubsection*{Offsetvector $O$}
 $O$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $\leq t$ in $T$.\\
 \[s_O = log_2|T| * |O| = log_2|T| * \sum_{m=1}^{t} \minimizerLength * \text{(number of minimizers with frequenzy m)} \]
 Every minimizer of length $\minimizerLength$ covers an average of $\frac{k-\minimizerLength+2}{2}$ consecutive k-mers. We can thus model the bits per k-mer in $O$ as:\\
-\[bpk_O = \frac{2}{k-\minimizerLength+2} * \percKmers * log |T| \]
+\[bpk_O = \percKmers * \frac{2}{k-\minimizerLength+2} * log |T| \]
 
-\subsubsection*{Hashtable $H$}
-$H$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $> t$ in $T$.\\
-However $H$ also contains a number of empty buckets. \todo{reason}\\
-For a hashtable with $b$ buckets containing $n$ elements, the load factor $\alpha$ is defined as:
-\[\alpha = \frac{n}{b}\].\\
-That means that for every entry in the hashtable, there must be $\frac{1-\alpha}{\alpha}$ many empty buckets.\\
-Using this we can model the bits per k-mer in $H$ as:\\
-\[bpk_H = (\alpha + \frac{1-\alpha}{\alpha}) * \frac{2}{k-\minimizerLength+2} * (1-\percKmers) * log |T| \]
+\subsubsection*{Hash table $H$}
+For $1-\percKmers$ of the k-mers $q$ in $T$ $H$ contains an entry $(key:m(q), value:offset(q))$\\
+Each entry has size $size(key) + size(value) = 64 + log |T|$.\\
+The bits per k-mer required for the hash table can thus be modeled by
+\[ bpk_H = (1-\percKmers) * \frac{2}{k-\minimizerLength+2} * (64 + log|T|)\]
+%However $H$ also contains a number of empty buckets requiring the same amount of space. \todo{reason}\\
+%For a hash table with $b$ buckets containing $n$ elements, the load factor $\alpha$ is defined as:
+%\[\alpha = \frac{n}{b}\].\\
+%That means that for every entry in the hash table, there must be $\frac{1-\alpha}{\alpha}$ many empty buckets.\\
+%Using this we can model the bits per k-mer in $H$ as:\\
+%\[bpk_H = (\alpha + \frac{1-\alpha}{\alpha}) * \frac{2}{k-\minimizerLength+2} * (1-\percKmers) * log |T| \]
 
 
 \newpage
 \section*{Several Levels}
+Let
+\begin{table}
+	\caption{Constants and Variables for One Level}
+	\begin{tabular}{|| l | l ||}
+		\hline
+		Constants	&  \\
+		\hline
+		$\timeForLookupInS$		& time to lookup a k-mer in vector S\\
+		$\timeForHashtable$		& time to lookup a k-mer in the hash table \\
+		$\percKmersEmpiric(m, t)$ &empirically estimated value for a k-mer with a minimizer \\
+		& of length $m$ to have a frequency less than $t$ \\
+		\hline
+		\hline
+		Variables	&  \\
+		\hline
+		$\percKmers^l \in \left[0,1\right]$ & probability of a k-mer to have a minimizer with frequency $\leq t$ on level $l$ \\
+		$\selectorm_m^l \in \left\{0, 1\right\}$	& binary selector for every minimizer length $m \in \possibleMinimizerLength$ on level $l$\\
+		$\selectort_t^l \in \left\{0, 1\right\}$	& binary selector for every threshold $t \in \possibleThresholds$ on level $l$\\
+		$\minimizerLength^l$ & optimal minimizer length on level $l$\\
+		$\threshold^l$ & optimal threshold on level $l$\\
+		\hline 
+	\end{tabular}\\
+\end{table}
 \subsection*{Runtime}
-minimize: nicht linear!\\
-
-
+RSHash uses several levels, to make use of the skewniss of minimizer distribution.\\
+Each level $l$ has a pair of parameters $\minimizerLength^l, \threshold^l$ which result in a probability $\percKmers^l$ of a k-mer belonging to level $l$.\\
+For now, we still assume, that the time for a lookup in the vectors $R,S$ as well as the hash table $H$ are independent of the parameters $\minimizerLength^l, \threshold^l$. \todo{reason}\\
+When using several levels, the probability of a k-mer belonging to a higher level is dependent on the probability of k-mers belonging to the levels below.\\
+We can model the lookup time $\lookupTime$ as:
 \[
 \begin{array}{llll}
-	\timeForCheckInR^\levelOne 	&+ \percKmers^\levelOne*\timeForLookupInS^\levelOne 				&							&\\
-			&+ (1-\percKmers^\levelOne) * \Bigg( \timeForCheckInR^\levelTwo &+ \percKmers^\levelTwo*\timeForLookupInS^\levelTwo 				&\\
-			&							&+ (1-\percKmers^\levelTwo) * \Big( \timeForCheckInR^\levelThree	&+ \percKmers^\levelThree*\timeForLookupInS^\levelThree \\
-			&							&							&+ (1-\percKmers^\levelThree) * \timeForHashtable \Big) \Bigg)
+	\lookupTime =
+	&\percKmers^\levelOne*\timeForLookupInS\\
+	&+ (1-\percKmers^\levelOne) * \Bigg(&\percKmers^\levelTwo*\timeForLookupInS\\
+			&&+(1-\percKmers^\levelTwo) * \Big( &+ \percKmers^\levelThree*\timeForLookupInS\\
+				&&&+ (1-\percKmers^\levelThree) * \timeForHashtable \Big) \Bigg)
 \end{array}
 \]
-\\
-TODO: linearise
-\\
-\\
-\begin{tabular}{ l | l }
-	variable	& meaning \\
-	\hline
-	$\percKmers^\levelI$		& probability of a kmer belonging to level i \\
-	$\timeForCheckInR^\levelI$		& time to check presence of a bit in vector R of level i \\
-	$t_l^\levelI$		& time to lookup a k-mer on level i \\
-\end{tabular}
-\\
-\\
 
-We can model $\percKmers$ for multiple levels with:
+Because $\minimizerLength^l$ and $\threshold^l$ can be different on every level $l$, a different set of binary selector variables $\selectorm^l_m$ and $\selectort^l$ is needed.\\
+The constraints for each level are the same as for one level:
 \begin{align*}
-	&\percKmers^\levelI = \sum_{m \in M} \left( \selectorm_m^\levelI \sum_{t \in T} \percKmersEmpiric^\levelI(m, t) * \selectort_t^\levelI\right)\\
-	&\percKmers^\levelI - \sum_{m \in M} \left( \selectorm_m^\levelI \sum_{t \in T} \percKmersEmpiric^\levelI(m, t) * \selectort_t^\levelI\right)= 0
+	&\selectorm_m^l \in {0,1} ~|~ \forall (l,m) \in (\levels \times \possibleMinimizerLength) \\
+	&\selectort_t^l \in {0,1} ~|~ \forall (l,t) \in (\levels \times \threshold) \\
+	&\sum_{m \in \possibleMinimizerLength} \selectorm_m^l = 1 ~|~ \forall l \\
+	&\sum_{t \in \possibleThresholds} \selectort_t^l = 1 ~|~ \forall l
 \end{align*}
-\\
-\\
-TODO: linearise
-\\
-\\
 
 \begin{tabular}{ l | l }
 	variable	& meaning \\
 	\hline
 	$\selectorm_m^\levelI$	& binary selector for minimizer length m in level i\\
 	$\selectort_t^\levelI$	& binary selector for threshold of t in level i\\
-	$\percKmersEmpiric^\levelI(m, t)$ &empirically estimated value for a kmer with a minimizer \\
+	$\percKmersEmpiric^\levelI(m, t)$ &empirically estimated value for a k-mer with a minimizer \\
 				& of length m to have a frequency less than t \\
 	$M$			& Set of all minimizer length to be considered \\
 	$T$			& Set of thresholds to be considered \\
@@ -208,7 +222,7 @@ Without further constraints
 
 \subsection*{Space Consumption} \label{sec:space}
 
-Using Elias Fano Coding a Bitvector of length $U$ with $n$ bits set to 1 can be encoded using $n \lceil log \frac{U}{n} \rceil + 3n$.\\
+Using Elias Fano Coding a bit vector of length $U$ with $n$ bits set to 1 can be encoded using $n \lceil log \frac{U}{n} \rceil + 3n$.\\
 \\
 Let $\noam$ be the number of appearing minimizers (minimizers with a frequency greater than zero).
 
@@ -225,7 +239,7 @@ $R^\levelOne$ has length $4^{sm_m^\levelOne}$ and contains $p_M^\levelOne * \noa
 \\
 \\
 $S$ - Offset Boundaries:\\
-$S$ is a bitvector of length $|O| + 1$ and is \textbf{probably not relevant} for the optimization of $m$ and $t$.
+$S$ is a bit vector of length $|O| + 1$ and is \textbf{probably not relevant} for the optimization of $m$ and $t$.
 \\
 \\
 $O$ - Offsets:\\

@@ -3,6 +3,7 @@ import math
 import csv
 import sys
 
+genome = "cod"
 K = 31  #kmer length
 T = 255 #max threshold
 TEXT_LENGTH = 681137419
@@ -27,7 +28,7 @@ the empirically measured percentage of
 """ 
 P_Kempirical = [[] for m in minimizer_lengths] 
 for i, m in enumerate(minimizer_lengths):
-    reader = csv.reader(open(f'./minimizer_stats/stats_m{m}_t{T}.csv'), delimiter=',')
+    reader = csv.reader(open(f'./minimizer_stats/{genome}/stats_m{m}_t{T}.csv'), delimiter=',')
     for t, row in enumerate(reader):
         if t not in thresholds:
             continue
@@ -71,11 +72,11 @@ scip.addCons(m - quicksum(sm * m for sm, m in zip(sm_vars, minimizer_lengths)) =
 scip.addCons(t - quicksum(st * t for st, t in zip(st_vars, thresholds)) == 0, name="get_t")         #determin t
 
 #bits per k-mer in O
-scip.addCons(bpk_O - (2/(K-m+2) * p_K * log_text_length) == 0)
+scip.addCons(bpk_O - (p_K * 2/(K-m+2) * log_text_length) == 0)
 scip.addCons(bpk_O <= 10)
 
 #bits per k-mer in H
-scip.addCons(bpk_H - ((LOAD_FACTOR + (1-LOAD_FACTOR)/LOAD_FACTOR) * 2/(K-m+2) * (1-p_K) * log_text_length) == 0)
+scip.addCons(bpk_H - ((1-p_K) * 2/(K-m+2) * (64+log_text_length)) == 0)
 scip.addCons(bpk_H <= 10)
 
 #FIND solution
