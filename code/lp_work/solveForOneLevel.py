@@ -1,4 +1,4 @@
-from pyscipopt import Model, quicksum
+from pyscipopt import Model, quicksum, quickprod
 import math
 import csv
 import sys
@@ -12,9 +12,9 @@ LOAD_FACTOR = 0.75
 
 T_SL = 2    #time for lookup in S
 T_H = 1     #time for lookup in hashtable
-LEVELS = 1
 
-minimizer_lengths = range(5,25)
+levels = 1
+minimizer_lengths = range(5,20)
 thresholds = [2**i for i in range(1,8)]
 
 if thresholds[-1] >= T:
@@ -36,62 +36,78 @@ for i, m in enumerate(minimizer_lengths):
         
 print(P_Kempirical)
 
-scip = Model("Level1")  # scip name is optional
+scip = Model("Level")  # scip name is optional
 
 #variables
-p_K = scip.addVar("p_K")    #percentage of kmers that have minimizers of length m with a frequency < t
-m = scip.addVar("m")        #minimizer length
-t = scip.addVar("t")        #threshold
-bpk_O = scip.addVar("bpk_O")  #bits per kmer in O
-bpk_H = scip.addVar("bpk_H")  #bits per kmer in O
+runtime = scip.addVar("runtime")
+bpk_total = scip.addVar("bpk_total")
+p_K_vars = [scip.addVar(f"p_K_{l}") for l in range(levels)]     #percentage of kmers that have minimizers of length m with a frequency < t for each level
+m_vars = [scip.addVar(f"m_{l}") for l in range(levels)]         #minimizer length on each level
+t_vars = [scip.addVar(f"t_{l}") for l in range(levels)]         #threshold on each level
+bpk_O_vars = [scip.addVar(f"bpk_O_{l}") for l in range(levels)] #bits per kmer in O on each level
+bpk_O = scip.addVar(f"bpk_O")
+bpk_H = scip.addVar(f"bpk_H")                                   #bits per kmer in H
 
-sm_vars = [scip.addVar(vtype='B', name=f"sm_{m}") for m in minimizer_lengths]   #binary selectors for m
-st_vars = [scip.addVar(vtype='B', name=f"st_{t}") for t in thresholds]          #binary selectors for t
 
-"""
-sm = [[None for i in range(len(minimizer_lengths))] for i in range(LEVELS)]
-st = [[None for i in range(len(thresholds))] for i in range(LEVELS)]
-for l in range(LEVELS):
-    for i, m in enumerate(minimizer_lengths):
-        sm[l][i] = scip.addVar(vtype='B', name=f"sm_L{l}_m{m}")
-        
-    for i, t in enumerate(thresholds):
-        st[l][i] = scip.addVar(vtype='B', name=f"st_L{l}_t{t}")
-"""
+sm_vars = [[scip.addVar(vtype='B', name=f"sm_{m}_{l}") for m in minimizer_lengths] for l in range(levels)] #binary selectors for m
+st_vars = [[scip.addVar(vtype='B', name=f"st_{t}") for t in thresholds] for l in range(levels)]            #binary selectors for t
 
 #OBJECTIVE
-scip.setObjective(T_SL * p_K + T_H * (1 - p_K), sense="minimize")   #runtime objective
-
+scip.setObjective(runtime, sense="minimize")   #runtime objective
 #CONSTRAINTS
-scip.addCons(p_K - quicksum(sm * quicksum((st * P_Kempirical[i][j]) for j, st in enumerate(st_vars)) for i, sm in enumerate(sm_vars)) == 0)
-#find m and t
-scip.addCons(quicksum(sm for sm in sm_vars) == 1, name="sm_mutually_exclusive")     #mutually exclusive selectors for m
-scip.addCons(quicksum(st for st in st_vars) == 1, name="st__mutually_exclusive")    #mutually exclusive selectors for t
-#get m and t
-scip.addCons(m - quicksum(sm * m for sm, m in zip(sm_vars, minimizer_lengths)) == 0, name="get_m")  #determin m
-scip.addCons(t - quicksum(st * t for st, t in zip(st_vars, thresholds)) == 0, name="get_t")         #determin t
+#runtime constraint
+#recursivly build the constraint which is layerd level by level
+remaining_time = T_H
+for p_K in reversed(p_K_vars[:levels]):
+    remaining_time = p_K * T_SL + (1 - p_K) * remaining_time
 
-#bits per k-mer in O
-scip.addCons(bpk_O - (p_K * 2/(K-m+2) * log_text_length) == 0)
-scip.addCons(bpk_O <= 10)
+scip.addCons(runtime - remaining_time == 0)
+
+for l in range(levels):
+    #determine p_K_l
+    scip.addCons(p_K_vars[l] - quicksum(sm * quicksum((st * P_Kempirical[i][j]) for j, st in enumerate(st_vars[l])) for i, sm in enumerate(sm_vars[l])) == 0)
+    #find m and t
+    scip.addCons(quicksum(sm for sm in sm_vars[l]) == 1, name=f"sm_mutually_exclusive_{l}")     #mutually exclusive selectors for m
+    scip.addCons(quicksum(st for st in st_vars[l]) == 1, name=f"st__mutually_exclusive_{l}")    #mutually exclusive selectors for t
+    #get m and t
+    scip.addCons(m_vars[l] - quicksum(sm * m for sm, m in zip(sm_vars[l], minimizer_lengths)) == 0, name=f"get_m_{l}")  #determin m
+    scip.addCons(t_vars[l] - quicksum(st * t for st, t in zip(st_vars[l], thresholds)) == 0, name=f"get_t_{l}")         #determin t
+
+    #bits per k-mer in O
+    scip.addCons(bpk_O_vars[l] - (quickprod((1-p_K_vars[i]) * 2/(K-m_vars[i]+2) for i in range(l)) * p_K_vars[l] * log_text_length) == 0)
+
+scip.addCons(bpk_O - quicksum(bpk_O_vars[l] for l in range(levels)) == 0)
 
 #bits per k-mer in H
-scip.addCons(bpk_H - ((1-p_K) * 2/(K-m+2) * (64+log_text_length)) == 0)
-scip.addCons(bpk_H <= 10)
+scip.addCons(bpk_H - (quickprod(((1-p_K_vars[l])) for l in range(levels)) * (64+log_text_length)) == 0)
+scip.addCons(bpk_total - (bpk_O + bpk_H) == 0)
+scip.addCons(bpk_total <= 39)
 
 #FIND solution
 scip.optimize()
 sol = scip.getBestSol()
 
-print(f"m: {format(sol[m])}")
-print(f"t: {format(sol[t])}\n")
-
-print(f"p_K: {format(sol[p_K])}")
-print(f"bpk_O: {format(sol[bpk_O])}")
-print(f"bpk_H: {format(sol[bpk_H])}\n")
-
-for i, m in enumerate(minimizer_lengths):
-    print(f"m_{m}: {format(sol[sm_vars[i]])}")
-for i, t in enumerate(thresholds):
-    print(f"t_{t}: {format(sol[st_vars[i]])}")
+for l in range(levels):
+    print(f"level {l}:")
+    for i, m in enumerate(minimizer_lengths):
+        print(f"m_{m}_{l}: {format(sol[sm_vars[l][i]])}")
+    for i, t in enumerate(thresholds):
+        print(f"t_{t}_{l}: {format(sol[st_vars[l][i]])}")
+    print("")
+    
+print("found solution:")
+for l in range(levels):
+    print(f"m_{l}: {format(sol[m_vars[l]])}")
+print()
+for l in range(levels):
+    print(f"t_{l}: {format(sol[t_vars[l]])}") 
+print() 
+for l in range(levels):  
+    print(f"p_K_{l}: {format(sol[p_K_vars[l]])}")
+print()
+for l in range(levels):
+    print(f"bpk_O_{l}: {format(sol[bpk_O_vars[l]])}")
+print(f"bpk_H: {format(sol[bpk_H])}")
+print(f"runtime: {format(sol[runtime])}")
+print(f"bpk_total: {format(sol[bpk_total])}")
     
