@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  11 AUG 2026 16:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.7.8)  11 AUG 2026 19:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1998,6 +1998,10 @@ Underfull \hbox (badness 1412) in paragraph at lines 18--20
  []
 
 
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
 LaTeX Warning: Marginpar on page 11 moved.
 
 
@@ -2038,7 +2042,10 @@ Underfull \hbox (badness 10000) in paragraph at lines 28--32
 
  []
 
-[11
+
+Underfull \vbox (badness 8170) has occurred while \output is active []
+
+ [11
 
 
 ])
@@ -2251,11 +2258,11 @@ Package logreq Info: Writing requests to 'thesis.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 56826 strings out of 467510
- 1362518 string characters out of 5408795
- 2378267 words of memory out of 5000000
- 85183 multiletter control sequences out of 15000+600000
- 648198 words of font info for 116 fonts, out of 8000000 for 9000
+ 56821 strings out of 467510
+ 1362439 string characters out of 5408795
+ 2377261 words of memory out of 5000000
+ 85178 multiletter control sequences out of 15000+600000
+ 646951 words of font info for 111 fonts, out of 8000000 for 9000
  1143 hyphenation exceptions out of 8191
  108i,13n,108p,11232b,2463s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
@@ -2282,7 +2289,7 @@ a200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C
 10.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
 s/cm/cmtt12.pfb><C:/Users/da200/AppData/Local/Programs/MiKTeX/fonts/type1/publi
 c/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (16 pages, 389594 bytes).
+Output written on thesis.pdf (16 pages, 389784 bytes).
 PDF statistics:
  344 PDF objects out of 1000 (max. 8388607)
  81 named destinations out of 1000 (max. 500000)
