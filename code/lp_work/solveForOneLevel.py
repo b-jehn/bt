@@ -13,9 +13,9 @@ LOAD_FACTOR = 0.75
 T_SL = 2    #time for lookup in S
 T_H = 1     #time for lookup in hashtable
 
-levels = 1
+levels = 3
 minimizer_lengths = range(5,20)
-thresholds = [2**i for i in range(1,8)]
+thresholds = [2**i for i in range(1,7)]
 
 if thresholds[-1] >= T:
     sys.exit(f"maximum threshold t: {thresholds[-1]} has to be smaller than T: {T}")
@@ -81,7 +81,7 @@ scip.addCons(bpk_O - quicksum(bpk_O_vars[l] for l in range(levels)) == 0)
 #bits per k-mer in H
 scip.addCons(bpk_H - (quickprod(((1-p_K_vars[l])) for l in range(levels)) * (64+log_text_length)) == 0)
 scip.addCons(bpk_total - (bpk_O + bpk_H) == 0)
-scip.addCons(bpk_total <= 39)
+scip.addCons(bpk_total <= 5)
 
 #FIND solution
 scip.optimize()
