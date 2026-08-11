@@ -1,0 +1,34 @@
+\documentclass[../thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Subsampling}
+\section*{Motivation}
+The time for processing a genome in order to find the minimizer distribution $\percKmers(m,t)$ for possible minimizer lengths $m \in \possibleMinimizerLength$ and thresholds $t \in \possibleThresholds$ is directly proportional to the size of the genome.\\
+For large genomes, this processing can become the dominating factor when searching for optimal parameters using the \nameref{chap:minlp} approach. In order to speed up the search for the empirical values, we introduce a subsampling method.
+
+\section*{Subsampling Method}
+Instead of calculating the distribution over the full genome, we sample $\numberOfSamples$ sequences of length $\lengthOfSamples \geq k$ at random positions in the genome.\\
+\todo[inline]{how to handle overlapping samples}
+
+\section*{Time Complexity of Finding the Minimizer Distributions}
+\todo[inline]{genaue zeitliche abhängigkeit 1. verstehen und 2. aufschreiben}
+
+\section*{Time Complexity using Subsampling}
+By applying the proposed subsampling strategy, the original genome $\genomeText$ of length $|\genomeText|$ is reduced to the subsampled text $\sampledText$ of length $|\sampledText| = \numberOfSamples * \lengthOfSamples$. This means a reduction in size by a factor of $\frac{|\genomeText|}{|\sampledText|}$.\todo{assuming no overlaps}\\
+Depending on the choice of $\numberOfSamples$ and $\lengthOfSamples$ this results in a speedup of the processing time by a factor of $ $\todo{factor} or even a constant processing time $ $\todo{time} when both parameters are chosen as a constand regardless of $|\genomeText|$ (this however should result in a growing error for larger genomes).
+
+\section*{Error Analysis}
+
+\section*{Choosing $\lengthOfSamples$}
+The length $\lengthOfSamples$ has to be at least $k$. 
+\todo[inline]{wenn $l > k$ ist, überlappen sich mehrere kmere an den gesampleten stellen. ich verstehe noch nicht, warum genau dass von vorteil ist.\\ Ist es für die Konstruktion der Burrow-Wheeler-Transformation relevant, bze. findet diese hier überhaupt statt?\\ oder lässt sich ein streaming case für ministats implementieren/ ist dies bereits so umgesetzt?}
+
+\section*{Choosing $\numberOfSamples$}
+Choosing a constant $\numberOfSamples$ would result in a processing time that would no longer be dependent of the genomes length $|\genomeText|$, as the sampled text would have constant size $\numberOfSamples * \lengthOfSamples$\todo{assuming no overlaps}. For large genomes, the percentage $\frac{|\sampledText|}{|\genomeText|}$ of the genome represented in the subsample can become arbitrarily small, resulting in growing error.\\
+If instead $\numberOfSamples$ is chosen relative to $|\genomeText|$, $\frac{|\sampledText|}{|\genomeText|}$ will have a constant value independent of the genomes size. Even though this means, that the time needed, in order to find the minimizer distributions would still be proportional to the genomes size, this should be the preferred option as it results in a bounded error of the approximation.
+\\
+For a large enough $\numberOfSamples$, the probability of choosing a bad representation becomes highly unlikely.\todo{zu vage, begründen}\\
+
+
+\end{document}
