@@ -1,0 +1,6 @@
+\babel@toc {english}{}\relax 
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\numberline {1}MINLP Modeling}{5}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Minimizer Distribution}{9}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Subsampling}{10}{chapter.3}%
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

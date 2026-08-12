@@ -1,0 +1,25 @@
+\chapter{Minimizer Distribution}
+The \nameref{chap:minlp} only works, if the values $\percKmers(m,t)$ are known for every $(m,t) \in \possibleMinimizerLength \times \possibleThresholds$ for the input sequence.
+\section*{Determining the Distribution}
+The code to find the minimizer distribution for a given $sequence, k, \minimizerLength$ and $\threshold$ follows the following steps:\\
+stats:\\
+\begin{enumerate}
+	\item $count_minimizers$:
+		\begin{enumerate}
+			\item set $kmers \leftarrow |sequence|-k+1$
+			\item parse every kmer in the $sequence$ and add all minimizers to a vector $minimizers$ \todo{Zeile 48-55: verstehe ich es richtig, dass in der schleife in Zeile 52 jeder minimizer nur einmal zum vektor hinzugefügt wird, auch wenn er mehrere kmere abdeckt?}
+			\item sort $minimizers$
+			\item iterate over the sorted vector and
+			\begin{itemize}
+				\item count the occurences of each minimizer
+				\item add all unfrequent minimizers to a new vector $unfrq_minimizers$
+				\item store their occurences in the vector $counts$ where $counts[i]$ relates to $unfreq_minimizers[i]$
+				\item store the sum of all occurences in $no_skmers$
+			\end{itemize}
+		\end{enumerate}
+	\item $minimizers \leftarrow unfreq_minimizers$
+	\item $no_minimizers \leftarrow |minimizers|$
+	\item $r \leftarrow$ elias-fano-compressed bitvector of length $2^{2\minimizerLength}$ that contains 1s at those positions $i$, for which the minimizer of value $i$ is present in $minimizers$
+	\item $s \leftarrow$ corresponding vector $S$
+	\item weiter ab Zeile 161
+\end{enumerate}
