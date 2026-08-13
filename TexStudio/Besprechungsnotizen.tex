@@ -1,0 +1,159 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{ulem} %for \sout -> strike through text
+
+\title{BA Besprechungsnotizen}
+\author{Bjarne Jehn}
+\date{April 2026}
+
+\begin{document}
+	
+\maketitle
+%\section*{Besprechung am xx.xx.}
+%\subsection*{Nächste Schritte}
+%	\begin{itemize}
+%		\item 
+%	\end{itemize}
+%	\subsection*{Fragen}
+%	\begin{itemize}
+%		\item 
+%	\end{itemize}
+
+\maketitle
+\section*{Besprechung am 12.08.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+			\item $p_K$ muss gewichtet betrachtet werden - wenn viele kmere den gleichen minimizer teilen, dann gibt es viele vergleiche mit dem Text, welche teuer sind - deswegen $p_K * durschnittliche Frequenz von unfrequent minimizern * T_{SL}$, sonst unverändert durchschnittliche frequenz berechnen - durchschnittliche frequenz: $p_K(m,1) * 1 + (p_K(m,2)-p_K(m,1)) * 2 + ... $
+			\item für mehrere Level wird der lookup in R relevant, da dieser für höhere Level mehrfach stattfindet - ca. 30ns für check in R, 35ns für check in S+ 10ns für jeden check in O, 20ns für H - die Zeiten genau zu modellieren, wäre für die Praxis sinnvoll
+			\item pdf mit pushed, raus aus gitignore
+			\item zu subsampling: entweder aus dem ganzen Text zufällig wählen, oder anteilig an der länge der einzelnen sequenz, da sonst ein bias zu den kürzeren teilsequenzen besteht
+		\end{itemize}
+	\subsection*{Fragen}
+	\begin{itemize}
+			\item sinnvoll bpk als constraint nutzen: abhängigkeit von R und S berücksichtigen? (bei korrekter modellierung könnten dann tatsächlich exakte maximale bpk werte festgelegt werden) - einfach mal mitmodellieren und dann argumentieren, warum es nicht relevant ist - wäre aber cool für den vergleich
+			\item ist es trivial, dass die parameter für steigende level non decreasing sind? - schon, dadurch könnte sich die Laufzeit verbessern lassen
+			\item warum hat die repititivität des genoms einen einfluss auf die kompression, wenn doch eh alle duplikate entfernt werden?
+			\item modellierte bpk Werte sind deutlich höher als jene im paper, woran könnte das liegen? 
+			\begin{itemize}
+				\item vllt daran, dass wiederholte kmere bereits entfernt wurden?
+				\item stammen die messwerte aus dem paper von vorbearbeiteten genomen ohne repititivität oder von unbearbeiteten genomen?
+				\item wie ist die länge de menschlichen genoms ohne repetitive sequenzen?
+			\end{itemize}
+			\item chapter subsampling: wie strukturieren? Laufzeit und Fehler hängen von $n,l$ ab aber auch die Wahl von $n,l$ wird erst durch die Analyse von Laufzeit und Fehler begründet. Was soll ich zuerst einführen?
+			\item Meinung/Tips zu include oder subfile
+			\item gitignore....
+		\end{itemize}
+	
+\section*{Besprechung am 22.07.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+			\item Anmerkungen übernehmen - done
+			\item Bennenung von minimizer länge m vs. minimizer min/M/..? - done
+			\item frequency immer als funktion f(..) nutzen -done
+			\item space consumption der Hashtabelle anpassen -done
+		\end{itemize}
+	\subsection*{Fragen}
+	\begin{itemize}
+			\item Hashtable/Lookup time? 
+			\item warum werden binary constraints misachtet, wenn empirische Werte /100 geteilt werden? - numerische Fehler?
+		\end{itemize}
+
+\section*{Besprechung am 08.07.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+			\item  gurobi solver probieren - bisher nicht nötig
+		\end{itemize}
+	\subsection*{Fragen}
+	\begin{itemize}
+			\item rshash/test/hashtable.cpp korrigieren: Zeile 72 und 91 jeweils "value" statt "kmer\_value" und "value\_rev" statt "kmer\_value\_rev"
+		\end{itemize}
+
+\section*{Besprechung am 17.06.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+			\item \sout{im ilp unterscheiden zwischen variablen und konstanten} 
+			\item \sout{erstmal nur ein level modellieren}
+			\item \sout{ilp begründen schriftlich}
+		\end{itemize}
+	\subsection*{Fragen}
+	\begin{itemize}
+			\item 
+		\end{itemize}
+
+\section*{Besprechung am 10.06.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+			\item linearisiern
+			\item oder einfach mal probieren
+			\item für fixe werte mal durch einen solver laufen lassen und ergebnisse bewerten
+			\item schonmal mit dem schreiben beginnen
+			\item erst danach über code ausdenken
+			\item git!
+		\end{itemize}
+	\subsection*{Fragen}
+	\begin{itemize}
+			\item Sollte man die Space Consumption nicht optimieren sondern eher möglichst genau modellieren, um dann eine obere Grenze wie z.B. 8Gb setzten zu können?
+		\end{itemize}
+
+\section*{Besprechung am 13.05.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+			\item git zugang
+		\end{itemize}
+	\subsection*{Fragen}
+	\begin{itemize}
+			\item Ist die Annahme, dass die Minimizer-Verteilung in den höheren Leveln ähnlich wie in Level 1 ist allgemein korrekt? - höchst wahrscheinlich schon.
+			\item Wie kann ich festellen, wie viele von $4^m$ möglichen Minimizern vorkommen? Bzw. ist das überhaupt relevant?
+			\item $p_M$ oder $p_K$ im ILP
+			\item wie kann $p_K$ modeliert werden?
+		\end{itemize}
+
+\section*{Besprechung am 06.05.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+		\item gleichungen linearisieren, wenn möglich
+		\item $p_M^2$ und $p_M^3$ modellieren
+		\item space consumption modellieren
+	\end{itemize}
+\subsection*{Fragen}
+	\begin{itemize}
+		\item Ist der Zugriff auf R in den Unterschiedlichen Leveln relevant für die Laufzeit? - Denke schon, da dadurch höhere Level "bestraft" werden
+		\item Ist die Zugriffszeit auf R bedeutend abhängig von m und t? - Wahrscheinlich nicht entscheidend aber könnte ebenfalls modelliert werden
+	\end{itemize}
+
+\section*{Besprechung am 29.04.}
+\subsection*{Nächste Schritte}
+	\begin{itemize}
+		\item ILP für Laufzeit und Größe überlegen
+		
+		\item tex studio installieren - done
+		
+		\item erstmal nur lookup betrachten + (streaming locate? testen obs funktioniert)
+		
+		\item nach dem timen nochmal über alle positionen iterieren, damit der compiler nichts wegoptimiert
+		
+		\item überprüfen, ob tatsächlicher locate/lookup linear abhängig von minimizer verteilung ist
+		
+		\item in build.cpp gucken für implementierung
+		\item streaming query lookup aus main - queries durch textstellen ersetzten, an denen minimizer mit frequenz i vorkommen
+		
+		\item überlegung: tatsächlich muss ja zunächst im Bitvektor und dann im Text nachgeschaut werden - zeiten variieren je nach system und die parameter können systemabhängig optimiert werden
+	\end{itemize}
+
+\subsection*{Fragen}
+	\begin{itemize}
+		\item BA Template? - kommt
+		\item minimizer stats output - geklärt
+		\item Warum kann ich \textit{.../rshash\$ .build/source/rshash --help} nicht ausführen aber \textit{.../rshash/build/source\$ ./rshash --help} schon? - fehlender backslash im PFad
+		\item Unterscheidet sich mini\_stats auf dem dev branch von mini\_stats auf dem main branch? - nein
+		\item was wäre eine sinnvolle Projektstruktur, wenn ich selber Code schreiben will? - es müsste möglich sein, programme aus rshash von BA directory aufzurufen
+		Wäre es okay, wenn ich eine  Kopie des rshash repositories erstelle und diese in meinem git\_lab hochlade? - ja aber nicht nötig
+		\item Fragen zu code:
+		\begin{itemize}
+			\item vieles passiert bereits in mini\_stats - ist das effizient gelöst? - ja
+			\item falls ja, kann ich den Code nutzten und anpassen? - ja
+			\item wäre es sinnvoll die minimizer komprimiert zu speichern? z.B. nur zwei bit pro Base oder gleich als Zahl? - jain, wird durch seqan bib bereits effizient gelöst
+			\item muss ich für jedes m eine Datei mit den minimizern anlegen oder reicht der Arbeitsspeicher, um das ganze in einer Datenstruktur zu behalten? - Arbeitsspreicher sollte vorerst ausreichen. Für sehr große Genome bzw. Sammlungen von vielen großen Genomen wären dateien nötig. Eine Datei wäre vielleicht trotzdem sinnvoll, um später damit zu arbeiten.
+		\end{itemize}
+	\end{itemize}
+\end{document}
