@@ -23,12 +23,15 @@
 \section*{Besprechung am 12.08.}
 \subsection*{Nächste Schritte}
 	\begin{itemize}
-			\item 
+			\item $p_K$ muss gewichtet betrachtet werden - wenn viele kmere den gleichen minimizer teilen, dann gibt es viele vergleiche mit dem Text, welche teuer sind - deswegen $p_K * durschnittliche Frequenz von unfrequent minimizern * T_{SL}$, sonst unverändert durchschnittliche frequenz berechnen - durchschnittliche frequenz: $p_K(m,1) * 1 + (p_K(m,2)-p_K(m,1)) * 2 + ... $
+			\item für mehrere Level wird der lookup in R relevant, da dieser für höhere Level mehrfach stattfindet - ca. 30ns für check in R, 35ns für check in S+ 10ns für jeden check in O, 20ns für H - die Zeiten genau zu modellieren, wäre für die Praxis sinnvoll
+			\item pdf mit pushed, raus aus gitignore
+			\item zu subsampling: entweder aus dem ganzen Text zufällig wählen, oder anteilig an der länge der einzelnen sequenz, da sonst ein bias zu den kürzeren teilsequenzen besteht
 		\end{itemize}
 	\subsection*{Fragen}
 	\begin{itemize}
-			\item sinnvoll bpk als constraint nutzen: abhängigkeit von R und S berücksichtigen? (bei korrekter modellierung könnten dann tatsächlich exakte maximale bpk werte festgelegt werden)
-			\item ist es trivial, dass die parameter für steigende level non decreasing sind?
+			\item sinnvoll bpk als constraint nutzen: abhängigkeit von R und S berücksichtigen? (bei korrekter modellierung könnten dann tatsächlich exakte maximale bpk werte festgelegt werden) - einfach mal mitmodellieren und dann argumentieren, warum es nicht relevant ist - wäre aber cool für den vergleich
+			\item ist es trivial, dass die parameter für steigende level non decreasing sind? - schon, dadurch könnte sich die Laufzeit verbessern lassen
 			\item warum hat die repititivität des genoms einen einfluss auf die kompression, wenn doch eh alle duplikate entfernt werden?
 			\item modellierte bpk Werte sind deutlich höher als jene im paper, woran könnte das liegen? 
 			\begin{itemize}

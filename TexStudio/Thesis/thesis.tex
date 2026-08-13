@@ -1,4 +1,4 @@
-\documentclass[a4paper,titlepage,twocolumn,oneside,12pt,ngerman,titlepage=firstiscover]{scrbook}
+\documentclass[a4paper,titlepage,onecolumn,oneside,12pt,ngerman,titlepage=firstiscover]{scrbook}
 \usepackage{subfiles}
 %for faster compiling - TODO remove in final version!
 %\includeonly{minimizer_distribution/minimizer_distribution}
@@ -217,7 +217,6 @@ Algorithmic Bioinformatics\\
 
 \maketitle
 
-\onecolumn
 \section*{Declaration of Authorship}
 \noindent
 I hereby declare that the thesis submitted is my own, unaided work, completed without any external help. Only
@@ -238,7 +237,7 @@ authority.\\
  & \small{Date} & \small{Signature}
 \end{tabular}
 \normalsize
-\twocolumn
+
 \newpage
 
 \section*{Abstract}
@@ -247,12 +246,254 @@ authority.\\
 \tableofcontents
 \newpage
 
+\chapter{Minimizer Distribution}
+The \nameref{chap:minlp} only works, if the values $\percKmers(m,t)$ are known for every $(m,t) \in \possibleMinimizerLength \times \possibleThresholds$ for the input sequence.
+\section*{Determining the Distribution}
+The code to find the minimizer distribution for a given $sequence, k, \minimizerLength$ and $\threshold$ follows the following steps:\\
+stats:\\
+\begin{enumerate}
+	\item $count_minimizers$:
+	\begin{enumerate}
+		\item set $kmers \leftarrow |sequence|-k+1$
+		\item parse every kmer in the $sequence$ and add all minimizers to a vector $minimizers$ \todo{Zeile 48-55: verstehe ich es richtig, dass in der schleife in Zeile 52 jeder minimizer nur einmal zum vektor hinzugefügt wird, auch wenn er mehrere kmere abdeckt?}
+		\item sort $minimizers$
+		\item iterate over the sorted vector and
+		\begin{itemize}
+			\item count the occurences of each minimizer
+			\item add all unfrequent minimizers to a new vector $unfrq_minimizers$
+			\item store their occurences in the vector $counts$ where $counts[i]$ relates to $unfreq_minimizers[i]$
+			\item store the sum of all occurences in $no_skmers$
+		\end{itemize}
+	\end{enumerate}
+	\item $minimizers \leftarrow unfreq_minimizers$
+	\item $no_minimizers \leftarrow |minimizers|$
+	\item $r \leftarrow$ elias-fano-compressed bitvector of length $2^{2\minimizerLength}$ that contains 1s at those positions $i$, for which the minimizer of value $i$ is present in $minimizers$
+	\item $s \leftarrow$ corresponding vector $S$
+	\item weiter ab Zeile 161
+\end{enumerate}
 
-\include{MINLP/MINLP}
+\section*{Distribution on Higher Levels}
 
-\include{minimizer_distribution/minimizer_distribution}
+\chapter{MINLP Modeling}\label{chap:minlp}
 
-\include{subsampling/subsampling}
+\section*{One Level}
+As a first approach we model the runtime and space consumption for only one level.\\
+Let $\possibleMinimizerLength$ be the Set of all minimizer length and $\possibleThresholds$ the set of all thresholds to be considered.
+\subsection*{Runtime}
+
+\begin{table}
+	\caption{Constants and Variables for One Level}
+	\begin{tabularx}{\columnwidth}{|| l | X ||}
+		\hline
+		Constants	&  \\
+		\hline
+		$\timeForLookupInS$		& time to lookup a k-mer in vector S \\
+		$\timeForHashtable$		& time to lookup a k-mer in the hash table \\
+		$\percKmersEmpiric(m, t)$ &empirically estimated value for a k-mer with a minimizer \\
+		& of length $m$ to have a frequency less than $t$ \\
+		\hline
+		\hline
+		Variables	&  \\
+		\hline
+		$\percKmers \in \left[0,1\right]$ & probability of a k-mer to have a minimizer with frequency $\leq t$ \\
+		$\selectorm_m \in \left\{0, 1\right\}$	& binary selector for every minimizer length $m \in \possibleMinimizerLength$\\
+		$\selectort_t \in \left\{0, 1\right\}$	& binary selector for every threshold $t \in \possibleThresholds$\\
+		\minimizerLength & optimal minimizer length\\
+		\threshold & optimal threshold\\
+		\hline 
+	\end{tabularx}
+\end{table}
+
+To lookup a k-mer $q$ with minimizer $m(q)$ of frequency $f(m(q))$ on one level, first the bit vector $R$ is checked in order to determin whether $1 \leq f(m) \leq threshold$. This can be ignored when modeling the lookup runtime as this is practically not influenced by the parameters. \todo{reason}\\
+For $\percKmers$ of the k-mers, the corresponding bit in $R$ will be set, which results in a lookup in $S$. If $m(q)$ does not appear at all or has a $f(m(q)) > t$, a lookup in the hash table will follow. The lookup time $\lookupTime$ for one level can thus be modeled as:
+\begin{equation*}
+	\lookupTime = \timeForLookupInS * \percKmers + \timeForHashtable * (1-\percKmers)
+\end{equation*}
+
+In order to determine $m$ and $t$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLength$ and $t \in \possibleThresholds$.\\
+$\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$.\\
+$\selectort_t$ should be $1$ exactly when the optimal threshold is $t$.\\
+The selectors for $m$ and $t$ must be binary and mutually exclusive:
+\begin{align*}
+	&\selectorm_m \in {0,1} \mid \forall m \in \possibleMinimizerLength \\
+	&\selectort_t \in {0,1} \mid \forall t \in \possibleThresholds \\
+	&\sum_{m \in \possibleMinimizerLength} \selectorm_m = 1 \\
+	&\sum_{t \in \possibleThresholds} \selectort_t = 1
+\end{align*}
+
+For a fixed minimizer length $m$ and threshold $t$ let $\percKmersEmpiric(m, t)$ be the empirically determined percentage of k-mers $q$ that have a minimizer with $f(m(q)) < t$.\\
+We can then model $\percKmers$ with:
+\[ \percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right) \]
+$\minimizerLength$ and $\threshold$ can then be determined by:
+\begin{align*}
+	\minimizerLength &= \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
+	\threshold &= \sum_{t \in \possibleThresholds} \selectort_t * t
+\end{align*}
+\\
+The above results in the following MINLP (Mixed Integer Non Linear Program):\\
+\\
+MINIMIZE
+\begin{align*}
+	\lookupTime = \timeForLookupInS^\levelOne * \percKmers + \timeForHashtable * (1-\percKmers)
+\end{align*}
+SUBJECT TO
+\begin{align*}
+	&\percKmers = \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t\right)\\
+	&\selectorm_m \in {0,1} \mid \forall m \in M \\
+	&\selectort_t \in {0,1} \mid \forall t \in T \\
+	&\sum_{m \in M} \selectorm_m = 1 \\
+	&\sum_{t \in T} \selectort_t = 1 \\
+	&\minimizerLength = \sum_{m \in \possibleMinimizerLength} \selectorm_m * m \\
+	&\threshold = \sum_{t \in \possibleThresholds} \selectort_t * t
+\end{align*}
+\\
+For now we will assume that $\timeForLookupInS \approx 40ns$ and $\timeForHashtable \approx 20ns$.\\
+Solving this MINLP will result in a Solution where the $\selectorm_m$, $\selectort_t$ corresponding to the smallest $m \in \possibleMinimizerLength$, $t \in \possibleThresholds$ will be set to one.\\
+This is as expected, since this leads to the smallest possible $\percKmers$. This minimizes the k-mers found in the vector $S$ and thus maximizes the lookups in the (faster) hash table.\\
+\\
+However this also results in a high space consumption, because each entry in the hash table containing the minimizer as a key and the offset as its value is significantly larger than an entry in $S$ which only contains offsets.\\
+\\
+In order to take that into account, we have to add a constraint modeling the space consumption.\\
+
+\subsection*{Space Consumption}
+The space consumption of the Data Structure used by RSHash can be split into that of the Vectors $R$, $O$ and $S$ as well as the hash table $H$.
+
+\subsubsection*{Bit Vectors $R$ and $S$}
+$R$ and $S$ can likely be disregarded when modeling the space consumption. \todo{explain why}\\
+$R$ is a Bit Vector of length $4^\minimizerLength$ that contains $n$ \todo{possibly model n?} 1s marking the existence of each encountered minimizer. Using Elias-Fano-Encoding, its size can be compressed to
+\[ n \rceil log(4^\minimizerLength/n) \rceil + 3n\]
+
+\subsubsection*{Offsetvector $O$}
+$O$ contains one entry of size $log |T|$ for the offset of every minimizer with frequency $\leq t$ in $T$.\\
+Every minimizer of length $\minimizerLength$ covers an average of $\frac{k-\minimizerLength+2}{2}$ consecutive k-mers. We can thus model the bits per k-mer in $O$ as:\\
+\[bpk_O = \percKmers * \frac{2}{k-\minimizerLength+2} * log |T| \]
+
+\subsubsection*{Hash table $H$}
+For $1-\percKmers$ of the k-mers $q$ in $T$ $H$ contains an entry $(key:q, value:offset(q))$\\
+Each entry has size $size(key) + size(value) = 64 + log |T|$.\\
+The bits per k-mer required for the hash table can thus be modeled by
+\[ bpk_H = (1-\percKmers) * (64 + log|T|)\]
+%However $H$ also contains a number of empty buckets requiring the same amount of space. \todo{reason}\\
+%For a hash table with $b$ buckets containing $n$ elements, the load factor $\alpha$ is defined as:
+%\[\alpha = \frac{n}{b}\].\\
+%That means that for every entry in the hash table, there must be $\frac{1-\alpha}{\alpha}$ many empty buckets.\\
+%Using this we can model the bits per k-mer in $H$ as:\\
+%\[bpk_H = (\alpha + \frac{1-\alpha}{\alpha}) * \frac{2}{k-\minimizerLength+2} * (1-\percKmers) * log |T| \]
+
+\section*{Several Levels}
+Let
+\begin{table}
+	\caption{Constants and Variables for Several Level}
+	\begin{tabularx}{\columnwidth}{|| l | X ||}
+		\hline
+		Constants	&  \\
+		\hline
+		$\timeForLookupInS$		& time to lookup a k-mer in vector S\\
+		$\timeForHashtable$		& time to lookup a k-mer in the hash table \\
+		$\percKmersEmpiric(m, t)$ &empirically estimated value for a k-mer with a minimizer \\
+		& of length $m$ to have a frequency less than $t$ \\
+		\hline
+		\hline
+		Variables	&  \\
+		\hline
+		$\percKmers^l \in \left[0,1\right]$ & probability of a k-mer to have a minimizer with frequency $\leq t$ on level $l$ \\
+		$\selectorm_m^l \in \left\{0, 1\right\}$	& binary selector for every minimizer length $m \in \possibleMinimizerLength$ on level $l$\\
+		$\selectort_t^l \in \left\{0, 1\right\}$	& binary selector for every threshold $t \in \possibleThresholds$ on level $l$\\
+		$\minimizerLength^l$ & optimal minimizer length on level $l$\\
+		$\threshold^l$ & optimal threshold on level $l$\\
+		\hline 
+	\end{tabularx}\\
+\end{table}
+\subsection*{Runtime}
+RSHash uses several levels, to make use of the skewniss of minimizer distribution.\\
+Each level $l$ has a pair of parameters $\minimizerLength^l, \threshold^l$ which result in a probability $\percKmers^l$ of a k-mer belonging to level $l$.\\
+For now, we still assume, that the time for a lookup in the vectors $R,S$ as well as the hash table $H$ are (practically) independent of the parameters $\minimizerLength^l, \threshold^l$. \todo{reason}\\
+\\
+When using $L$ levels, the probability of a k-mer belonging to a higher level is dependent on the probability of k-mers belonging to the levels below.\\
+On each level $1 \leq l \leq L$, for $\percKmers^l$ of the k-mers, the lookup will be completed by finding a value in the offset vector on that level whilst the remaining $(1-\percKmers^l)$ queries result in a lookup on the next level.\\
+We can model the lookup time for all levels $1\leq l<L$ levels recursively as:
+\[ 
+\lookupTime^l =
+\begin{cases}
+	\percKmers^l*\timeForLookupInS + (1-\percKmers^l)*\lookupTime^{l+1} &\mid 1\leq l \leq L\\
+	\timeForHashtable &\mid l=L+1
+\end{cases}
+\]
+For $L=3$ levels, this results in:
+\[
+\begin{array}{llll}
+	\lookupTime =
+	&\percKmers^\levelOne*\timeForLookupInS\\
+	&+ (1-\percKmers^\levelOne) * \Bigg(&\percKmers^\levelTwo*\timeForLookupInS\\
+	&&+(1-\percKmers^\levelTwo) * \Big( &+ \percKmers^\levelThree*\timeForLookupInS\\
+	&&&+ (1-\percKmers^\levelThree) * \timeForHashtable \Big) \Bigg)
+\end{array}
+\]
+
+Because $\minimizerLength^l$ and $\threshold^l$ can be different on every level $l$, a different set of binary selector variables $\selectorm^l_m$ and $\selectort^l$ is needed.\\
+The constraints for each level are the same as for one level:
+\[ \begin{array}{ll}
+	\selectorm_m^l \in {0,1} & \mid \forall (l,m) \in (\levels \times \possibleMinimizerLength) \\
+	\selectort_t^l \in {0,1} & \mid \forall (l,t) \in (\levels \times \threshold) \\
+	\sum_{m \in \possibleMinimizerLength} \selectorm_m^l = 1 & \mid \forall l \\
+	\sum_{t \in \possibleThresholds} \selectort_t^l = 1 & \mid \forall l
+\end{array} \]
+
+For every level $l$ $\percKmers^l, \minimizerLength^l$ and $\threshold^l$ can also be modeled analogously to having only one level: \todo{this only holds under the assumption, that the minimizer distribution is equal on each level - independent of the choice of m and t. This is not trivial and should be further explored!!}
+\begin{align*}
+	\percKmers^l &= \sum_{m \in \possibleMinimizerLength} \left( \selectorm_m^l \sum_{t \in \possibleThresholds} \percKmersEmpiric(m, t) * \selectort_t^l\right) & \mid \forall l \in \levels\\
+	\minimizerLength^l &= \sum_{m \in \possibleMinimizerLength} \selectorm_m^l * m  & \mid \forall l \in \levels\\
+	\threshold^l &= \sum_{t \in \possibleThresholds} \selectort_t^l * t & \mid \forall l \in \levels
+\end{align*}
+
+
+\subsection*{Space Consumption}
+\subsubsection*{Offsetvector $O$}
+For several levels, the offset vector for level $l$ only contains an entry for a k-mer $q$, if the k-mers minimizer $m(q)$ has a frequency $f(m(q)) > t^{i}$ for all levels $1 \leq i < l$ and $f(m(q)) \leq t^{l}$. \todo{should I introduce an index for the minimizer function as it differs for every level? e.g. $m^l(q)$}\\
+The bits per k-mer for the Offset vector on level $l$ can thus be modeled as:
+\[bpk_{O^l} = \prod_{i=1}^{l-1} (1-\percKmers^i) * \percKmers^l * \frac{2}{k-\minimizerLength^l+2} * log |T| \]
+
+\subsubsection*{Hash table $H$}
+The hash table only contains an entry k-mers $q$, for which $f(m(q)) > t^l$ for all levels $1 \leq l \leq L$.\\
+The bits per k-mer for the hash table can thus be modeled as 
+\[ bpk_H = \prod_{l=1}^{L} (1-\percKmers^l) * (64 + log|T|)\]
+
+\section*{Limitations}
+This approach of solving the constructed model has the advantage (\todo{over what}) of finding optimal results \todo{does it?}.\\
+However for large genomes, finding the empirical values $\percKmersEmpiric(m,t)$ becomes increasingly time consuming and needs a lot of RAM \todo{how much, why?}.\\
+\todo[inline]{paragraph/section about the complexity of finding the solution}
+
+For these reasons, an approach yielding a solution that is a certain approximation of the optimum but takes less time to find it could be of interest.\\
+An easy adaption  to speed up the search for empirical values would be to only sample part of the genome. By sampling sequences of length \todo{what length} at a large \todo{how lorge} number of random locations, the probability of choosing a bad representation becomes highly unlikely.\\
+By sampling only part of the genome, we can speed up the finding of empirical values by a factor of \todo{factor} / or even "get it down to a constant" (that is for a fixed number of sample locations - regardless of the genomes size. this however results in a growing error for larger genomes).\\
+
+\chapter{Subsampling}
+\section*{Motivation}
+The time for processing a genome in order to find the minimizer distribution $\percKmers(m,t)$ for possible minimizer lengths $m \in \possibleMinimizerLength$ and thresholds $t \in \possibleThresholds$ is directly proportional to the size of the genome.\\
+For large genomes, this processing can become the dominating factor when searching for optimal parameters using the \nameref{chap:minlp} approach. In order to speed up the search for the empirical values, we introduce a subsampling method.
+
+\section*{Subsampling Method}
+Instead of calculating the distribution over the full genome, we sample $\numberOfSamples$ sequences of length $\lengthOfSamples \geq k$ at random positions in the genome.\\
+\todo[inline]{how to handle overlapping samples}
+
+\section*{Time Complexity of Finding the Minimizer Distributions}
+\todo[inline]{genaue zeitliche abhängigkeit 1. verstehen und 2. aufschreiben}
+
+\section*{Time Complexity using Subsampling}
+By applying the proposed subsampling strategy, the original genome $\genomeText$ of length $|\genomeText|$ is reduced to the subsampled text $\sampledText$ of length $|\sampledText| = \numberOfSamples * \lengthOfSamples$. This means a reduction in size by a factor of $\frac{|\genomeText|}{|\sampledText|}$.\todo{assuming no overlaps}\\
+Depending on the choice of $\numberOfSamples$ and $\lengthOfSamples$ this results in a speedup of the processing time by a factor of $ $\todo{factor} or even a constant processing time $ $\todo{time} when both parameters are chosen as a constand regardless of $|\genomeText|$ (this however should result in a growing error for larger genomes).
+
+\section*{Error Analysis}
+
+\section*{Choosing $\lengthOfSamples$}
+The length $\lengthOfSamples$ has to be at least $k$. 
+\todo[inline]{wenn $l > k$ ist, überlappen sich mehrere kmere an den gesampleten stellen. ich verstehe noch nicht, warum genau dass von vorteil ist.\\ Weil roling hash - l ca 1000, dann quasi linear}
+
+\section*{Choosing $\numberOfSamples$}
+Choosing a constant $\numberOfSamples$ would result in a processing time that would no longer be dependent of the genomes length $|\genomeText|$, as the sampled text would have constant size $\numberOfSamples * \lengthOfSamples$\todo{assuming no overlaps}. For large genomes, the percentage $\frac{|\sampledText|}{|\genomeText|}$ of the genome represented in the subsample can become arbitrarily small, resulting in growing error.\\
+If instead $\numberOfSamples$ is chosen relative to $|\genomeText|$, $\frac{|\sampledText|}{|\genomeText|}$ will have a constant value independent of the genomes size. Even though this means, that the time needed, in order to find the minimizer distributions would still be proportional to the genomes size, this should be the preferred option as it results in a bounded error of the approximation.
+\\
+For a large enough $\numberOfSamples$, the probability of choosing a bad representation becomes highly unlikely.\todo{zu vage, begründen}\\
 
 %\include{vorlagen_beispiele/vorlagen_beispiele}
 

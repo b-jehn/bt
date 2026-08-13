@@ -3,7 +3,7 @@ import math
 import csv
 import sys
 
-genome = "cod"
+genome = "homo_sapiens"
 K = 31  #kmer length
 T = 255 #max threshold
 TEXT_LENGTH = 681137419
@@ -53,7 +53,7 @@ sm_vars = [[scip.addVar(vtype='B', name=f"sm_{m}_{l}") for m in minimizer_length
 st_vars = [[scip.addVar(vtype='B', name=f"st_{t}") for t in thresholds] for l in range(levels)]            #binary selectors for t
 
 #OBJECTIVE
-scip.setObjective(runtime, sense="minimize")   #runtime objective
+scip.setObjective(bpk_total, sense="minimize")   #runtime objective
 #CONSTRAINTS
 #runtime constraint
 #recursivly build the constraint which is layerd level by level
@@ -81,7 +81,7 @@ scip.addCons(bpk_O - quicksum(bpk_O_vars[l] for l in range(levels)) == 0)
 #bits per k-mer in H
 scip.addCons(bpk_H - (quickprod(((1-p_K_vars[l])) for l in range(levels)) * (64+log_text_length)) == 0)
 scip.addCons(bpk_total - (bpk_O + bpk_H) == 0)
-scip.addCons(bpk_total <= 5)
+#scip.addCons(bpk_total <= 40)
 
 #FIND solution
 scip.optimize()

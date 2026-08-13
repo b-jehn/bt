@@ -2,8 +2,12 @@
 /code/rshash
 /code/build
 
-/TexStudio/*.aux
-/TexStudio/*.pdf
-/TexStudio/*.log
-/TexStudio/*.gz
-/TexStudio/*.out
+*.aux
+*.bbl
+*.bib
+*.blg
+*.gz
+*.log
+*.out
+*.toc
+*.xml
