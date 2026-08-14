@@ -143,6 +143,7 @@
 \newcommand{\access}{access}
 \newcommand{\rank}{rank}
 \newcommand{\select}{select}
+\newcommand{\compare}{compare}
 
 \newcommand{\timeForOperationOnStructure}[2]{T_{#1_{#2}}} %#1:operation - e.g. rank, #2:structure - e.g. R
 
@@ -272,18 +273,18 @@ stats:\\
 	\item weiter ab Zeile 161
 \end{enumerate}
 
-\section*{Distribution on Higher Levels}
+\section{Distribution on Higher Levels}\label{sec:distributionOnHigherLevels}
 
 \chapter{MINLP Modeling}\label{chap:minlp}
 
-\section*{One Level}
-As a first approach we model the runtime and space consumption for only one level.
+\section{One Level}
+As a first approach we model the runtime and space consumption for a single level.
 
 \subsection*{Notation}
 The minimizer of a k-mer $q$ is reffered to as $m(q)$ and its frequency as $f(m(q))$.\\
 We denote the time needed to access bit in $R$ with $\timeForOperationOnStructure{\access}{R}$, the time for rank and select queries with $\timeForOperationOnStructure{\rank}{R}, \timeForOperationOnStructure{\select}{R}$ and analogously for the vectors $S$ and $O$.\\%\todo{model these times as part of the optimization}
-The time for checking whether a k-mer is present at a given offset in the Text is denoted as $\timeForOperationOnStructure{compare}{T}$.\\
-Let $\possibleMinimizerLengths$ be the Set of all minimizer length and $\possibleThresholds$ the set of all thresholds to be considered when searching for optimal parameters.\\
+The time for checking whether a k-mer is present at a given offset in the Text is denoted as $\timeForOperationOnStructure{\compare}{T}$.\\
+Let $\possibleMinimizerLengths$ be the set of all minimizer lengths and $\possibleThresholds$ the set of all thresholds considered when searching for optimal parameters.\\
 We denote the optimal minimizer length $\minimizerLength$ and threshold $\threshold$.\\
 Let $\percKmers$ be the percentage of k-mers $q$ with unfrequent minimizers of length $\minimizerLength$ ($f(m(q)) \leq \threshold$). $\percKmersEmpiric(m,t)$ on the other hand is the empirically measured percentage on a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$.\\
 
@@ -322,7 +323,16 @@ Finally the presence of $q$ in $T$ is checked at every offset $o \in O[\select_S
 For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through an access of the hash table.
 
 The lookup time $\timeForOperationOnStructure{lookup}{RSHash}$ for one level can thus be modeled as:
-\[ \timeForOperationOnStructure{lookup}{RSHash} = \timeForOperationOnStructure{\access}{R} + \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\averageFrequency}{2})  + (1-\percKmers) \cdot \timeForOperationOnStructure{\access}{H}\]
+\newcommand{\lookupTimeExpression}{%
+\begin{aligned}
+	\timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\averageFrequency}{2} \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
+	&+ (1-\percKmers) \cdot \timeForOperationOnStructure{\access}{H}
+\end{aligned}%
+}
+\[ \timeForOperationOnStructure{lookup}{RSHash} = 
+\lookupTimeExpression
+ \]
+
 
 In order to determine $m$ and $t$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLengths$ and $t \in \possibleThresholds$.\\
 $\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$.\\
@@ -330,8 +340,8 @@ $\selectort_t$ should be $1$ exactly when the optimal threshold is $t$.\\
 The selectors for $m$ and $t$ must be binary and mutually exclusive:
 \[ 
 \begin{array}{rl}
-	\selectorm_m &\in {0,1} \mid \forall m \in \possibleMinimizerLengths \\
-	\selectort_t &\in {0,1} \mid \forall t \in \possibleThresholds \\
+	\selectorm_m &\in \{0,1\} \mid \forall m \in \possibleMinimizerLengths \\
+	\selectort_t &\in \{0,1\} \mid \forall t \in \possibleThresholds \\
 	\sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m &= 1 \\
 	\sum\limits_{t \in \possibleThresholds} \selectort_t &= 1
 \end{array} 
@@ -346,21 +356,31 @@ $\minimizerLength$ and $\threshold$ can then be determined by:
 \end{align*}
 \\
 The average Frequency $\averageFrequency$ can be ... %\todo{explain!}
-\[ \averageFrequency = \frac{\percKmersEmpiric(\minimizerLength,1) + \sum\limits_{f=2}^\threshold \percKmersEmpiric(\minimizerLength,f) - \percKmersEmpiric(\minimizerLength,f-1) * f}{\sum\limits_{f=1}^\threshold f}\]
+\newcommand{\averageFrequencyExpression}{
+\frac{\percKmersEmpiric(\minimizerLength,1) + \sum\limits_{f=2}^\threshold \percKmersEmpiric(\minimizerLength,f) - \percKmersEmpiric(\minimizerLength,f-1) * f}{\sum\limits_{f=1}^\threshold f}
+}
+\[ \averageFrequency = \averageFrequencyExpression \]
 The above results in the following MINLP (Mixed Integer Non Linear Program):\\
 \\
 \[ 
-\begin{array}{lrl}
-	\text{MINIMIZE} &\\
-		&\timeForOperationOnStructure{lookup}{RSHash} &= \timeForOperationOnStructure{\access}{R} + \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\averageFrequency}{2})  + (1-\percKmers) \cdot \timeForOperationOnStructure{\access}{H}\\
-	\text{SUBJECT TO} &\\
-		&\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)\\
-		&\sum\limits_{m \in M} \selectorm_m &= 1 \\
-		&\sum\limits_{t \in T} \selectort_t &= 1 \\
-		&\selectorm_m &\in {0,1} \mid \forall m \in M \\
-		&\selectort_t &\in {0,1} \mid \forall t \in T \\
-		&\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
-		&\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
+\begin{array}{rl}
+	\text{MINIMIZE}\\
+		\timeForOperationOnStructure{lookup}{RSHash} &= \lookupTimeExpression\\
+	\text{SUBJECT TO}\\
+		\timeForOperationOnStructure{\access}{R} &= \\
+		\timeForOperationOnStructure{\rank}{R} &= \\
+		\timeForOperationOnStructure{\select}{S} &= \\
+		\timeForOperationOnStructure{\access}{O} &= \\
+		\timeForOperationOnStructure{\compare}{T} &= \\
+		\timeForOperationOnStructure{\access}{H} &= \\
+		\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)\\
+		\sum\limits_{m \in M} \selectorm_m &= 1 \\
+		\sum\limits_{t \in T} \selectort_t &= 1 \\
+		\selectorm_m &\in \{0,1\} \mid \forall m \in M \\
+		\selectort_t &\in \{0,1\} \mid \forall t \in T \\
+		\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
+		\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t\\
+		\averageFrequency &= \averageFrequencyExpression
 \end{array} 
 \]
 
@@ -371,7 +391,7 @@ This however results in maximal space consumption, as each entry in the hash tab
 In order to take that into account, we have to add constraints modeling the space consumption.\\
 
 \subsection*{Space Consumption}
-The space consumption of the Data Structure used by RSHash can be split into that of the Vectors $R$, $O$ and $S$ as well as the hash table $H$.
+The space consumption of RSHash can be decomposed into the space needed for the data structures components: the vectors $R$, $O$ and $S$, the text $T$ as well as the hash table $H$.
 
 \subsubsection*{Bit Vectors $R$ and $S$}
 $R$ and $S$ can likely be disregarded when modeling the space consumption. %\todo{explain why}\\
@@ -395,8 +415,8 @@ The bits per k-mer required for the hash table can thus be modeled by
 %Using this we can model the bits per k-mer in $H$ as:\\
 %\[bpk_H = (\alpha + \frac{1-\alpha}{\alpha}) \cdot \frac{2}{k-\minimizerLength+2} \cdot (1-\percKmers) \cdot log |T| \]
 
-\section*{Several Levels}
-
+\section{Several Levels}
+As explored in \nameref{sec:distributionOnHigherLevels}, we assume the minimizer distribution on higher levels to be practically identical to the distribution on the first level.
 %\begin{table}
 %	\caption{Constants and Variables for Several Level}
 %	\begin{tabularx}{\columnwidth}{|| l | X ||}
@@ -428,28 +448,31 @@ When using $L$ levels, the probability of a k-mer belonging to a higher level is
 On each level $1 \leq l \leq L$, for $\percKmers^l$ of the k-mers, the lookup will be completed by finding a value in the offset vector on that level whilst the remaining $(1-\percKmers^l)$ queries result in a lookup on the next level.\\
 We can model the lookup time for all levels $1\leq l \leq L$ levels recursively as:
 \[ 
-\timeForOperationOnStructure{lookup}{RSHash} = 
+\timeForOperationOnStructure{lookup}{RSHash}^{\levelL} = 
 \begin{cases}
-	\timeForOperationOnStructure{\access}{R^\levelL} + \percKmers^\levelL \cdot (\timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency}{2})  + (1-\percKmers^l) \cdot \timeForOperationOnStructure{lookup}{RSHash}^{\levelL+1} &\mid 1\leq l \leq L\\
+	\begin{aligned}
+		\timeForOperationOnStructure{\access}{R^\levelL} &+ \percKmers^\levelL \cdot (\timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency}{2}  \cdot (\timeForOperationOnStructure{\access}{O^l} + \timeForOperationOnStructure{\compare}{T})) \\
+		&+ (1-\percKmers^l) \cdot \timeForOperationOnStructure{lookup}{RSHash}^{\levelL+1}
+	\end{aligned} &\mid 1\leq l \leq L\\
 	\timeForOperationOnStructure{\access}{H} &\mid l=L+1
 \end{cases}
 \]
 
 As an example for $L=2$ levels, this results in:
-\[
-\begin{array}{lll}
+\begin{align*}
 	\timeForOperationOnStructure{lookup}{RSHash} =
-	\timeForOperationOnStructure{\access}{R^\levelOne} &+ \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency}{2})\\
-		&+ (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} + &\percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency}{2})\\
-			&&+(1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{\access}{H} \Big)
-\end{array}
-\]
+	\timeForOperationOnStructure{\access}{R^\levelOne} &+ \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
+		&\begin{aligned}
+			+ (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} &+ \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
+			&+(1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{\access}{H} \Bigg)
+		\end{aligned}
+\end{align*}
 
 Because $\minimizerLength^l$ and $\threshold^l$ can be different on every level $l$, a different set of binary selector variables $\selectorm^l_m$ and $\selectort^l$ is needed.\\
 The constraints for each level are the same as for one level:
 \[ \begin{array}{rll}
-	\selectorm_m^l &\in {0,1} & \mid \forall (l,m) \in (\{1,...,L\} \times \possibleMinimizerLengths) \\
-	\selectort_t^l &\in {0,1} & \mid \forall (l,t) \in (\{1,...,L\} \times \threshold) \\
+	\selectorm_m^l &\in \{0,1\} & \mid \forall (l,m) \in (\{1,...,L\} \times \possibleMinimizerLengths) \\
+	\selectort_t^l &\in \{0,1\} & \mid \forall (l,t) \in (\{1,...,L\} \times \threshold) \\
 	\sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m^l &= 1 & \mid \forall l \\
 	\sum\limits_{t \in \possibleThresholds} \selectort_t^l &= 1 & \mid \forall l
 \end{array} \]
