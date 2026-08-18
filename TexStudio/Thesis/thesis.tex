@@ -148,7 +148,10 @@
 \newcommand{\timeForOperationOnStructure}[2]{T_{#1_{#2}}} %#1:operation - e.g. rank, #2:structure - e.g. R
 
 \newcommand{\percKmers}{\textbf{p}_\textbf{K}}
-\newcommand{\percKmersEmpiric}{P_{K}}
+\newcommand{\percKmersEmpiric}{p_{K}}
+
+\newcommand{\averageFrequency}{\textbf{f}_{\textbf{avg}}}
+\newcommand{\averageFrequencyEmpiric}{f_{avg}}
 
 \newcommand{\possibleMinimizerLengths}{\mathcal{M}}
 \newcommand{\possibleThresholds}{\mathcal{T}}
@@ -158,8 +161,6 @@
 
 \newcommand{\minimizerLength}{\textbf{m}}
 \newcommand{\threshold}{\textbf{t}}
-
-\newcommand{\averageFrequency}{\mathcal{F_\minimizerLength^\threshold}}
 
 \newcommand{\levelL}{{l}}
 \newcommand{\levelOne}{1}
@@ -287,12 +288,34 @@ The time for checking whether a k-mer is present at a given offset in the Text i
 Let $\possibleMinimizerLengths$ be the set of all minimizer lengths and $\possibleThresholds$ the set of all thresholds considered when searching for optimal parameters.\\
 We denote the optimal minimizer length $\minimizerLength$ and threshold $\threshold$.\\
 Let $\percKmers$ be the percentage of k-mers $q$ with unfrequent minimizers of length $\minimizerLength$ ($f(m(q)) \leq \threshold$). $\percKmersEmpiric(m,t)$ on the other hand is the empirically measured percentage on a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$.\\
-
+Similarly $\averageFrequency$ describes the average frequency of minimizers, whilst $\averageFrequencyEmpiric(m,t)$ is the empirically measured average frequency for a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$. $\averageFrequencyEmpiric(m,t)$ can be derived from $\percKmersEmpiric(m,t)$:
+\[ \averageFrequencyEmpiric(m,t) = \percKmersEmpiric(m,1) + \sum\limits_{f=2}^t (\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1)) * f\] %\todo{tabelle $f_avg(m,t)$ mittels dynamischer programmierung bauen}
 
 \subsection*{Runtime}
-\subsubsection*{Vector Access}
-\subsubsection*{Bit Vector Rank Query}
-\subsubsection*{Bit Vector Select Query}
+\subsubsection*{Times for Operations on Datastructure}
+\textbf{Vector Access}
+Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
+\begin{align*}
+	\timeForOperationOnStructure{\access}{R} &= ...\\
+	\timeForOperationOnStructure{\access}{O} &= ...\\
+\end{align*}
+
+\textbf{Hash Table Access}
+Accessing an element of a Hash Table can be done in constant time, we use the following values based on measurements:
+\begin{align*}
+	\timeForOperationOnStructure{\access}{H} &= ...
+\end{align*}
+
+\textbf{Bit Vector Rank Query}
+A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log U/n \rceil + 3n$ many bits supporting rank in $O(log(U/n)$ time (Okanohara and Sadakane, 2007).
+%\todo{does that help here? Doesn't the model require actual time instead of O notation - maybe measurements would be more suited}
+
+\textbf{Bit Vector Select Query}
+???
+
+\textbf{Comparison with Text}
+???
+
 %\begin{table}
 %	\caption{Constants and Variables for One Level}
 %	\begin{tabularx}{\columnwidth}{|| l | X ||}
@@ -349,17 +372,19 @@ The selectors for $m$ and $t$ must be binary and mutually exclusive:
 
 With $\percKmersEmpiric(m, t)$ being the empirically determined percentage of k-mers $q$ that have a minimizer with $f(m(q)) < t$ (for a fixed $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$)  we can then model $\percKmers$ with:
 \[ \percKmers = \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right) \]
+
+The average Frequency $\averageFrequency$ can be ... %\todo{explain!}
+\newcommand{\averageFrequencyExpression}{
+	\sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric(m, t) \cdot \selectort_t\right)
+}
+\[ \averageFrequency = \averageFrequencyExpression \]
+
 $\minimizerLength$ and $\threshold$ can then be determined by:
 \begin{align*}
 	\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
 	\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
 \end{align*}
-\\
-The average Frequency $\averageFrequency$ can be ... %\todo{explain!}
-\newcommand{\averageFrequencyExpression}{
-\frac{\percKmersEmpiric(\minimizerLength,1) + \sum\limits_{f=2}^\threshold \percKmersEmpiric(\minimizerLength,f) - \percKmersEmpiric(\minimizerLength,f-1) * f}{\sum\limits_{f=1}^\threshold f}
-}
-\[ \averageFrequency = \averageFrequencyExpression \]
+
 The above results in the following MINLP (Mixed Integer Non Linear Program):\\
 \\
 \[ 
@@ -374,13 +399,13 @@ The above results in the following MINLP (Mixed Integer Non Linear Program):\\
 		\timeForOperationOnStructure{\compare}{T} &= \\
 		\timeForOperationOnStructure{\access}{H} &= \\
 		\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)\\
+		\averageFrequency &= \averageFrequencyExpression\\
 		\sum\limits_{m \in M} \selectorm_m &= 1 \\
 		\sum\limits_{t \in T} \selectort_t &= 1 \\
 		\selectorm_m &\in \{0,1\} \mid \forall m \in M \\
 		\selectort_t &\in \{0,1\} \mid \forall t \in T \\
 		\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
-		\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t\\
-		\averageFrequency &= \averageFrequencyExpression
+		\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
 \end{array} 
 \]
 
@@ -451,7 +476,7 @@ We can model the lookup time for all levels $1\leq l \leq L$ levels recursively 
 \timeForOperationOnStructure{lookup}{RSHash}^{\levelL} = 
 \begin{cases}
 	\begin{aligned}
-		\timeForOperationOnStructure{\access}{R^\levelL} &+ \percKmers^\levelL \cdot (\timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency}{2}  \cdot (\timeForOperationOnStructure{\access}{O^l} + \timeForOperationOnStructure{\compare}{T})) \\
+		\timeForOperationOnStructure{\access}{R^\levelL} &+ \percKmers^\levelL \cdot (\timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency^\levelL}{2}  \cdot (\timeForOperationOnStructure{\access}{O^l} + \timeForOperationOnStructure{\compare}{T})) \\
 		&+ (1-\percKmers^l) \cdot \timeForOperationOnStructure{lookup}{RSHash}^{\levelL+1}
 	\end{aligned} &\mid 1\leq l \leq L\\
 	\timeForOperationOnStructure{\access}{H} &\mid l=L+1
@@ -477,9 +502,10 @@ The constraints for each level are the same as for one level:
 	\sum\limits_{t \in \possibleThresholds} \selectort_t^l &= 1 & \mid \forall l
 \end{array} \]
 
-For every level $l$ $\percKmers^l, \minimizerLength^l$ and $\threshold^l$ can also be modeled analogously to having only one level: %\todo{this only holds under the assumption, that the minimizer distribution is equal on each level - independent of the choice of m and t. This is not trivial and should be further explored!!}
+For every level $l$ $\percKmers^\levelL, \averageFrequency^\levelL \minimizerLength^\levelL$ and $\threshold^\levelL$ can also be modeled analogously to having only one level: %\todo{this only holds under the assumption, that the minimizer distribution is equal on each level - independent of the choice of m and t. This is not trivial and should be further explored!!}
 \begin{align*}
 	\percKmers^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m^l \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t^l\right) & \mid \forall l \in \{1,...,L\}\\
+	\averageFrequency^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m^l \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric(m, t) \cdot \selectort_t^l\right) & \mid \forall l \in \{1,...,L\}\\
 	\minimizerLength^l &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m^l \cdot m  & \mid \forall l \in \{1,...,L\}\\
 	\threshold^l &= \sum\limits_{t \in \possibleThresholds} \selectort_t^l \cdot t & \mid \forall l \in \{1,...,L\}
 \end{align*}
