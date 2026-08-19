@@ -287,9 +287,12 @@ We denote the time needed to access bit in $R$ with $\timeForOperationOnStructur
 The time for checking whether a k-mer is present at a given offset in the Text is denoted as $\timeForOperationOnStructure{\compare}{T}$.\\
 Let $\possibleMinimizerLengths$ be the set of all minimizer lengths and $\possibleThresholds$ the set of all thresholds considered when searching for optimal parameters.\\
 We denote the optimal minimizer length $\minimizerLength$ and threshold $\threshold$.\\
-Let $\percKmers$ be the percentage of k-mers $q$ with unfrequent minimizers of length $\minimizerLength$ ($f(m(q)) \leq \threshold$). $\percKmersEmpiric(m,t)$ on the other hand is the empirically measured percentage on a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$.\\
+Let $\percKmers$ be the percentage of appearing k-mers $q$ with unfrequent minimizers of length $\minimizerLength$ ($f(m(q)) \leq \threshold$). $\percKmersEmpiric(m,t)$ on the other hand is the empirically measured percentage on a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$.\\
 Similarly $\averageFrequency$ describes the average frequency of minimizers, whilst $\averageFrequencyEmpiric(m,t)$ is the empirically measured average frequency for a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$. $\averageFrequencyEmpiric(m,t)$ can be derived from $\percKmersEmpiric(m,t)$:
-\[ \averageFrequencyEmpiric(m,t) = \percKmersEmpiric(m,1) + \sum\limits_{f=2}^t (\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1)) * f\] %\todo{tabelle $f_avg(m,t)$ mittels dynamischer programmierung bauen}
+\begin{align*}
+	\averageFrequencyEmpiric(m,t) &= \sum\limits_{f=1}^t \frac{(\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1))}{\percKmersEmpiric(m,t)} \cdot f\\
+	&= \frac{1}{\percKmersEmpiric(m,t)} \cdot\sum\limits_{f=1}^t (\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1)) \cdot f
+\end{align*} %\todo{tabelle $f_avg(m,t)$ mittels dynamischer programmierung bauen}
 
 \subsection*{Runtime}
 \subsubsection*{Times for Operations on Datastructure}

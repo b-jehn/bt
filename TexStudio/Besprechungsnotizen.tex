@@ -27,15 +27,18 @@
 \end{itemize}
 \subsection*{Fragen}
 \begin{itemize}
-	\item 
+	\item $f_{avg}$: müsste $p_K(m,f)$ normiert werden, da es sich um eine Bedingte wahrscheinlichkeit handelt?
+	\item $f_{avg}$ in $bpk_O$ berücksichtigen
+	\item $f_{avg}/2$ sinnvoll für lookup?
+	\item O Notation für $t_{...}$ sinnvoll?
 \end{itemize}
 
 \section*{Besprechung am 12.08.}
 \subsection*{Nächste Schritte}
 	\begin{itemize}
-			\item $p_K$ muss gewichtet betrachtet werden - wenn viele kmere den gleichen minimizer teilen, dann gibt es viele vergleiche mit dem Text, welche teuer sind - deswegen $p_K * durschnittliche Frequenz von unfrequent minimizern * T_{SL}$, sonst unverändert durchschnittliche frequenz berechnen - durchschnittliche frequenz: $p_K(m,1) * 1 + (p_K(m,2)-p_K(m,1)) * 2 + ... $
+			\item $p_K$ muss gewichtet betrachtet werden - wenn viele kmere den gleichen minimizer teilen, dann gibt es viele vergleiche mit dem Text, welche teuer sind - deswegen $p_K * durschnittliche Frequenz von unfrequent minimizern * T_{SL}$, sonst unverändert durchschnittliche frequenz berechnen - durchschnittliche frequenz: $p_K(m,1) * 1 + (p_K(m,2)-p_K(m,1)) * 2 + ... $ - done
 			\item für mehrere Level wird der lookup in R relevant, da dieser für höhere Level mehrfach stattfindet - ca. 30ns für check in R, 35ns für check in S+ 10ns für jeden check in O, 20ns für H - die Zeiten genau zu modellieren, wäre für die Praxis sinnvoll
-			\item pdf mit pushed, raus aus gitignore
+			\item pdf mit pushed, raus aus gitignore - done
 			\item zu subsampling: entweder aus dem ganzen Text zufällig wählen, oder anteilig an der länge der einzelnen sequenz, da sonst ein bias zu den kürzeren teilsequenzen besteht
 		\end{itemize}
 	\subsection*{Fragen}
