@@ -18,12 +18,25 @@
 ## Preperation
 ### Set up RSHash
 Clone the RSHash repository into the code directory:
-
 ```
 cd ./code
 git clone --recursive https://github.com/jonsmcode/rshash
 ```
 
+Follow the setup steps for RSHash - (also documented in the repositories README):
 ```
 
-Follow the setup steps for RSHash - documented in the repositories README
+```
+
+### Install bcalm
+```
+cd ./code
+git clone --recursive https://github.com/GATB/bcalm.git
+
+cd bcalm
+mkdir -p build
+cd build
+cmake ..
+make -j"$(nproc)"
+```
+### Set up UST

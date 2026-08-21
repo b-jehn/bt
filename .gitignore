@@ -1,7 +1,6 @@
-/rshash
-/bcalm
-/UST
 /code/rshash
+/code/bcalm
+/code/UST
 /code/build
 
 *.aux
