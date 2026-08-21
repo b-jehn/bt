@@ -4,36 +4,36 @@ import csv
 import sys
 import os
 
-K = 31  #kmer length
-T = 255 #max threshold
+K = 31  #kmer length that is/was used to gain minimizer_stats
+T = 255 #max threshold - the .csv files in ./minimizer_stats/{SEQUENCE_NAME}/ have to contain values for all t <= T
 LOAD_FACTOR = 0.75  #of the hash table
-SEQUENCE_NAME = "homo_sapiens"
 
+SEQUENCE_NAME = "cod"
+OPTIMIZATION_GOAL = "bpk_total"   #"runtime" or "bpk_total"
+MAX_BPK_TOTAL = 5               #needed, when OPTIMIZATION_GOAL == "runtime"
 LEVELS = 3
-MINIMIZER_LENGTHS = range(5,20)
-THRESHOLDS = [2**i for i in range(0,7)]
+MINIMIZER_LENGTHS = [m for m in range(5,20)]
+THRESHOLDS = [2**i for i in range(0,8)]
 
 if THRESHOLDS[-1] >= T:
     sys.exit(f"maximum threshold t: {THRESHOLDS[-1]} has to be smaller than T: {T}")
 
-
 sequence_path = f'../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
 sequence_length = 0
-log_sequence_length = 0
 if os.path.isfile(sequence_path):
     sequence_length = os.path.getsize(sequence_path)
-    log_sequence_length = math.log(sequence_length, 2)
 else:
     sys.exit(f"{sequence_path} is not a file")
+log_sequence_length = math.log(sequence_length, 2)
 
 
 #TODO: model or measure!
-t_access_R_empirical = 50
-t_access_O_empirical = 20
+t_access_R_empirical = 30
+t_access_O_empirical = 10
 t_access_H_empirical = 20
 t_rank_R_empirical = 35
 t_select_S_empirical = 35
-t_compare_T_empirical = 40
+t_compare_T_empirical = 10
 
 
 """
@@ -106,8 +106,12 @@ bpk_total = scip.addVar("bpk_total")
 #============================#
 #OBJECTIVE
 #============================#
-scip.setObjective(runtime, sense="minimize")   #runtime objective
-
+if(OPTIMIZATION_GOAL == "runtime"):
+    scip.setObjective(runtime, sense="minimize")   #runtime objective
+elif(OPTIMIZATION_GOAL == "bpk_total"):
+    scip.setObjective(bpk_total, sense="minimize")   #runtime objective
+else:
+    sys.exit(f"OPTIMIZATION_GOAL should be 'runtime' or 'bpk_total' but is: {OPTIMIZATION_GOAL}")
 #============================#
 #CONSTRAINTS
 #============================#
@@ -131,6 +135,7 @@ for l in range(LEVELS):
     scip.addCons(p_K_vars[l] - quicksum(sm * quicksum((st * P_K_needed[i][j]) for j, st in enumerate(st_vars[l])) for i, sm in enumerate(sm_vars[l])) == 0)
     #determine f_avg_l
     scip.addCons(f_avg_vars[l] - quicksum(sm * quicksum((st * f_avg_empirical[i][j]) for j, st in enumerate(st_vars[l])) for i, sm in enumerate(sm_vars[l])) == 0)
+    #scip.addCons(f_avg_vars[l] - 2 == 0)
     #find m and t
     scip.addCons(quicksum(sm for sm in sm_vars[l]) == 1, name=f"sm_mutually_exclusive_{l}")     #mutually exclusive selectors for m
     scip.addCons(quicksum(st for st in st_vars[l]) == 1, name=f"st__mutually_exclusive_{l}")    #mutually exclusive selectors for t
@@ -146,7 +151,8 @@ scip.addCons(bpk_O - quicksum(bpk_O_vars[l] for l in range(LEVELS)) == 0)
 #bits per k-mer in H
 scip.addCons(bpk_H - (quickprod(((1-p_K_vars[l])) for l in range(LEVELS)) * (64+log_sequence_length)) == 0)
 scip.addCons(bpk_total - (bpk_O + bpk_H) == 0)
-scip.addCons(bpk_total <= 10)
+if(OPTIMIZATION_GOAL == "runtime"):
+    scip.addCons(bpk_total <= MAX_BPK_TOTAL)
 
 #============================#
 #SOLVE
@@ -166,7 +172,16 @@ for l in range(LEVELS):
         print(f"t_{t}_{l}: {format(sol[st_vars[l][i]])}")
     print("")
 '''
-print("found solution:")
+print(f"\nsolved MINLP for sequence: {SEQUENCE_NAME}")
+if(OPTIMIZATION_GOAL == "runtime"):
+    print(f"with optimization goal: {OPTIMIZATION_GOAL} and MAX_BPK_TOTAL = {MAX_BPK_TOTAL}")
+else:
+    print(f"with optimization goal: {OPTIMIZATION_GOAL}")
+print(f"for {LEVELS} levels and k = {K}")
+print(f"considered minimizer lengths: {MINIMIZER_LENGTHS}")
+print(f"considered thresholds: {THRESHOLDS}")
+
+print("\nfound solution:")
 for l in range(LEVELS):
     print(f"m_{l}: {format(sol[m_vars[l]])}")
 print()

@@ -27,10 +27,10 @@
 \end{itemize}
 \subsection*{Fragen}
 \begin{itemize}
-	\item $f_{avg}$: müsste $p_K(m,f)$ normiert werden, da es sich um eine Bedingte wahrscheinlichkeit handelt?
-	\item $f_{avg}$ in $bpk_O$ berücksichtigen
-	\item $f_{avg}/2$ sinnvoll für lookup?
+	\item $f_{avg}$: müsste $p_K(m,f)$ normiert werden, da es sich um eine bedingte wahrscheinlichkeit handelt? - klingt sinnvoll, habe es erstmal so gemacht
+	\item $max(1, f_{avg}/2)$ sinnvoll für lookup?
 	\item O Notation für $t_{...}$ sinnvoll?
+	\item rshash/source/build.cpp besprechen/nachvollziehen - wie werden die unfrequent minimizer aus dem ersten level aus den sequencen gelöscht, um sie im zweiten level nicht mehr zu betrachten usw.?
 \end{itemize}
 
 \section*{Besprechung am 12.08.}

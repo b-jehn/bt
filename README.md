@@ -19,15 +19,11 @@
 ### Set up RSHash
 Clone the RSHash repository into the code directory:
 
-via HTTPS
 ```
 cd ./code
-git clone https://github.com/jonsmcode/rshash.git
+git clone --recursive https://github.com/jonsmcode/rshash
 ```
-or via SSH
-```
-cd ./code
-git clone git@github.com:jonsmcode/rshash.git
+
 ```
 
 Follow the setup steps for RSHash - documented in the repositories README
