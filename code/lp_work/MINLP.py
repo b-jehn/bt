@@ -103,6 +103,7 @@ bpk_O_vars = [scip.addVar(f"bpk_O_{l}") for l in range(LEVELS)] #bits per kmer i
 bpk_O = scip.addVar("bpk_O")
 bpk_H = scip.addVar("bpk_H")                                   #bits per kmer in H
 bpk_total = scip.addVar("bpk_total")
+
 #============================#
 #OBJECTIVE
 #============================#

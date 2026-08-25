@@ -136,6 +136,11 @@
 \newcommand\norm[2]{\left\lVert#1\right\rVert_{#2}} % norm
 \newcommand\enorm[1]{\norm{#1}{2}} % euclidean norm
 
+%=========== commands for minimizer distribution
+\newcommand{\sequence}{\mathcal{S}}
+\newcommand{\listOfSuperKmers}{\textbf{skmers}}
+\newcommand{\maxThreshold}{T}
+
 %=========== commands for MINLP
 \newcommand{\access}{access}
 \newcommand{\rank}{rank}
@@ -247,7 +252,7 @@ authority.\\
 
 \chapter{Minimizer Distribution}
 The \nameref{chap:minlp} only works, if the values $\percKmers(m,t)$ are known for every $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$ for the input sequence.
-\section*{Determining the Distribution}
+\section*{Minimizer Distribution for One Level}\label{sec:distributionOnOneLevel}
 The code to find the minimizer distribution for a given $sequence, k, \minimizerLength$ and $\threshold$ follows the following steps:\\
 stats:\\
 \begin{enumerate}
@@ -271,7 +276,17 @@ stats:\\
 	\item weiter ab Zeile 161
 \end{enumerate}
 
-\section{Distribution on Higher Levels}\label{sec:distributionOnHigherLevels}
+\section{Minimizer Distribution for Several Levels}\label{sec:distributionOnHigherLevels}
+The distribution of minimizers on higher levels should be dependent on the choice of minimizer lengths and thresholds on the levels below, as those influence which k-mers appear on higher levels.\\
+In order to understand this relationship, we will measure these distributions for a selection of sequences and analyze the results. It should be noted that this alone will not result in any knowledge relevant for the general case.\\
+
+For a given sequence $\sequence$, as well as sets of minimizer lengths $\possibleMinimizerLengths$ and thresholds $\possibleThresholds$ to be considered we determine the distribution per level in the following manner:\\
+First a list $\listOfSuperKmers$ of all super k-mers in $\sequence$ is computed.
+For every $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$ the distribution for the fist level is calculated as described in \nameref{sec:distributionOnOneLevel} using $\listOfSuperKmers$ as its input. During this, all frequent k-mers are added to a list $q \in \listOfSuperKmers \mid f(m(q)) \leq t$  
+
+\begin{enumerate}
+	\item 
+\end{enumerate}
 
 \chapter{MINLP Modeling}\label{chap:minlp}
 

@@ -16,21 +16,21 @@
 ```
 
 ## Preperation
-### Set up RSHash
-Clone the RSHash repository into the code directory:
+### Set up RSHash in the ./code Directory
 ```
-cd ./code
+cd code
 git clone --recursive https://github.com/jonsmcode/rshash
-```
 
-Follow the setup steps for RSHash - (also documented in the repositories README):
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. -D CMAKE_CXX_COMPILER=g++-14
+make
 ```
+"RSHash is a compressed, exact data structure for k-mers (strings of length k over the DNA alphabet {A,C,G,T}) based on bitvectors with Rank and Select support to Hash k-mers." - (https://github.com/jonsmcode/rshash/blob/main/README.md)
 
+### Install bcalm in the ./code Directory
 ```
-
-### Install bcalm
-```
-cd ./code
+cd code
 git clone --recursive https://github.com/GATB/bcalm.git
 
 cd bcalm
@@ -39,4 +39,21 @@ cd build
 cmake ..
 make -j"$(nproc)"
 ```
-### Set up UST
+"BCALM 2 is a bioinformatics tool for constructing the compacted de Bruijn graph from sequencing data." - (https://github.com/GATB/bcalm/blob/master/README.md)
+
+### Set up UST in the ./code Directory
+```
+cd code
+git clone https://github.com/medvedevgroup/UST.git
+
+cd UST
+make
+```
+"UST is a bioinformatics tool for constructing a spectrum-preserving string set (SPSS) representation from sets of k-mers." - (https://github.com/medvedevgroup/UST/blob/master/README.md)
+
+### Benchmarks
+Get datasets used by Pibiri (2022) with
+```
+cd code/rshash
+./benchmarks/download_and_preprocess_datasets.sh
+```
