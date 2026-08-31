@@ -23,14 +23,29 @@
 \section*{Besprechung am 26.08.}
 \subsection*{Nächste Schritte}
 \begin{itemize}
-	\item 
+	\item -l durch --level ersetzten
+	\item gewichtetes minimierungs Ziel in Form von $\alpha \cdot runtime + \beta \cdot bpk_{total}$ oder ähnlichem definieren
+	\item \textbf{Roadmap}:
+		\begin{enumerate}
+			\item Verteilung auf mehreren Leveln berechnen und untersuchen 
+			\item  Experimente durchführen
+			\begin{enumerate}
+				\item Server Zugang
+				\item $T_{access/select/rank/..._{R/S/...}}$ messen
+				\item MINLP für verschiedene Genome laufen lassen und mit tatsächlichem Speicherbedarf \& Laufzeit von RSHash vergleichen
+				\item (dabei Daten für ML Ansatz sammeln)
+			\end{enumerate}
+		\end{enumerate}
 \end{itemize}
 \subsection*{Fragen}
 \begin{itemize}
-	\item $f_{avg}$: müsste $p_K(m,f)$ normiert werden, da es sich um eine bedingte wahrscheinlichkeit handelt? - klingt sinnvoll, habe es erstmal so gemacht
-	\item $max(1, f_{avg}/2)$ sinnvoll für lookup?
-	\item O Notation für $t_{...}$ sinnvoll?
-	\item rshash/source/build.cpp besprechen/nachvollziehen - wie werden die unfrequent minimizer aus dem ersten level aus den sequencen gelöscht, um sie im zweiten level nicht mehr zu betrachten usw.?
+	\item $f_{avg}$: müsste $p_K(m,f)$ normiert werden, da es sich um eine bedingte wahrscheinlichkeit handelt? - ja, ist sinnvoll
+	\item $(f_{avg}+1)/2)$ sinnvoll für lookup? - scheint so
+	\item O Notation für $t_{...}$ sinnvoll? - wohl eher nicht -lieber messen
+	\item rshash/source/build.cpp und ministats.cpp durchsprechen - besonders:
+	\begin{itemize}
+		\item get uncovered skmers und freq minimizers
+	\end{itemize}
 \end{itemize}
 
 \section*{Besprechung am 12.08.}

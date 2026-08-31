@@ -357,13 +357,14 @@ A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log U/n \rc
 \subsubsection*{Lookup}
 A k-mer $q$ is looked up by first computing its minimizer $m(q)$. If the bit $R[m(q)]$ is not set, $q$ is not in the data structure.\\
 For the $\percKmers$ of the k-mers for which the bit is set, the minimizer’s rank $r = \rank_R(m(q))$ is computed. Then $\select_S(r)$ and $\select_S(r+1)-1$ tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored.\\
-Finally the presence of $q$ in $T$ is checked at every offset $o \in O[\select_S(r):\select_S(r+1)-1]$. For the lookup case, this is terminated as soon as $q$ is found for the first time, which is on average at the offset in the middle of the interval: $O[\select_S(r) + \frac{\select_S(r+1)-1-\select_S(r)}{2}]$.\\
+Finally the presence of $q$ in $T$ is checked at every offset $o \in O[\select_S(r):\select_S(r+1)-1]$. This interval contains on average $\averageFrequency$ many offsets.\\
+In the lookup case, this comparison is terminated as soon as $q$ is found for the first time, which is on average the case after $(\averageFrequency+1)/2$ comparisons ($+1$ because the fist index always has to be checked).\\
 For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through an access of the hash table. \todo{quelle: rshash}
 
 The lookup time $\timeForOperationOnStructure{lookup}{RSHash}$ for one level can thus be modeled as:
 \newcommand{\lookupTimeExpression}{%
 \begin{aligned}
-	\timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\averageFrequency}{2} \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
+	\timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + (\averageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
 	&+ (1-\percKmers) \cdot \timeForOperationOnStructure{\access}{H}
 \end{aligned}%
 }

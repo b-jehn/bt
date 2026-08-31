@@ -1,4 +1,5 @@
 from pyscipopt import Model, quicksum, quickprod
+from datetime import datetime
 import math
 import csv
 import sys
@@ -8,8 +9,8 @@ K = 31  #kmer length that is/was used to gain minimizer_stats
 T = 255 #max threshold - the .csv files in ./minimizer_stats/{SEQUENCE_NAME}/ have to contain values for all t <= T
 LOAD_FACTOR = 0.75  #of the hash table
 
-SEQUENCE_NAME = "cod"
-OPTIMIZATION_GOAL = "bpk_total"   #"runtime" or "bpk_total"
+SEQUENCE_NAME = "homo_sapiens"
+OPTIMIZATION_GOAL = "runtime"   #"runtime" or "bpk_total"
 MAX_BPK_TOTAL = 5               #needed, when OPTIMIZATION_GOAL == "runtime"
 LEVELS = 3
 MINIMIZER_LENGTHS = [m for m in range(5,20)]
@@ -18,6 +19,7 @@ THRESHOLDS = [2**i for i in range(0,8)]
 if THRESHOLDS[-1] >= T:
     sys.exit(f"maximum threshold t: {THRESHOLDS[-1]} has to be smaller than T: {T}")
 
+logfile_path = f'logs/log_{SEQUENCE_NAME}'
 sequence_path = f'../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
 sequence_length = 0
 if os.path.isfile(sequence_path):
@@ -46,8 +48,9 @@ P_K_empirical = [[0] for m in MINIMIZER_LENGTHS] #percentage of appearing minimi
 for i, m in enumerate(MINIMIZER_LENGTHS):  
     reader = csv.reader(open(f'./minimizer_stats/{SEQUENCE_NAME}/stats_m{m}_t{T}.csv'), delimiter=',')
     for t, row in enumerate(reader):
-        if(t>0 and t<=T):
-            P_K_empirical[i].append(float(row[2])/100)   #convert to percentage
+        if(t==0):
+            continue    #skip first line - describtion of the values
+        P_K_empirical[i].append(float(row[2])/100)   #convert to percentage
 """
 P_K_needed[i][j]: only relevant values of p_K_empirical
 the empirically measured percentage of 
@@ -72,6 +75,9 @@ for m in range(len(MINIMIZER_LENGTHS)):
             f_avg_empirical[m].append(current/P_K_empirical[m][t])
 print(f"f_avg_empirical:\n {f_avg_empirical}")
 
+#============================#
+#Set up SCIP Model
+#============================#
 scip = Model("Level")  # scip name is optional
 
 #============================#
@@ -101,7 +107,7 @@ t_vars = [scip.addVar(f"t_{l}") for l in range(LEVELS)]         #threshold on ea
 
 bpk_O_vars = [scip.addVar(f"bpk_O_{l}") for l in range(LEVELS)] #bits per kmer in O on each level
 bpk_O = scip.addVar("bpk_O")
-bpk_H = scip.addVar("bpk_H")                                   #bits per kmer in H
+bpk_H = scip.addVar("bpk_H")                                    #bits per kmer in H
 bpk_total = scip.addVar("bpk_total")
 
 #============================#
@@ -127,7 +133,7 @@ scip.addCons(t_compare_T - t_compare_T_empirical == 0)
 #recursivly build the runtime constraint level by level
 remaining_time = t_access_H
 for l in reversed(range(LEVELS)):
-    remaining_time = t_access_R + p_K_vars[l] * (t_rank_R + 2*t_select_S + f_avg_vars[l]/2*(t_access_O+t_compare_T)) + (1 - p_K_vars[l]) * remaining_time
+    remaining_time = t_access_R + p_K_vars[l] * (t_rank_R + 2*t_select_S + (f_avg_vars[l]+1)/2*(t_access_O+t_compare_T)) + (1 - p_K_vars[l]) * remaining_time
 
 scip.addCons(runtime - remaining_time == 0, name="runtime")
 
@@ -197,4 +203,33 @@ for l in range(LEVELS):
 print(f"bpk_H: {format(sol[bpk_H])}")
 print(f"runtime: {format(sol[runtime])}")
 print(f"bpk_total: {format(sol[bpk_total])}")
+
+#============================#
+#WRITE SOLUTION TO LOG
+#============================#
+with open(logfile_path, "a") as logfile:
+    date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    with open(logfile_path, "a") as logfile:
+        logfile.write(f"{date_time}----------------------------------------\nsolved MINLP for sequence: {SEQUENCE_NAME}\n")
+    if(OPTIMIZATION_GOAL == "runtime"):
+        logfile.write(f"with optimization goal: {OPTIMIZATION_GOAL} and MAX_BPK_TOTAL = {MAX_BPK_TOTAL}\n")
+    else:
+        logfile.write(f"with optimization goal: {OPTIMIZATION_GOAL}\n")
+    logfile.write(f"for {LEVELS} levels and k = {K}\nconsidered minimizer lengths: {MINIMIZER_LENGTHS}\nconsidered thresholds: {THRESHOLDS}\n")
+
+    logfile.write("\nfound solution:\n")
+    for l in range(LEVELS):
+        logfile.write(f"m_{l}: {format(sol[m_vars[l]])}\n")
+    logfile.write("\n")
+    for l in range(LEVELS):
+        logfile.write(f"t_{l}: {format(sol[t_vars[l]])}\n") 
+    logfile.write("\n") 
+    for l in range(LEVELS):  
+        logfile.write(f"p_K_{l}: {format(sol[p_K_vars[l]])}\n")
+    logfile.write("\n")
+    for l in range(LEVELS):
+        logfile.write(f"bpk_O_{l}: {format(sol[bpk_O_vars[l]])}\n")
+    logfile.write(f"bpk_H: {format(sol[bpk_H])}\n")
+    logfile.write(f"runtime: {format(sol[runtime])}\n")
+    logfile.write(f"bpk_total: {format(sol[bpk_total])}\n\n\n")
     
