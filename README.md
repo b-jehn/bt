@@ -57,3 +57,11 @@ Get datasets used by Pibiri (2022) with
 cd code/rshash
 ./benchmarks/download_and_preprocess_datasets.sh
 ```
+
+## Run RSHash
+```
+./build/source/rshash build -i ./DNA_datasets/Gadus_morhua.gadMor3.0.dna.toplevel.fa -d ./DNA_datasets/Gadus_morhua.rshash -k 31 --m1 18 --t1 64 --level 1
+./build/source/rshash query -d ./DNA_datasets/Gadus_morhua.rshash -q ./DNA_datasets/Gadus_morhua.fastq.gz
+
+./build/source/rshash build -i ./DNA_datasets/Gadus_morhua.gadMor3.0.dna.toplevel.fa -d ./DNA_datasets/Gadus_morhua.rshash -k 31 --m1 18 --t1 64 --m2 18 --t2 64 --level 2
+```
