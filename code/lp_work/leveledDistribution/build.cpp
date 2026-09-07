@@ -587,13 +587,50 @@ std::vector<uint64_t> get_uncovered_kmers(const std::vector<seqan3::bitpacked_se
             }   
         }
     }
-    for(size_t i=0; i < t; i++) {
-        std::cout << "kmers_uncovered[" << i << "]: " << kmers_uncovered[i] << '\n';
-    }   
     return kmers_uncovered;
 }
 
+void getDistributionOnLevel(
+    const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> &sequences,
+    std::vector<SkmerInfo> &freq_skmers,
+    sux::bits::EliasFano<sux::util::AllocType::MALLOC> &r,
+    sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> &s_select,
+    std::vector<uint8_t> &minimizers_occurences,
+    size_t no_minimizers, size_t no_kmers,
+    uint64_t level, uint64_t m, uint64_t t, uint64_t k, uint64_t seed,
+    std::filesystem::path stats_directory
+)
+{
+    std::cout << "getting uncovered kmers on level " << level << " out of " << no_kmers << " kmers left over\n";
+    std::vector<size_t> kmers_uncovered = get_uncovered_kmers(sequences, freq_skmers, m, t, k, seed, level, r, s_select);
 
+    size_t counter[t] = {0};
+    for(uint8_t count : minimizers_occurences) {
+        counter[count-1]++;
+    }
+
+    // Create and open output file
+    std::string stats_fileName("level" + std::to_string(level));
+    std::filesystem::path stats_filePath = stats_directory / (stats_fileName + ".csv");
+    std::ofstream stats_file(stats_filePath);
+    
+    stats_file << "frequency, percentage of kmers covered\n";
+    for(uint8_t j=0; j < t; j++) {
+        stats_file << (j+1) << ',' << (double) (no_kmers-kmers_uncovered[j])/no_kmers << '\n';
+    }
+    /*
+    size_t cum = 0;
+    size_t cum_skmers = 0;
+    stats_file << "frequency, superkmers, kmers covered\n";
+    for(uint8_t j=0; j < t; j++) {
+        cum += counter[j];
+        cum_skmers += (j+1)*counter[j];
+        stats_file << (j+1) << ',' << (double) counter[j]/no_minimizers*100 << ',' << (double) (no_kmers-kmers_uncovered[j])/no_kmers*100 << '\n';
+    }
+    */
+    stats_file.close();
+    kmers_uncovered.clear();
+}
 
 void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& input)
 {
@@ -613,7 +650,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     std::cout << "build R_1...\n";
     const uint64_t M1 = 1ULL << (m1+m1);
     r1 = sux::bits::EliasFano(minimizers1, M1);
-    uint64_t no_minimizers1 = minimizers1.size();    //needed for stats
+    size_t no_minimizers1 = minimizers1.size();    //needed for stats
     minimizers1.clear();
 
     std::cout << "mark skmers1...\n";
@@ -623,32 +660,20 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     //for minimizer distribution stats:
     //=================================
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
-    std::cout << "getting uncovered kmers on level 1 out of " << no_text_kmers<< " frequent kmers in the text\n";
-    std::vector<uint64_t> kmers_uncovered = get_uncovered_kmers(input, freq_skmers, m1, m_thres1, k, seed1, 1, r1, s1_select);
-
-    uint64_t counter[m_thres1] = {0};
-    for(uint8_t count : minimizers1_occurences) {
-        counter[count-1]++;
-    }
 
     //create the directory if necessary
-    std::filesystem::path stats_directory = "../lp_work/leveledDistribution/cod";
+    std::filesystem::path stats_directory = "./cod/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
     std::filesystem::create_directories(stats_directory);
-    // Create and open output file
-    std::string stats_fileName("leveledStats_m1=" + std::to_string(m1) + "_t1=" + std::to_string(m_thres1));
-    std::filesystem::path stats_filePath = stats_directory / (stats_fileName + ".csv");
-    std::ofstream stats_file(stats_filePath);
-    
-    uint64_t cum = 0;
-    uint64_t cum_skmers = 0;
-    stats_file << "frequency, superkmers, kmers covered\n";
-    for(uint8_t j=0; j < m_thres1; j++) {
-        cum += counter[j];
-        cum_skmers += (j+1)*counter[j];
-        stats_file << (j+1) << ',' << (double) counter[j]/no_minimizers1*100 << ',' << (double) (no_text_kmers-kmers_uncovered[j])/no_text_kmers*100 << '\n';
-    }
-    stats_file.close();
-    kmers_uncovered.clear();
+
+    getDistributionOnLevel(
+        input,
+        freq_skmers,
+        r1,
+        s1_select,
+        minimizers1_occurences,
+        no_minimizers1, no_text_kmers,
+        1, m1, m_thres1, k, seed1,
+        stats_directory);
     //=================================
     //end of distribution computation for level one
     //=================================
@@ -674,7 +699,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         std::cout << "build R_2...\n";
         const uint64_t M2 = 1ULL << (m2+m2);
         r2 = sux::bits::EliasFano(minimizers2, M2);
-        uint64_t no_minimizers2 = minimizers2.size();    //needed for stats
+        size_t no_minimizers2 = minimizers2.size();    //needed for stats
         minimizers2.clear();
 
         std::cout << "mark skmers2...\n";
@@ -684,29 +709,15 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         //for minimizer distribution stats:
         //=================================
         sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s2_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s2.data()), no_skmers2+1, 3);
-        std::cout << "getting uncovered kmers on level 2 out of " << freq_kmers<< " frequent kmers on the previous level\n";
-        kmers_uncovered = get_uncovered_kmers(input, freq_skmers, m2, m_thres2, k, seed2, 2, r2, s2_select);
-
-        uint64_t counter[m_thres2] = {0};
-        for(uint8_t count : minimizers2_occurences) {
-            counter[count-1]++;
-        }
-
-        // Create and open output file
-        stats_fileName.append("_m2=" + std::to_string(m2) + "_t2=" + std::to_string(m_thres2));
-        std::filesystem::path stats_filePath = stats_directory / (stats_fileName + ".csv");
-        std::ofstream stats_file(stats_filePath);
-
-        uint64_t cum = 0;
-        uint64_t cum_skmers = 0;
-        stats_file << "frequency, superkmers, kmers covered\n";
-        for(uint8_t j=0; j < m_thres2; j++) {
-            cum += counter[j];
-            cum_skmers += (j+1)*counter[j];
-            stats_file << (j+1) << ',' << (double) counter[j]/no_minimizers2*100 << ',' << (double) (freq_kmers-kmers_uncovered[j])/freq_kmers*100 << '\n';
-        }
-        stats_file.close();
-        kmers_uncovered.clear();
+        getDistributionOnLevel(
+            input,
+            freq_skmers,
+            r2,
+            s2_select,
+            minimizers2_occurences,
+            no_minimizers2, freq_kmers,
+            2, m2, m_thres2, k, seed2,
+            stats_directory);
         //=================================
         //end of distribution computation for level one
         //=================================
@@ -734,7 +745,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         std::cout << "build R_3...\n";
         const uint64_t M3 = 1ULL << (m3+m3);
         r3 = sux::bits::EliasFano(minimizers3, M3);
-        uint64_t no_minimizers3 = minimizers3.size();    //needed for stats
+        size_t no_minimizers3 = minimizers3.size();    //needed for stats
         minimizers3.clear();
 
         std::cout << "mark skmers3...\n";
@@ -744,29 +755,15 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         //for minimizer distribution stats:
         //=================================
         sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s3_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s3.data()), no_skmers3+1, 3);
-        std::cout << "getting uncovered kmers on level 3 out of " << freq_kmers<< " frequent kmers on the previous level\n";
-        kmers_uncovered = get_uncovered_kmers(input, freq_skmers, m3, m_thres3, k, seed3, 3, r3, s3_select);
-
-        uint64_t counter[m_thres3] = {0};
-        for(uint8_t count : minimizers3_occurences) {
-            counter[count-1]++;
-        }
-
-        // Create and open output file
-        stats_fileName.append("_m3=" + std::to_string(m3) + "_t3=" + std::to_string(m_thres3));
-        std::filesystem::path stats_filePath = stats_directory / (stats_fileName + ".csv");
-        std::ofstream stats_file(stats_filePath);
-
-        uint64_t cum = 0;
-        uint64_t cum_skmers = 0;
-        stats_file << "frequency, superkmers, kmers covered\n";
-        for(uint8_t j=0; j < m_thres3; j++) {
-            cum += counter[j];
-            cum_skmers += (j+1)*counter[j];
-            stats_file << (j+1) << ',' << (double) counter[j]/no_minimizers3*100 << ',' << (double) (freq_kmers-kmers_uncovered[j])/freq_kmers*100 << '\n';
-        }
-        stats_file.close();
-        kmers_uncovered.clear();
+        getDistributionOnLevel(
+            input,
+            freq_skmers,
+            r3,
+            s3_select,
+            minimizers3_occurences,
+            no_minimizers3, freq_kmers,
+            3, m3, m_thres3, k, seed3,
+            stats_directory);
         //=================================
         //end of distribution computation for level one
         //=================================
