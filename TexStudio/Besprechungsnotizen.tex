@@ -23,12 +23,17 @@
 \section*{Besprechung am 03.09.}
 \subsection*{Nächste Schritte}
 \begin{itemize}
-	\item 
+	\item \textit{no\_minimizers} ist falsch, da es sich hierbei nur um die anzahl an unfrequenten minimizern handelt
 \end{itemize}
 \subsection*{Fragen}
 \begin{itemize}
 	\item im rshash repository wird häufig 'minimiser' statt 'minimi\textbf{z}er' genutzt
 	\item falscher Datentyp bei berechnung von $P_\mathcal{M}$? Verteilung "springt"
+	\item wofür sind \textit{cum} und \textit{cum\_skmers} bei der Berechnung der Minimizer stats nötig?
+	\item lässt sich \textit{get\_uncovered\_kmers} ohne die loops über 1-t umsetzten? So, dass dabei nicht direkt die kummulative Summer gezählt wird sondern die exakte Anzahl an k-meren mit minimizern dieser Frequenzen?
+	\item nur eine idee: könnte es nicht interessant sein, den zusammenhang zwischen der frequenz eines minimizers und der länge der zugehörigen super kmere zu betrachten? \\
+	Vermutung dazu: wenn gerade "kleine" minimizer besonders frequent sind, dann müssten diese fast alle anliegenden k-mere abdecken und somit zu langen super k-meren gehören.\\
+	Ist das genau der zusammenhang zwischen $p_K$ und $p_M$?
 \end{itemize}
 
 \section*{Besprechung am 26.08.}
