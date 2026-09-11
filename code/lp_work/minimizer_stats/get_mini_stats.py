@@ -2,7 +2,7 @@ import subprocess
 import os
 
 T = "255"
-genome = "homo_sapiens"
+genome = "frequent_skmers_level1"
 
 # checking if the directory demo_folder 
 # exist or not.
@@ -12,7 +12,7 @@ if not os.path.exists(genome):
     # then create it.
     os.makedirs(genome)
 
-for m in range(17,26):
+for m in range(18,19):
     print(f"writing {genome}/stats_m" + str(m) + "_t" + T + ".csv")
     with open(f"{genome}/stats_m" + str(m) + "_t" + T + ".csv", "w") as outfile:
         subprocess.run(

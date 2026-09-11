@@ -633,6 +633,25 @@ void getDistributionOnLevel(
     kmers_uncovered.clear();
 }
 
+void print_freq_skmers(
+    const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> & input,
+    const std::vector<SkmerInfo> & freq_skmers,
+    std::string outfile_path)
+{
+    std::cout << "frequent skmers: " << freq_skmers.size() << "\n\n";
+    seqan3::sequence_file_output fout{outfile_path};
+    for (size_t i = 0; i < freq_skmers.size(); ++i) {
+        auto const & skmer_info = freq_skmers[i];
+        // std::cout << ">skmer_" << i << " seq=" << skmer_info.seq_id << " start=" << skmer_info.start << " end=" << skmer_info.end << '\n';
+        auto skmer = input[skmer_info.seq_id] | std::views::drop(skmer_info.start) | std::views::take(skmer_info.end - skmer_info.start);
+        // for (char c : skmer | seqan3::views::to_char)
+        //     std::cout << c;
+        // std::cout << '\n';
+        std::string id = "seq=" + std::to_string(skmer_info.seq_id) + " start=" + std::to_string(skmer_info.start) + " end=" + std::to_string(skmer_info.end);
+        fout.emplace_back(skmer, id);
+    }
+}
+
 void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& input)
 {
     no_text_kmers = mark_sequences(input, k, endpoints);
@@ -663,7 +682,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
 
     //create the directory if necessary
-    std::filesystem::path stats_directory = "./cod.k31.eulertigs/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
+    std::filesystem::path stats_directory = "./Gadus_morhua.gadMor3.0.dna.toplevel/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
     std::filesystem::create_directories(stats_directory);
 
     getDistributionOnLevel(
@@ -684,6 +703,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     std::cout << "get frequent skmers...\n";
     size_t freq_kmers;
     freq_kmers = get_frequent_skmers<1>(input, freq_skmers, freq_skmers);
+    //print_freq_skmers(input, freq_skmers, "./frequent_skmers_level1.fasta");
     
 
     if(level > 1)
@@ -730,6 +750,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         freq_kmers = get_frequent_skmers<2>(input, freq_skmers, freq_skmers2);
         freq_skmers.clear();
         freq_skmers = freq_skmers2;
+        //print_freq_skmers(input, freq_skmers, "./frequent_skmers_level2.fasta");
     }
 
     if(level > 2)
@@ -776,6 +797,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         freq_kmers = get_frequent_skmers<3>(input, freq_skmers, freq_skmers3);
         freq_skmers.clear();
         freq_skmers = freq_skmers3;
+        //print_freq_skmers(input, freq_skmers, "./frequent_skmers_level3.fasta");
     }
 
     std::cout << "build last level...\n";
