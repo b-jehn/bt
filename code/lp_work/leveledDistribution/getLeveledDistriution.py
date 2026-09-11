@@ -5,10 +5,10 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
-genome = "cod" #also has to be manually changed in build.cpp - as of now
+genome = "cod.k31.eulertigs" #also has to be manually changed in build.cpp - as of now
 levels = 3
-minimizer_sets = [[14,14,14], [5, 18, 18], [18, 18, 18], [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17]]
-#minimizer_sets = [[19,19,19]]
+#minimizer_sets = [[14,14,14], [5, 18, 18], , [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17],[19,19,19]]
+minimizer_sets = [[18, 18, 18]]
 t = [64, 64, 64]
 
 for m in minimizer_sets:
@@ -19,8 +19,8 @@ for m in minimizer_sets:
         [
             "../../rshash/build/source/rshash",
             "build",
-            "-i", "../../rshash/DNA_datasets/Gadus_morhua.gadMor3.0.dna.toplevel.fa",
-            "-d", "../../rshash/DNA_datasets/Gadus_morhua.rshash",
+            "-i", f"../../rshash/DNA_datasets/{genome}.fa",
+            "-d", f"../../rshash/DNA_datasets/{genome}.rshash",
             "-k", "31",
             "--m1", str(m[0]),
             "--m2", str(m[1]),

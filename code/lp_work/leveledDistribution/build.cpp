@@ -663,7 +663,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
 
     //create the directory if necessary
-    std::filesystem::path stats_directory = "./cod/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
+    std::filesystem::path stats_directory = "./cod.k31.eulertigs/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
     std::filesystem::create_directories(stats_directory);
 
     getDistributionOnLevel(
