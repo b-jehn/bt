@@ -33,65 +33,66 @@ for m in minimizer_sets:
         check=True,
     )
 
-    ###############
-    # plot p_M stats
-    ###############
-    # directory containing level1.csv, level2.csv, and level3.csv
-    stats_directory = Path(f"./{genome}/leveledMinimizerDistribution_m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
-    plt.figure(figsize=(8, 6))
+    for type in ["distinct", "cumulated"]:
+        ###############
+        # plot p_M stats
+        ###############
+        # directory containing level1.csv, level2.csv, and level3.csv
+        stats_directory = Path(f"./{genome}/leveledMinimizerDistribution_m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
+        plt.figure(figsize=(8, 6))
 
-    for level in range(1, 4):
-        stats_path = stats_directory / f"level{level}.csv"
+        for level in range(1, 4):
+            stats_path = stats_directory / f"{type}Stats_level{level}.csv"
 
-        stats = pd.read_csv(stats_path)
+            stats = pd.read_csv(stats_path)
 
-        # Use the first column as x and the second column as y
-        x = stats.iloc[:, 0]
-        y = stats.iloc[:, 1]
-
-
-        plt.scatter(x, y, label=f"Level {level}\nm={m[level-1]}; t= {t[level-1]}", s=35)
-
-    plt.xlabel("threshold")
-    plt.ylabel("percentage of minimizers with frequency <= threshold")
-    plt.title("Minimizer Frequencies per Level")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.ylim(0, 100)
-    plt.tight_layout()
-
-    #save the plot
-    plt.savefig(stats_directory / "minimizer_frequencies_per_level.png", dpi=300)
-    #plt.show()
-
-    ###############
-    # plot p_K stats
-    ###############
-    # directory containing level1.csv, level2.csv, and level3.csv
-    stats_directory = Path(f"./{genome}/leveledMinimizerDistribution_m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
-    plt.figure(figsize=(8, 6))
-
-    for level in range(1, 4):
-        stats_path = stats_directory / f"level{level}.csv"
-
-        stats = pd.read_csv(stats_path)
-
-        # Use the first column as x and the second column as y
-        x = stats.iloc[:, 0]
-        y = stats.iloc[:, 2]
+            # Use the first column as x and the second column as y
+            x = stats.iloc[:, 0]
+            y = stats.iloc[:, 1]
 
 
-        plt.scatter(x, y, label=f"Level {level}\nm={m[level-1]}; t= {t[level-1]}", s=35)
+            plt.scatter(x, y, label=f"Level {level}\nm={m[level-1]}; t= {t[level-1]}", s=35)
 
-    plt.xlabel("threshold")
-    plt.ylabel("percentage of kmers with minimizers of frequency <= threshold")
-    plt.title("Covered k_mers per Level")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.ylim(0, 100)
-    plt.tight_layout()
+        plt.xlabel(stats.columns[0])
+        plt.ylabel(stats.columns[1])
+        plt.title(f"{type} minimizer frequencies per Level")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.ylim(0, 100)
+        plt.tight_layout()
 
-    #save the plot
-    plt.savefig(stats_directory / "kmer_coverage_by_level.png", dpi=300)
-    #plt.show()
-    plt.close()
+        #save the plot
+        plt.savefig(stats_directory / f"{type}_p_M_per_level.png", dpi=300)
+        #plt.show()
+
+        ###############
+        # plot p_K stats
+        ###############
+        # directory containing level1.csv, level2.csv, and level3.csv
+        stats_directory = Path(f"./{genome}/leveledMinimizerDistribution_m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
+        plt.figure(figsize=(8, 6))
+
+        for level in range(1, 4):
+            stats_path = stats_directory / f"{type}Stats_level{level}.csv"
+
+            stats = pd.read_csv(stats_path)
+
+            # Use the first column as x and the second column as y
+            x = stats.iloc[:, 0]
+            y = stats.iloc[:, 2]
+
+
+            plt.scatter(x, y, label=f"Level {level}\nm={m[level-1]}; t= {t[level-1]}", s=35)
+
+        plt.xlabel(stats.columns[0])
+        plt.ylabel(stats.columns[2])
+        plt.title(f"{type} k_mers covered per Level")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.ylim(0, 100)
+        plt.tight_layout()
+
+        #save the plot
+        plt.savefig(stats_directory / f"{type}_p_K_per_level.png", dpi=300)
+        #plt.show()
+        plt.close()

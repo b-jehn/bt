@@ -1,4 +1,4 @@
-frequency, superkmers, kmers covered
+f, p_M: percentage of minimizers with frequency <= f on the level, p_k: percentage of kmers having minimizers of frequency <= f on the level
 1,62.1707,60.0461
 2,68.3033,66.2397
 3,70.8764,68.7956

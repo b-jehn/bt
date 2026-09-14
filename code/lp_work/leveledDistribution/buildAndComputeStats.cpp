@@ -1,4 +1,5 @@
 /*
+THIS VERSIO COMPUTES NOT CUMULATED BUT RAW STATS FOR P_M AND P_K
 this is a modified version of the build.cpp file, which in addition to building rshash also
 computes the minimizer distribution for the levels and parameters specified when calling the function
 
@@ -515,7 +516,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                 if(minimiser_rank = r.rank(minimiser.minimiser_value), r.rank(minimiser.minimiser_value + 1) - minimiser_rank) {
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     for(size_t i=0; i < t; i++)
-                        mini_unfreq[i] = frequency <= i+1;
+                        mini_unfreq[i] = frequency == i+1;
                 }
                 break;
             }
@@ -525,7 +526,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     
                     for(size_t i=0; i < t; i++) {
-                        cur_mini_unfreq[i] = frequency <= i+1;
+                        cur_mini_unfreq[i] = frequency == i+1;
                         if(mini_unfreq[i] && !cur_mini_unfreq[i])
                             start_positions[i] = minimiser.range_position;
                         if(!mini_unfreq[i] && cur_mini_unfreq[i])
@@ -559,7 +560,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                 if(minimiser_rank = r.rank(minimiser.minimiser_value), r.rank(minimiser.minimiser_value + 1) - minimiser_rank) {
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     for(size_t i=0; i < t; i++)
-                        mini_unfreq[i] = frequency <= i+1;
+                        mini_unfreq[i] = frequency == i+1;
                 }
                 break;
             }
@@ -569,7 +570,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     
                     for(size_t i=0; i < t; i++) {
-                        cur_mini_unfreq[i] = frequency <= i+1;
+                        cur_mini_unfreq[i] = frequency == i+1;
                         if(mini_unfreq[i] && !cur_mini_unfreq[i])
                             start_positions[i] = minimiser.range_position;
                         if(!mini_unfreq[i] && cur_mini_unfreq[i])
@@ -615,18 +616,33 @@ void getDistributionOnLevel(
         minimizer_frequency_counter[frequency-1]++;     //TODO: possibly clean up indecees at some point
     }
 
+    //getting distinct stats
     // Create and open output file
-    std::string stats_fileName("level" + std::to_string(level));
+    std::string stats_fileName("distinctStats_level" + std::to_string(level));
     std::filesystem::path stats_filePath = stats_directory / (stats_fileName + ".csv");
     std::ofstream stats_file(stats_filePath);
 
-    size_t cum = 0;             //cumulated number of minimizers with frequency <= j in each iteration
-    size_t cum_skmers = 0;      //cummulated number of super kmers with minimizers of frequency <= j in each iteration
-    stats_file << "frequency, superkmers, kmers covered\n";
+    stats_file << "f, p_M: percentage of minimizers with frequency == f on the level, p_k: percentage of kmers having minimizers of frequency == f on the level\n";
     for(uint8_t j=0; j < t; j++) {
-        cum += minimizer_frequency_counter[j];
-        cum_skmers += (j+1)*minimizer_frequency_counter[j];
-        stats_file << (j+1) << ',' << (double) cum_skmers/no_skmers_in_input*100 << ',' << (double) (no_kmers-kmers_uncovered[j])/no_kmers*100 << '\n';
+        stats_file << (j+1) << ',' << (double) (j+1)*minimizer_frequency_counter[j]/no_skmers_in_input*100 << ',' << (double) (no_kmers-kmers_uncovered[j])/no_kmers*100 << '\n';
+    }
+
+    stats_file.close();
+
+    //getting cummulated stats
+    // Create and open output file
+    stats_fileName = "cumulatedStats_level" + std::to_string(level);
+    stats_filePath = stats_directory / (stats_fileName + ".csv");
+    stats_file.open(stats_filePath);
+
+    size_t cum_frequency_counts = 0;      //cummulated number of super kmers with minimizers of frequency <= j in each iteration
+    size_t cumulated_covered_kmers = 0;     //cummulated number of super kmers with minimizers of frequency <= j in each iteration
+
+    stats_file << "f, p_M: percentage of minimizers with frequency <= f on the level, p_k: percentage of kmers having minimizers of frequency <= f on the level\n";
+    for(uint8_t j=0; j < t; j++) {
+        cum_frequency_counts += (j+1)*minimizer_frequency_counter[j];
+        cumulated_covered_kmers += no_kmers-kmers_uncovered[j];
+        stats_file << (j+1) << ',' << (double) cum_frequency_counts/no_skmers_in_input*100 << ',' << (double) (cumulated_covered_kmers)/no_kmers*100 << '\n';
     }
 
     stats_file.close();
@@ -682,7 +698,8 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
 
     //create the directory if necessary
-    std::filesystem::path stats_directory = "./Gadus_morhua.gadMor3.0.dna.toplevel/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
+    std::string genome = "Gadus_morhua.gadMor3.0.dna.toplevel";
+    std::filesystem::path stats_directory = "./" + genome + "/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
     std::filesystem::create_directories(stats_directory);
 
     getDistributionOnLevel(
