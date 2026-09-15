@@ -88,7 +88,7 @@ inline void RSHash::filter_freq_minimizers(std::vector<MinimizerT> &minimizers,
 template<int level, typename MinimizerT>
 inline uint64_t RSHash::get_minimizers(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> &sequences,
     const std::vector<SkmerInfo> &skmers,
-    std::vector<uint64_t> &unfreq_minimizers, std::vector<uint8_t> &counts)
+    std::vector<uint64_t> &infreq_minimizers, std::vector<uint8_t> &counts)
 {
     std::cout << std::bitset<64>(shape.value) << ' ' << window_size << " " << k << " " << overlap << " " << m1 << " " << m2 << " " << m3 << "\n";
     auto view = [&]() {
@@ -141,7 +141,7 @@ inline uint64_t RSHash::get_minimizers(const std::vector<seqan3::bitpacked_seque
         data_ptr[i] = minimizers[i].first;
     auto* raw = reinterpret_cast<uint64_t*>(minimizers.data());
     std::vector<uint64_t> tmp(raw, raw + no_minimizers);
-    unfreq_minimizers.swap(tmp);
+    infreq_minimizers.swap(tmp);
 
     minimizers.clear();
 
@@ -508,7 +508,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
     if(level == 1) { //if level == 1: use sequences as input
         
         for(auto & sequence : sequences) {
-            std::vector<bool> cur_mini_unfreq(t), mini_unfreq(t, false);
+            std::vector<bool> cur_mini_infreq(t), mini_infreq(t, false);
             std::vector<size_t> start_positions(t, 0);
 
             for(auto && minimiser : sequence | skmerview) {
@@ -516,7 +516,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                 if(minimiser_rank = r.rank(minimiser.minimiser_value), r.rank(minimiser.minimiser_value + 1) - minimiser_rank) {
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     for(size_t i=0; i < t; i++)
-                        mini_unfreq[i] = frequency == i+1;
+                        mini_infreq[i] = frequency == i+1;
                 }
                 break;
             }
@@ -526,25 +526,25 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     
                     for(size_t i=0; i < t; i++) {
-                        cur_mini_unfreq[i] = frequency == i+1;
-                        if(mini_unfreq[i] && !cur_mini_unfreq[i])
+                        cur_mini_infreq[i] = frequency == i+1;
+                        if(mini_infreq[i] && !cur_mini_infreq[i])
                             start_positions[i] = minimiser.range_position;
-                        if(!mini_unfreq[i] && cur_mini_unfreq[i])
+                        if(!mini_infreq[i] && cur_mini_infreq[i])
                             kmers_uncovered[i] += minimiser.range_position - start_positions[i];
-                        mini_unfreq[i] = cur_mini_unfreq[i];
+                        mini_infreq[i] = cur_mini_infreq[i];
                     }
                 }
                 else {
                     for(size_t i=0; i < t; i++) {
-                        cur_mini_unfreq[i] = false;
-                        if(mini_unfreq[i])
+                        cur_mini_infreq[i] = false;
+                        if(mini_infreq[i])
                             start_positions[i] = minimiser.range_position;
-                        mini_unfreq[i] = false;
+                        mini_infreq[i] = false;
                     }
                 }
             }
             for(size_t i=0; i < t; i++) {
-                if(!cur_mini_unfreq[i])
+                if(!cur_mini_infreq[i])
                     kmers_uncovered[i] += sequence.size() - k + 1 - start_positions[i];
             }   
         }
@@ -552,7 +552,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
         for(auto skmer : freq_skmers) {
             auto skmer_view = sequences[skmer.seq_id] | std::views::drop(skmer.start) | std::views::take(skmer.end - skmer.start);
 
-            std::vector<bool> cur_mini_unfreq(t), mini_unfreq(t, false);
+            std::vector<bool> cur_mini_infreq(t), mini_infreq(t, false);
             std::vector<size_t> start_positions(t, 0);
 
             for(auto && minimiser : skmer_view | skmerview) {
@@ -560,7 +560,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                 if(minimiser_rank = r.rank(minimiser.minimiser_value), r.rank(minimiser.minimiser_value + 1) - minimiser_rank) {
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     for(size_t i=0; i < t; i++)
-                        mini_unfreq[i] = frequency == i+1;
+                        mini_infreq[i] = frequency == i+1;
                 }
                 break;
             }
@@ -570,25 +570,25 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
                     size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                     
                     for(size_t i=0; i < t; i++) {
-                        cur_mini_unfreq[i] = frequency == i+1;
-                        if(mini_unfreq[i] && !cur_mini_unfreq[i])
+                        cur_mini_infreq[i] = frequency == i+1;
+                        if(mini_infreq[i] && !cur_mini_infreq[i])
                             start_positions[i] = minimiser.range_position;
-                        if(!mini_unfreq[i] && cur_mini_unfreq[i])
+                        if(!mini_infreq[i] && cur_mini_infreq[i])
                             kmers_uncovered[i] += minimiser.range_position - start_positions[i];
-                        mini_unfreq[i] = cur_mini_unfreq[i];
+                        mini_infreq[i] = cur_mini_infreq[i];
                     }
                 }
                 else {
                     for(size_t i=0; i < t; i++) {
-                        cur_mini_unfreq[i] = false;
-                        if(mini_unfreq[i])
+                        cur_mini_infreq[i] = false;
+                        if(mini_infreq[i])
                             start_positions[i] = minimiser.range_position;
-                        mini_unfreq[i] = false;
+                        mini_infreq[i] = false;
                     }
                 }
             }
             for(size_t i=0; i < t; i++) {
-                if(!cur_mini_unfreq[i])
+                if(!cur_mini_infreq[i])
                     kmers_uncovered[i] += skmer_view.size() - k + 1 - start_positions[i];
             }   
         }
@@ -698,7 +698,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
 
     //create the directory if necessary
-    std::string genome = "Gadus_morhua.gadMor3.0.dna.toplevel";
+    std::string genome = "Homo_sapiens.GRCh38.dna.toplevel";
     std::filesystem::path stats_directory = "./" + genome + "/leveledMinimizerDistribution_m=" + std::to_string(m1) + ',' + std::to_string(m2) + ',' + std::to_string(m3) + "_t=" + std::to_string(m_thres1) + ',' + std::to_string(m_thres2) + ',' + std::to_string(m_thres3);
     std::filesystem::create_directories(stats_directory);
 

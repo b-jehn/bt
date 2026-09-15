@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
-genome = "Gadus_morhua.gadMor3.0.dna.toplevel" #also has to be manually changed in build.cpp - as of now
+genome = "Homo_sapiens.GRCh38.dna.toplevel" #also has to be manually changed in build.cpp - as of now
 levels = 3
 #minimizer_sets = [[14,14,14], [5, 18, 18], , [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17],[18, 18, 18],[19,19,19]]
 minimizer_sets = [[18,18,18]]
