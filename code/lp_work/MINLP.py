@@ -156,7 +156,7 @@ for l in range(LEVELS):
 scip.addCons(bpk_O - quicksum(bpk_O_vars[l] for l in range(LEVELS)) == 0)
 
 #bits per k-mer in H
-scip.addCons(bpk_H - (quickprod(((1-p_K_vars[l])) for l in range(LEVELS)) * (64+log_sequence_length)) == 0)
+scip.addCons(bpk_H - (quickprod(((1-p_K_vars[l])) for l in range(LEVELS)) * (64+log_sequence_length)/LOAD_FACTOR) == 0)
 scip.addCons(bpk_total - (bpk_O + bpk_H) == 0)
 if(OPTIMIZATION_GOAL == "runtime"):
     scip.addCons(bpk_total <= MAX_BPK_TOTAL)

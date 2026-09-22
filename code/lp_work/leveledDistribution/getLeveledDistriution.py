@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
-genome = "Homo_sapiens.GRCh38.dna.toplevel" #also has to be manually changed in build.cpp - as of now
+genome = "Gadus_morhua.gadMor3.0.dna.toplevel" #also has to be manually changed in build.cpp - as of now
 levels = 3
 #minimizer_sets = [[14,14,14], [5, 18, 18], , [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17],[18, 18, 18],[19,19,19]]
 minimizer_sets = [[18,18,18]]
@@ -38,7 +38,7 @@ for m in minimizer_sets:
         # plot p_M stats
         ###############
         # directory containing level1.csv, level2.csv, and level3.csv
-        stats_directory = Path(f"./{genome}/leveledMinimizerDistribution_m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
+        stats_directory = Path(f"./{genome}/m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
         plt.figure(figsize=(8, 6))
 
         for level in range(1, 4):
@@ -69,7 +69,7 @@ for m in minimizer_sets:
         # plot p_K stats
         ###############
         # directory containing level1.csv, level2.csv, and level3.csv
-        stats_directory = Path(f"./{genome}/leveledMinimizerDistribution_m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
+        stats_directory = Path(f"./{genome}/m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
         plt.figure(figsize=(8, 6))
 
         for level in range(1, 4):
