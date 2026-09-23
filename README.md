@@ -10,9 +10,8 @@
 │       └── subsampling     #chapter: subsampling
 └── code                    #contains everything code related
     └── lp_work             #should be MINLP work
-        └── minimizer_stats #minimizer distributions
-            ├── cod 
-            └── homo_sapiens
+        └── minimizer_stats     #minimizer distributions for one level - outdated
+        └── leveledDistribution #leveled minimizer distributions
 ```
 
 ## Preperation

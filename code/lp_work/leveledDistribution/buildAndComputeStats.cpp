@@ -817,11 +817,11 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         //print_freq_skmers(input, freq_skmers, "./frequent_skmers_level3.fasta");
     }
 
-    std::cout << "build last level...\n";
-    last_level(input, freq_skmers);
-
-    std::cout << "copy text...\n";
-    text = pack_dna4_to_uint64(input);
-
-    print_info();
+//    std::cout << "build last level...\n";
+//    last_level(input, freq_skmers);
+//
+//    std::cout << "copy text...\n";
+//    text = pack_dna4_to_uint64(input);
+//
+//    print_info();
 }

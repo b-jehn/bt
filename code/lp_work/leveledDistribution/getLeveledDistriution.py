@@ -8,13 +8,19 @@ import matplotlib.pyplot as plt
 genome = "Gadus_morhua.gadMor3.0.dna.toplevel" #also has to be manually changed in build.cpp - as of now
 levels = 3
 #minimizer_sets = [[14,14,14], [5, 18, 18], , [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17],[18, 18, 18],[19,19,19]]
-minimizer_sets = [[18,18,18]]
-t = [64, 64, 64]
+minimizerLengths_sets = [[m, m, m] for m in range(5,20)]# + [[m,m+2,m+4] for m in range(5,16)] + [[m,m+4,m+8] for m in range(5,12)]
+#threshold_sets = [[]]
+t = [32, 32, 32]
 
-for m in minimizer_sets:
+for m in minimizerLengths_sets:
     ###############
     # build rshash and compute stats
     ###############
+    stats_directory = Path(f"./{genome}/m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
+    if(stats_directory.is_dir()):
+        print(f"stats for m: {m} and t: {t} already exist")
+        continue
+    print(f"\n\ncomputing leveled stats for m: {m} and t: {t}")
     subprocess.run(
         [
             "../../rshash/build/source/rshash",
@@ -37,8 +43,6 @@ for m in minimizer_sets:
         ###############
         # plot p_M stats
         ###############
-        # directory containing level1.csv, level2.csv, and level3.csv
-        stats_directory = Path(f"./{genome}/m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
         plt.figure(figsize=(8, 6))
 
         for level in range(1, 4):
@@ -68,8 +72,6 @@ for m in minimizer_sets:
         ###############
         # plot p_K stats
         ###############
-        # directory containing level1.csv, level2.csv, and level3.csv
-        stats_directory = Path(f"./{genome}/m={m[0]},{m[1]},{m[2]}_t={t[0]},{t[1]},{t[2]}")
         plt.figure(figsize=(8, 6))
 
         for level in range(1, 4):
