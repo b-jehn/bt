@@ -372,7 +372,7 @@ A k-mer $q$ is looked up by first computing its minimizer $m(q)$ and checking wh
 For the $\percKmers$ of the k-mers for which the bit is set, the minimizer’s rank $r = \rank_R(m(q))$ is computed. Then $\select_S(r)$ and $\select_S(r+1)-1$ tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored.\\
 Finally the presence of $q$ in $T$ is checked at every offset $o \in O[\select_S(r):\select_S(r+1)-1]$ until $q$ is either found or the end of the interval is reached.\\
 This offset interval contains an average of $\averageFrequency$ offsets. In the lookup case, the comparison is terminated as soon as $q$ is found for the first time, which is on average the case after $(\averageFrequency+1)/2$ comparisons ($+1$ is necessary because the first index always has to be checked).\\
-For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through an access of the hash table.\cite{schulte-mattler_rshash_2026}
+For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through an access of the hash table.
 
 The lookup time $\timeForOperationOnStructure{lookup}{RSHash}$ for one level can thus be modeled as:
 \newcommand{\lookupTimeExpression}{%
@@ -421,35 +421,45 @@ This however results in maximal space consumption, as each entry in the hash tab
 In order to account for that, we have to add constraints modeling the space consumption.
 
 \subsection*{Space Consumption}
-The space consumption of RSHash can be decomposed into the space needed for the data structures components: the vectors $R$, $O$ and $S$, the text $T$ as well as the hash table $H$.
+The space consumption of RSHash can be decomposed into the space needed for the data structures components: the text $T$, the vectors $R$, $S$ and $O$ as well as the hash table $H$.
 
-\subsubsection*{Text $T$}
-As the text length is much larger then k on all levels, the bits per k-mer for storing the text $T$ can be be approximated to be $bpk_T \approx 1$.
+\textbf{The text $T$} is much longer then k on all levels. Because of this the bits per k-mer for storing the text $T$ can be be approximated to be $bpk_T \approx 1$.
 
-\subsubsection*{Bit Vectors $R$ and $S$}
-$R$ and $S$ can likely be disregarded when modeling the space consumption. \todo{explain why}\\
+\textbf{Bit Vectors $R$ and $S$} can likely be disregarded when modeling the space consumption. \todo{explain why}\\
 $R$ is a Bit Vector of length $4^\minimizerLength$ that contains $n$ \todo{the code for computing the minimizer stats already uses n - it could easily be used} 1s marking the existence of each encountered minimizer. Using Elias-Fano-Encoding, its size can be compressed to
 \[ n \lceil log(4^\minimizerLength/n) \rceil + 3n\]
 
-\subsubsection*{Offsetvector $O$}
-The offset vector $O$ contains one entry of size $log |T|$ for the offset of each super-k-mer having an infrequent minimizer.\\
-Since $\percKmers$ describes the percentage of k-mers with infrequent minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $O$ as:\\
-\[bpk_O = \frac{\percKmers}{(k-\minimizerLength+2)/2} \cdot log |T| \]
+\textbf{The offset vector $O$} contains one entry of size $log |T|$ for the offset of each super-k-mer having an infrequent minimizer.\\
+Since $\percKmers$ describes the percentage of k-mers with infrequent minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $O$ as:
+\newcommand{\bpkOExpression}{\frac{\percKmers}{(k-\minimizerLength+2)/2} \cdot log |T|}
+\[ bpk_O = \bpkOExpression\]
 
-\subsubsection*{Hash table $H$}
-For $1-\percKmers$ of the k-mers $q$ in $T$, the hash table $H$ contains an entry $(key:q, value:offset(q))$\\
-Each entry has size $size(key) + size(value) = 64 + log |T|$. We introduce the load factor $\alpha = 0.75$\todo{justify 0.75} to the model, in order to account for empty buckets in the hash table.\\
+\textbf{The hash table $H$} contains an entry $(key:q, value:offset(q))$ for $1-\percKmers$ of the k-mers $q$ in $T$.
+Each entry has size $size(key) + size(value) = 64 + log |T|$. We introduce the load factor $\alpha = 0.75$\todo{justify 0.75} to the model, in order to account for empty buckets in the hash table.
 The bits per k-mer required for the hash table can thus be modeled by
-\[ bpk_H = (1-\percKmers) \cdot \frac{(64 + log|T|)}{\alpha}\]
+\newcommand{\bpkHExpression}{(1-\percKmers) \cdot \frac{(64 + log|T|)}{\alpha}}
+\[ bpk_H = \bpkHExpression\]
 
 Combining the above results in the following MINLP for minimizing $\timeForOperationOnStructure{lookup}{RSHash}$ whilst setting an upper bound on the total bits per k-mer.\\
 
-\todo[inline]{define total bpk and add it to the MINLP}
+\textbf{Total Space Consumption}
+Using the above, we can define a constraint describing the total bits per k-mer used by RSHash:
+\newcommand{\bpkTotalExpression}{bpk_T + bpk_R + bpk_S + bpk_O + bpk_H}
+\[ bpk_{total} = \bpkTotalExpression\]
+
+\subsection*{Optimization Goal}
+Having defined all constraints regarding the lookup time and space consumption of RSHash, we can now build a MINLP in order to find the optimal level parameters.\\
+The sets of possible minimizer lengths and thresholds, the measured minimizer statistic $\percKmersEmpiric$ and $\averageFrequencyEmpiric$ for those sets as well as the times needed for the access, rank and select queries on the data structures different components are passed as arguments to the MINLP.\\
+We introduce three more arguments: The optimization goal $Opt_{goal}$ which specifies whether to minimize $\timeForOperationOnStructure{lookup}{RSHash}$ or $bpk_{total}$ and upper bounds $MAX_{\timeForOperationOnStructure{lookup}{RSHash}}, MAX_{bpk_{total}}$. When using the MINLP, the upper bound belonging to the optimization goal should be set to $\infty$.\\
+\nameref{algo:minlp} shows the complete MINLP for one level.
 
 \begin{algorithm}
 	\caption{MINLP For One Level}\label{algo:minlp}
 	\begin{algorithmic}[1]
 		\Input{$
+			Opt_{goal},
+			MAX_{\timeForOperationOnStructure{lookup}{RSHash}},
+			MAX_{bpk_{total}},
 			\possibleMinimizerLengths, 
 			\possibleThresholds, 
 			\percKmersEmpiric, 
@@ -465,15 +475,24 @@ Combining the above results in the following MINLP for minimizing $\timeForOpera
 		\[ 
 		\begin{array}{rl}
 			\text{MINIMIZE}\\
-			\timeForOperationOnStructure{lookup}{RSHash} &= \lookupTimeExpression\\
+				&Opt_{goal}\\
 			\text{SUBJECT TO}\\
+			\timeForOperationOnStructure{lookup}{RSHash} &\leq MAX_{\timeForOperationOnStructure{lookup}{RSHash}}\\
+			\timeForOperationOnStructure{lookup}{RSHash} &= \lookupTimeExpression\\
 			\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)\\
 			\averageFrequency &= \averageFrequencyExpression\\
 			\sum\limits_{m \in M} \selectorm_m &= 1 \\
 			\sum\limits_{t \in T} \selectort_t &= 1 \\
 			\selectorm_m &\in \{0,1\} \mid \forall m \in M \\
-			\selectort_t &\in \{0,1\} \mid \forall t \in T
-			BPKKKK
+			\selectort_t &\in \{0,1\} \mid \forall t \in T\\
+			
+			bpk_{total} &\leq MAX_{bpk_{total}}\\
+			bpk_{total} &= \bpkTotalExpression\\
+			bpk_T &= 1\\
+			bpk_R &= ??\\
+			bpk_S &= ??\\
+			bpk_O &= \bpkOExpression\\
+			bpk_H &= \bpkHExpression
 			%		\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
 			%		\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
 		\end{array} 
