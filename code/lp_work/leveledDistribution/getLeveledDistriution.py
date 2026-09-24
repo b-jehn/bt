@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 genome = "Gadus_morhua.gadMor3.0.dna.toplevel" #also has to be manually changed in build.cpp - as of now
 levels = 3
 #minimizer_sets = [[14,14,14], [5, 18, 18], , [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17],[18, 18, 18],[19,19,19]]
-minimizerLengths_sets = [[m, m, m] for m in range(5,20)]# + [[m,m+2,m+4] for m in range(5,16)] + [[m,m+4,m+8] for m in range(5,12)]
-threshold_sets = [[32, 32, 32], [64, 64, 64],[128,128,128]]
+minimizerLengths_sets = [[m, m, m] for m in range(10,20)]# + [[m,m+2,m+4] for m in range(5,16)] + [[m,m+4,m+8] for m in range(5,12)]
+threshold_sets = [[32, 64, 128]]
 #t = [32, 32, 32]
 
 for t in threshold_sets:
@@ -21,24 +21,30 @@ for t in threshold_sets:
         if(stats_directory.is_dir()):
             print(f"stats for m: {m} and t: {t} already exist")
             continue
+        stats_directory.mkdir()
+        
         print(f"\n\ncomputing leveled stats for m: {m} and t: {t}")
-        subprocess.run(
-            [
-                "../../rshash/build/source/rshash",
-                "build",
-                "-i", f"../../rshash/DNA_datasets/{genome}.fa",
-                "-d", f"../../rshash/DNA_datasets/{genome}.rshash",
-                "-k", "31",
-                "--m1", str(m[0]),
-                "--m2", str(m[1]),
-                "--m3", str(m[2]),
-                "--t1", str(t[0]),
-                "--t2", str(t[1]),
-                "--t3", str(t[2]),
-                "--level", str(levels)
-            ],
-            check=True,
-        )
+        logfile_path = stats_directory / f"build.log"
+        with logfile_path.open("w") as logfile:
+            subprocess.run(
+                [
+                    "../../rshash/build/source/rshash",
+                    "build",
+                    "-i", f"../../rshash/DNA_datasets/{genome}.fa",
+                    "-d", f"../../rshash/DNA_datasets/{genome}.rshash",
+                    "-k", "31",
+                    "--m1", str(m[0]),
+                    "--m2", str(m[1]),
+                    "--m3", str(m[2]),
+                    "--t1", str(t[0]),
+                    "--t2", str(t[1]),
+                    "--t3", str(t[2]),
+                    "--level", str(levels)
+                ],
+                stdout=logfile,
+                stderr=subprocess.STDOUT,
+                check=True,
+            )
 
         for type in ["distinct", "cumulated"]:
             ###############
@@ -69,6 +75,7 @@ for t in threshold_sets:
             #save the plot
             plt.savefig(stats_directory / f"{type}_p_M_per_level.png", dpi=300)
             #plt.show()
+            plt.close()
 
             ###############
             # plot p_K stats

@@ -255,24 +255,24 @@ authority.\\
 \section{RSHash Explanation}
 \todo[inline]{Wie detailiert soll ich RSHash beschreiben? Reicht eine grobe Beschreibung und ein Verweis auf \cite{schulte-mattler_rshash_2026}?}
 RSHash is a minimizer based fast, compressed hash table for storing DNA k-mers that answers lookup and can be extended for supporting locate. It was recently introduced by the Reinert Group.\\
-The data structure works with one, two or three levels and a hash table. For each level $i$ a pair of level parameters has to be specified: the minimizer length $m_i$ and a threshold $t_i$.\\
-Each level $i$ works in the following way: The minimizer of length $m_i$ is computed for each super-k-mer in the input whilst also counting the frequency (occurrences) of all appearing minimizers.\\
-All super-k-mers with minimizers whose frequency does not succeed $t_i$ are marked in a bit vector $R$, their offsets in the Text are stored in a vector $O$ and a bit vector $S$ marks the boundaries of the offsets for each minimizer.\\
-Those super-k-mers with minimizers of a frequency larger than $t_i$ make up the input for the next higher level $i+1$ which works exactly like the previous apart from having its own level parameters.\\
-Only super-k-mers with frequent k-mers on the highest level specified end up being stored in the hash table.\cite{schulte-mattler_rshash_2026}.
+The data structure works with one, two or three levels and a hash table. For each level $l$ a pair of level parameters has to be specified: the minimizer length $m_l$ and a threshold $t_l$.\\
+Each level $l$ works in the following way: The minimizer of length $m_l$ is computed for each super-k-mer in the input whilst also counting the frequency (occurrences) of all appearing minimizers.\\
+All super-k-mers with minimizers whose frequency does not succeed $t_l$ are marked in a bit vector $R$, their offsets in the Text are stored in a vector $O$ and a bit vector $S$ marks the boundaries of the offsets for each minimizer.\\
+Those super-k-mers with minimizers of a frequency larger than $t_l$ make up the input for the next higher level $l+1$ which works exactly like the previous apart from having its own level parameters.\\
+Only k-mers with frequent minimizers on all specified levels end up being stored in the hash table.\cite{schulte-mattler_rshash_2026}.
 
 \section{Problem Definition}\label{sec:problemDefinition}
 Choosing the minimizer length $\minimizerLength$ is an inherent problem of minimizer based k-mer indexing methods. 
 A minimizer is expected to be valid for an average of $(k-m+2)/2$ k-mers. Using a small $\minimizerLength$ thus leads to a relatively small number of super-k-mers meaning a better compression.
 Picking a small $\minimizerLength$ however also means that minimizers will be more frequent which leads to high query times because each minimizer offset has to be evaluated for an actual match with the queried k-mer.
-This means a constant trade off between space consumption and query times of minimizer based k-mer indexing methods.
+This means a constant trade off between space consumption and query times.
 Existing methods use a number of approaches to deal with this problem \todo[inline]{beispiele und quellen angeben}
 
-The leveled approach used by RSHash exploits the skewed distribution of minimizers. It allows to achieve high compression by using relatively short minimizers on the lower levels whilst also mitigating the burden of very frequent minimizers by using thresholds.
+The leveled approach used by RSHash exploits the skewed distribution of minimizers. It allows to achieve high compression by using relatively short minimizers on the lower levels whilst also mitigating the burden of very frequent minimizers by using thresholds to move them to higher levels.
 
 So far the level parameters have to be specified when building the data structure which requires manual testing and extensive understanding of the RSHash algorithm.
 
-With this thesis we attempt expand the understanding of how exactly the level parameters influence the time and space consumption of RSHash and make the algorithm more accessible to use by automating the optimization of level parameters for a given genome and optimization goal.
+With this thesis we attempt to expand the understanding of how exactly the level parameters influence the time and space consumption of RSHash and make the algorithm more accessible to use by automating the optimization of level parameters for a given genome and optimization goal.
 
 
 Problems:
@@ -295,13 +295,9 @@ The distribution of minimizers on higher levels is dependent on the choice of th
 In order to understand this relationship, we will measure these distributions for a selection of sequences and analyze the results. It should be noted that this alone is not sufficient to argue about the general case.\\
 
 
-\begin{enumerate}
-	\item 
-\end{enumerate}
-
 \chapter{MINLP Modeling}\label{chap:minlp}
 We introduce a Mixed Integer Non Linear Programming (MINLP) aiming to optimize the level parameters. First we model the runtime and space needed by RSHash on \nameref{sec:minlp_oneLevel} in dependence of the level parameters and minimizers distribution. We then extend this to the general case of \nameref{sec:minlp_severalLevels}.\\
-For a given Sequence we can then compute the minimizer distribution as outlined in \nameref{chap:minimizerDistribution} and use a MINLP solver to find those level parameters leading to the optimization goal.
+For a given Sequence we can then compute the minimizer distribution as outlined in \nameref{chap:minimizerDistribution} and use a MINLP solver like SCIP \Cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023} to find those level parameters leading to the optimization goal.
 
 \section{Notation}\label{sec:minlp_notation}
 Let $q$ be a k-mer. We refer to its minimizer $m(q)$ and the minimizers frequency $f(m(q))$.\\
@@ -318,8 +314,9 @@ Similarly $\averageFrequency$ describes the average frequency of all infrequent 
 \todo{tabelle $f_avg(m,t)$ mittels dynamischer programmierung bauen? - eigentlich nicht nötig, wenn distinct stats (also nicht die cumulativen verwendet werden)}
 
 \section{One Level}\label{sec:minlp_oneLevel}
-\subsection*{Runtime}
-\subsubsection*{Times for Operations on Datastructure}
+\subsection{Runtime}
+\subsubsection{Times for Operations on Datastructure}
+\todo[inline]{incomplete. measure or model?}
 \textbf{Vector Access}
 Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
 \begin{align*}
@@ -330,7 +327,7 @@ Accessing an element of a Vector can be done in constant time, we use the follow
 \textbf{Hash Table Access}
 Accessing an element of a Hash Table can be done in constant time, we use the following values based on measurements:
 \begin{align*}
-	\timeForOperationOnStructure{\access}{H} &= ...
+	\timeForOperationOnStructure{lookup}{H} &= ...
 \end{align*}
 
 \textbf{Bit Vector Rank Query}
@@ -350,7 +347,7 @@ A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log U/n \rc
 %		Constants	&  \\
 %		\hline
 %		$\timeForS$		& time to lookup a k-mer in vector S \\
-%		$\timeForOperationOnStructure{\access}{H}$		& time to lookup a k-mer in the hash table \\
+%		$\timeForOperationOnStructure{lookup}{H}$		& time to lookup a k-mer in the hash table \\
 %		$\percKmersEmpiric(m, t)$ & empirically estimated value for a k-mer with a minimizer \\
 %		& of length $m$ to have a frequency less than $t$ \\
 %		\hline
@@ -366,19 +363,19 @@ A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log U/n \rc
 %	\end{tabularx}
 %\end{table}
 
-\subsubsection*{Lookup}
-In order to model the time $\timeForOperationOnStructure{lookup}{RSHash}$ needed for a lookup using RSHash, we closely follow the lookup procedure as described by \cite{schulte-mattler_rshash_2026}.\\
+\subsubsection{Lookup}
+In order to model the time $\timeForOperationOnStructure{lookup}{RSHash}$ needed for a lookup using RSHash, we closely follow the lookup procedure as described by \cite{schulte-mattler_rshash_2026}:\\
 A k-mer $q$ is looked up by first computing its minimizer $m(q)$ and checking whether the bit $R[m(q)]$ is set.\\
 For the $\percKmers$ of the k-mers for which the bit is set, the minimizer’s rank $r = \rank_R(m(q))$ is computed. Then $\select_S(r)$ and $\select_S(r+1)-1$ tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored.\\
 Finally the presence of $q$ in $T$ is checked at every offset $o \in O[\select_S(r):\select_S(r+1)-1]$ until $q$ is either found or the end of the interval is reached.\\
 This offset interval contains an average of $\averageFrequency$ offsets. In the lookup case, the comparison is terminated as soon as $q$ is found for the first time, which is on average the case after $(\averageFrequency+1)/2$ comparisons ($+1$ is necessary because the first index always has to be checked).\\
-For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through an access of the hash table.
+For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through a lookup of $q$ in the hash table.
 
 The lookup time $\timeForOperationOnStructure{lookup}{RSHash}$ for one level can thus be modeled as:
 \newcommand{\lookupTimeExpression}{%
 \begin{aligned}
 	\timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + (\averageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
-	&+ (1-\percKmers) \cdot \timeForOperationOnStructure{\access}{H}
+	&+ (1-\percKmers) \cdot \timeForOperationOnStructure{lookup}{H}
 \end{aligned}%
 }
 \[ \timeForOperationOnStructure{lookup}{RSHash} = 
@@ -386,10 +383,12 @@ The lookup time $\timeForOperationOnStructure{lookup}{RSHash}$ for one level can
  \]
 
 
-In order to determine $\minimizerLength$ and $\threshold$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLengths$ and $t \in \possibleThresholds$.\\
-$\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$.\\
-$\selectort_t$ should be $1$ exactly when the optimal threshold is $t$.\\
-The following constraints force the selectors for $m$ and $t$ to be binary and mutually exclusive:
+In order to determine $\minimizerLength$ and $\threshold$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLengths$, $t \in \possibleThresholds$. $\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$ and $\selectort_t$ should be $1$ exactly when the optimal threshold is $t$. This is ensured through:
+\begin{align*}
+	\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
+	\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
+\end{align*}
+The following constraints force the selectors for $\minimizerLength$ and $\threshold$ to be binary and mutually exclusive:
 \[ 
 \begin{array}{rl}
 	\selectorm_m &\in \{0,1\} \mid \forall m \in \possibleMinimizerLengths \\
@@ -399,9 +398,8 @@ The following constraints force the selectors for $m$ and $t$ to be binary and m
 \end{array} 
 \]
 
-With $\percKmersEmpiric(m, t)$ being the empirically determined percentage of k-mers $q$ with $1 \leq f(m(q)) \leq t$ (for a fixed $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$) we can then model $\percKmers$ with:
+With $\percKmersEmpiric(m, t)$ being the empirically determined percentage of k-mers $q$ with $1 \leq f(m(q)) \leq t$ (for a fixed $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$) we can then model a constraint forcing $\percKmers$ to take the value of the only $\percKmersEmpiric(m,t)$ for which $\selectorm_m = 1$ and $\selectort_t = 1$:
 \[ \percKmers = \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right) \]
-which takes the value of the only $\percKmersEmpiric(m,t)$ for which $\selectorm_m = 1$ and $\selectort_t = 1$.
 
 Analogously with $\averageFrequencyEmpiric(m, t)$ being the empirically determined average frequency of k-mers $q$ with $1 \leq f(m(q)) \leq t$ (for a fixed $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$)  we can then model $\averageFrequency$ with:
 \newcommand{\averageFrequencyExpression}{
@@ -409,19 +407,13 @@ Analogously with $\averageFrequencyEmpiric(m, t)$ being the empirically determin
 }
 \[ \averageFrequency = \averageFrequencyExpression \]
 
-%$\minimizerLength$ and $\threshold$ can then be determined by:
-%\begin{align*}
-%	\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
-%	\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
-%\end{align*}
-
 Without further constraints, solving the described MINLP for minimal $\timeForOperationOnStructure{lookup}{RSHash}$ results in a solution where the $\selectorm_m$, $\selectort_t$ corresponding to the smallest $m \in \possibleMinimizerLengths$, $t \in \possibleThresholds$ will be set to one.\\
 This is expected, as this leads to the smallest possible $\percKmers$ which minimizes the k-mers having to be looked up in the text and maximizes the lookups in the (faster) hash table.\\
 This however results in maximal space consumption, as each entry in the hash table is significantly larger than an entry in $O$ as described in \nameref{sec:problemDefinition}.\\
 In order to account for that, we have to add constraints modeling the space consumption.
 
-\subsection*{Space Consumption}
-The space consumption of RSHash can be decomposed into the space needed for the data structures components: the text $T$, the vectors $R$, $S$ and $O$ as well as the hash table $H$.
+\subsection{Space Consumption}
+The space consumption of RSHash can be decomposed into the space needed for the data structures components: the text $T$, the vectors $R$, $S$ and $O$ as well as the hash table $H$. Instead of modeling the total space used by RSHash we will focus on the bits per k-mer (bpk) used by the data structure as this metric allows to compare compression independent of the inputs length.\\
 
 \textbf{The text $T$} is much longer then k. Because of this the bits per k-mer for storing the text $T$ can be be approximated to be $bpk_T \approx 1$.
 
@@ -435,25 +427,22 @@ Since $\percKmers$ describes the percentage of k-mers with infrequent minimizers
 \[ bpk_O = \bpkOExpression\]
 
 \textbf{The hash table $H$} contains an entry $(key:q, value:offset(q))$ for $1-\percKmers$ of the k-mers $q$ in $T$.
-Each entry has size $size(key) + size(value) = 64 + log |T|$. We introduce the load factor $\alpha = 0.75$\todo{justify 0.75} to the model, in order to account for empty buckets in the hash table.
+Each entry has size $size(key) + size(value) = 64 + log |T|$. We introduce the load factor $\alpha$\todo{reminder to include somewhere that we set $\alpha = 0.75$ in practice and explain why that is a reasonable value} to the model, in order to account for empty buckets in the hash table.
 The bits per k-mer required for the hash table can thus be modeled by
 \newcommand{\bpkHExpression}{(1-\percKmers) \cdot \frac{(64 + log|T|)}{\alpha}}
 \[ bpk_H = \bpkHExpression\]
-
-Combining the above results in the following MINLP for minimizing $\timeForOperationOnStructure{lookup}{RSHash}$ whilst setting an upper bound on the total bits per k-mer.\\
 
 \textbf{The total bits per k-mer} can be modeled by simply adding up the space requirements of each component:
 \newcommand{\bpkTotalExpression}{bpk_T + bpk_R + bpk_S + bpk_O + bpk_H}
 \[ bpk_{total} = \bpkTotalExpression\]
 
-\subsection*{Optimization Goal}
+\subsection{Optimization Goal}
 Having defined all constraints regarding the lookup time and space consumption of RSHash, we can now build a MINLP in order to find the optimal level parameters.\\
-The sets of possible minimizer lengths and thresholds, the measured minimizer statistic $\percKmersEmpiric$ and $\averageFrequencyEmpiric$ for those sets as well as the times needed for the access, rank and select queries on the data structures different components are passed as arguments to the MINLP.\\
-We introduce three more arguments: The optimization goal $OptGoal$ which specifies whether to minimize $\timeForOperationOnStructure{lookup}{RSHash}$ or $bpk_{total}$ and upper bounds $Bound_{time}, Bound_{bpk}$ for the lookup time and space consumption. When using the MINLP, the upper bound belonging to the optimization goal should be set to $\infty$. One could for example search for level parameters minimizing the lookup time whilst not exceeding eight bits per k-mer by setting $OptGoal \leftarrow \timeForOperationOnStructure{lookup}{RSHash}, Bound_{time} \leftarrow \infty, Bound_{bpk} \leftarrow 8$.\\
-In addition to the already defined constraints, $\timeForOperationOnStructure{lookup}{RSHash} \leq Bound_{time}$ and $bpk_{total} \leq Bound_{bpk}$ are added to the MINLP to enforce these bounds.
-\nameref{algo:minlp} shows the constructed MINLP.
+The sets of possible minimizer lengths $\possibleMinimizerLengths$ and thresholds $\possibleThresholds$, the measured minimizer statistics $\percKmersEmpiric$ and $\averageFrequencyEmpiric$ for those sets as well as the times needed for the access, rank and select queries on the data structures different components are passed as arguments to the MINLP.\\
+We introduce three more arguments: The optimization goal $OptGoal$ which specifies whether to minimize $\timeForOperationOnStructure{lookup}{RSHash}$ or $bpk_{total}$ and upper bounds $Bound_{time}, Bound_{bpk}$ for the lookup time and space consumption. When using the MINLP, the upper bound belonging to the optimization goal should be set to $\infty$. In addition to the already defined constraints, $\timeForOperationOnStructure{lookup}{RSHash} \leq Bound_{time}$ and $bpk_{total} \leq Bound_{bpk}$ are added to the MINLP to enforce these bounds. \nameref{algo:minlp} shows the constructed MINLP.\\
+One could for example search for level parameters minimizing the lookup time whilst not exceeding eight bits per k-mer by setting $OptGoal \leftarrow \timeForOperationOnStructure{lookup}{RSHash}, Bound_{time} \leftarrow \infty, Bound_{bpk} \leftarrow 8$.
 
-\begin{algorithm}[t]
+\begin{algorithm}
 	\caption{Complete MINLP For One Level}\label{algo:minlp}
 	\begin{algorithmic}[1]
 		\Input{$
@@ -469,7 +458,7 @@ In addition to the already defined constraints, $\timeForOperationOnStructure{lo
 			\timeForOperationOnStructure{\select}{S},
 			\timeForOperationOnStructure{\access}{O},
 			\timeForOperationOnStructure{\compare}{T},
-			\timeForOperationOnStructure{\access}{H},
+			\timeForOperationOnStructure{lookup}{H}
 			$}
 		%		\Output{Optimal Level Parameters $\minimizerLength, \threshold$}
 		\[ 
@@ -481,6 +470,8 @@ In addition to the already defined constraints, $\timeForOperationOnStructure{lo
 			\timeForOperationOnStructure{lookup}{RSHash} &= \lookupTimeExpression\\
 			\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)\\
 			\averageFrequency &= \averageFrequencyExpression\\
+			\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
+			\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t \\
 			\sum\limits_{m \in M} \selectorm_m &= 1 \\
 			\sum\limits_{t \in T} \selectort_t &= 1 \\
 			\selectorm_m &\in \{0,1\} \mid \forall m \in M \\
@@ -501,10 +492,10 @@ In addition to the already defined constraints, $\timeForOperationOnStructure{lo
 \end{algorithm}
 
 \section{Several Levels}\label{sec:minlp_severalLevels}
-In the following, we generalize the constraints defined in \nameref{sec:minlp_oneLevel} to model the use of $L$ levels. We extend the \nameref{sec:minlp_notation} by adding a superscript $l$ in order to indicate an instance belonging to level $1 \leq l \leq L$.
-We still assume, that the times $\timeForOperationOnStructure{\access}{R^l},\timeForOperationOnStructure{\rank}{R^l},\timeForOperationOnStructure{\select}{S^l},\timeForOperationOnStructure{\access}{O^l},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{\access}{H}$ are (practically) independent of the parameters $\minimizerLength^l, \threshold^l$ and the level $l$. \todo{reason}
+In the following, we generalize the constraints defined in \nameref{sec:minlp_oneLevel} to model the use of $L \geq 1$ levels. We extend the \nameref{sec:minlp_notation} by adding a superscript $l$ in order to indicate an instance belonging to level $1 \leq l \leq L$.
+We still assume, that the times $\timeForOperationOnStructure{\access}{R^l},\timeForOperationOnStructure{\rank}{R^l},\timeForOperationOnStructure{\select}{S^l},\timeForOperationOnStructure{\access}{O^l},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{lookup}{H}$ are (practically) independent of the parameters $\minimizerLength^l, \threshold^l$ and the level $l$. \todo{reason}
 
-\subsection*{Runtime}
+\subsection{Runtime}
 When using $L$ levels, the probability of a k-mer belonging to a higher level is dependent on the probability of k-mers belonging to the levels below.\\
 For $\percKmers^l$ of the k-mers on a level $1 \leq l \leq L$ the lookup is completed by a search through the offsets on that level whilst the remaining $(1-\percKmers^l)$ of queries result in a lookup on the next level.\\
 We can thus model the lookup time for all levels $1\leq l \leq L$ recursively as:
@@ -515,7 +506,7 @@ We can thus model the lookup time for all levels $1\leq l \leq L$ recursively as
 		\timeForOperationOnStructure{\access}{R^\levelL} &+ \percKmers^\levelL \cdot (\timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency^\levelL+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^l} + \timeForOperationOnStructure{\compare}{T})) \\
 		&+ (1-\percKmers^l) \cdot \timeForOperationOnStructure{lookup}{RSHash}^{\levelL+1}
 	\end{aligned} &\mid 1\leq l \leq L\\
-	\timeForOperationOnStructure{\access}{H} &\mid l=L+1
+	\timeForOperationOnStructure{lookup}{H} &\mid l=L+1
 \end{cases}
 \]
 
@@ -525,48 +516,50 @@ As an example for $L=2$ levels, this results in:
 	\timeForOperationOnStructure{\access}{R^\levelOne} &+ \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
 		&\begin{aligned}
 			+ (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} &+ \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
-			&+(1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{\access}{H} \Bigg)
+			&+(1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{lookup}{H} \Bigg)
 		\end{aligned}
 \end{align*}\todo[inline]{Ist das Besipiel nötig? Falls ja: Besser formatieren}
 
 
-Because $\minimizerLength^l$ and $\threshold^l$ are likely to be different on every level $l$, unique sets of binary selector variables $\selectorm^l_m$ and $\selectort^l$ are needed for each level.\\
-The constraints for each level are the same as for one level:
+Unique sets of binary selector variables $\selectorm^l_m$ and $\selectort^l$ are needed for the level parameters $\minimizerLength^l$ and $\threshold^l$ of each level $l$.
+The constraints regarding these variables are analog to those when using only one level:
 \[ \begin{array}{rll}
+	\minimizerLength^l &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m^l \cdot m^l & \mid \forall l \\
+	\threshold^l &= \sum\limits_{t \in \possibleThresholds} \selectort_t^l \cdot t^l & \mid \forall l \\
 	\selectorm_m^l &\in \{0,1\} & \mid \forall (l,m) \in (\{1,...,L\} \times \possibleMinimizerLengths) \\
 	\selectort_t^l &\in \{0,1\} & \mid \forall (l,t) \in (\{1,...,L\} \times \threshold) \\
 	\sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m^l &= 1 & \mid \forall l \\
 	\sum\limits_{t \in \possibleThresholds} \selectort_t^l &= 1 & \mid \forall l
 \end{array} \]
 
-For each level $l$ $\percKmers^l$ and $\averageFrequency^l$ can also be modeled analogously to having only one level using the \nameref{sec:minimizerDistribution_severalLevels}:
+For each level $l$ $\percKmers^l$ and $\averageFrequency^l$ can also be modeled analogously to using only one level by making use of the \nameref{sec:minimizerDistribution_severalLevels}:
 \begin{align*}
 	\percKmers^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m^l \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric^l(m, t) \cdot \selectort_t^l\right) & \mid \forall l \in \{1,...,L\}\\
 	\averageFrequency^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m^l \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric^l(m, t) \cdot \selectort_t^l\right) & \mid \forall l \in \{1,...,L\}
 \end{align*}
 
 
-\subsection*{Space Consumption}
+\subsection{Space Consumption}
 \textbf{The text $T$} is only being stored once, so $bpk_T \approx 1$ still holds.
 
-\textbf{Bit vectors $R$ and $S$} \todo{....}
+\textbf{Bit vectors $R^l$ and $S^l$} \todo{....}
 
-\textbf{The offset vector $O$} for level $l$ only contains an entry for a k-mer $q$, if the k-mers minimizer is frequent on all previous levels but infrequent on level $l$. 
+\textbf{The offset vector $O^l$} on level $l$ only contains an entry for a k-mer $q$, if the k-mers minimizer is frequent on all previous levels but infrequent on level $l$. 
 The bits per k-mer for the Offset vector on level $l$ can thus be modeled as:
-\[bpk_{O^l} = \prod_{i=1}^{l-1} (1-\percKmers^i) \cdot \frac{ \percKmers^l}{(k-\minimizerLength^l+2)/2} \cdot log |T| \]
+\[bpk_{O^l} = \prod_{i=1}^{l-1} (1-\percKmers^i) \cdot \frac{ \percKmers^l}{(k-\minimizerLength^l+2)/2} \cdot log |T| \mid \forall l \in \{1,...,L\}\]
 
-\textbf{The hash table $H$} only contains an entry k-mers $q$, which have frequent minimizers on all levels.
+\textbf{The hash table $H$} only contains an entry for k-mers $q$, which have frequent minimizers on all levels.
 The bits per k-mer for the hash table can thus be modeled as 
-\[ bpk_H = \prod_{l=1}^{L} (1-\percKmers^l) \cdot (64 + log|T|)\]
+\[ bpk_H = \prod_{l=1}^{L} (1-\percKmers^l) \cdot \frac{(64 + log|T|)}{\alpha}\]
 
 \textbf{The total bits per k-mer} for $L$ levels only differ to those on one level, as there are now a vector $R,S$ and $O$ on each level:
 \[ bpk_{total} = bpk_T + \sum_{l=1}^{L} \left(bpk_{R^l} + bpk_{S^l} + bpk_{O^l}\right) + bpk_H\]
 
 
-\section*{Limitations}
+\section{Limitations}
 The MINLP approach for finding optimal level parameters has the advantage of finding the optimal level parameters for the specified optimization goal. \todo[inline]{rather: should have the advantage... - wie kann ich die Korrektheit des MINLP Zeigen/Argumentieren??}
 
-However for large genomes, finding the empirical values $\percKmersEmpiric^l(m,t)$ for each level becomes increasingly time consuming as outlined in \nameref{sec:minimizerDistribution_severalLevels}. \todo{noch nicht geschrieben} This renders the approach implausible.
+However, finding the empirical values $\percKmersEmpiric^l(m,t)$ for each level becomes increasingly time consuming for large genomes and more levels used as outlined in \nameref{sec:minimizerDistribution_severalLevels}. \todo{noch nicht geschrieben} This renders the approach implausible.
 
 For this reason, an approach yielding only an approximation of the optimal level parameters but taking less time to do so could be of interest.
 
@@ -575,28 +568,28 @@ We will further explore the method of \nameref{chap:subsampling} the genome in o
 In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get arround the exponential \todo{is it exponential?} cost of computing those values. \todo{TODO}
 
 \chapter{Subsampling}\label{chap:subsampling}
-\section*{Motivation}
+\section{Motivation}
 The time for processing a genome in order to find the minimizer distribution $\percKmers(m,t)$ for possible minimizer lengths $m \in \possibleMinimizerLengths$ and thresholds $t \in \possibleThresholds$ is directly proportional to the size of the genome.\\
 For large genomes, this processing can become the dominating factor when searching for optimal parameters using the \nameref{chap:minlp} approach. In order to speed up the search for the empirical values, we introduce a subsampling method.
 
-\section*{Subsampling Method}
+\section{Subsampling Method}
 Instead of calculating the distribution over the full genome, we sample $\numberOfSamples$ sequences of length $\lengthOfSamples \geq k$ at random positions in the genome.\\
 \todo[inline]{how to handle overlapping samples}
 
-\section*{Time Complexity of Finding the Minimizer Distributions}
+\section{Time Complexity of Finding the Minimizer Distributions}
 \todo[inline]{genaue zeitliche abhängigkeit 1. verstehen und 2. aufschreiben}
 
-\section*{Time Complexity using Subsampling}
+\section{Time Complexity using Subsampling}
 By applying the proposed subsampling strategy, the original genome $\genomeText$ of length $|\genomeText|$ is reduced to the subsampled text $\sampledText$ of length $|\sampledText| = \numberOfSamples \cdot \lengthOfSamples$. This means a reduction in size by a factor of $\frac{|\genomeText|}{|\sampledText|}$.\todo{assuming no overlaps}\\
 Depending on the choice of $\numberOfSamples$ and $\lengthOfSamples$ this results in a speedup of the processing time by a factor of $ $\todo{factor} or even a constant processing time $ $\todo{time} when both parameters are chosen as a constand regardless of $|\genomeText|$ (this however should result in a growing error for larger genomes).
 
-\section*{Error Analysis}
+\section{Error Analysis}
 
-\section*{Choosing $\lengthOfSamples$}
+\section{Choosing $\lengthOfSamples$}
 The length $\lengthOfSamples$ has to be at least $k$. 
 \todo[inline]{wenn $l > k$ ist, überlappen sich mehrere kmere an den gesampleten stellen. \\Frage: ich verstehe noch nicht, warum genau dass von vorteil ist.\\Antwort: Weil roling hash - l ca 1000, dann quasi linear}
 
-\section*{Choosing $\numberOfSamples$}
+\section{Choosing $\numberOfSamples$}
 Choosing a constant $\numberOfSamples$ would result in a processing time that would no longer be dependent of the genomes length $|\genomeText|$, as the sampled text would have constant size $\numberOfSamples \cdot \lengthOfSamples$\todo{assuming no overlaps}. For large genomes, the percentage $\frac{|\sampledText|}{|\genomeText|}$ of the genome represented in the subsample can become arbitrarily small, resulting in growing error.\\
 If instead $\numberOfSamples$ is chosen relative to $|\genomeText|$, $\frac{|\sampledText|}{|\genomeText|}$ will have a constant value independent of the genomes size. Even though this means, that the time needed, in order to find the minimizer distributions would still be proportional to the genomes size, this should be the preferred option as it results in a bounded error of the approximation.
 \\
