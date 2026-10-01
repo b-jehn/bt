@@ -193,6 +193,8 @@ for t in threshold_sets:
             all_parameters[level-1].append(parameters)
             plotDataAgainstModel(x,y,parameters, m,t, level)
             print(f"level{level}: a={all_parameters[level-1][m_index][0]}, b={all_parameters[level-1][m_index][1]}")
+            residuals = loglogistic4P(x, parameters) - y
+            print(f"residuals={np.sum(residuals**2)}")
 
     """ 
     print("fitted data for all levels to logistic function: a * expit(-(c * x + np.log(b))) = a/(1+b*np.exp(c*x))\n with parameters:")
@@ -203,7 +205,7 @@ for t in threshold_sets:
     """            
 
     #plot parameters across levels
-    mWindowStart = 0    #default = 0, set to x to ignore the first x minimizer lengths
+    mWindowStart = 4    #default = 0, set to x to ignore the first x minimizer lengths
     plt.figure(figsize=(16, 12))
     x = [m[0] for m in minimizerLengths_sets[mWindowStart:]]
     
@@ -218,7 +220,7 @@ for t in threshold_sets:
 
         plt.xlabel("minimizer lengths on all levels")
         plt.ylabel("parameter value")
-        plt.title("logistic regression parameter values")
+        plt.title(f"4Ploglogistic regression parameter:{parameter_dict[parameter]} values")
         plt.legend()
         plt.grid(True, alpha=0.3)
         #plt.ylim(0, 100)

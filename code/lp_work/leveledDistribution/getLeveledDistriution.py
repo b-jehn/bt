@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 genome = "Gadus_morhua.gadMor3.0.dna.toplevel" #also has to be manually changed in build.cpp - as of now
 levels = 3
 #minimizer_sets = [[14,14,14], [5, 18, 18], , [14, 16, 18], [5,5,5], [7,7,7], [9,9,9], [11,11,11], [13,13,13], [15,15,15], [17,17,17],[18, 18, 18],[19,19,19]]
-minimizerLengths_sets = [[m, m, m] for m in range(10,20)]# + [[m,m+2,m+4] for m in range(5,16)] + [[m,m+4,m+8] for m in range(5,12)]
-threshold_sets = [[32, 64, 128]]
+minimizerLengths_sets = [[15, m, m] for m in range(10,20)]# + [[m,m+2,m+4] for m in range(5,16)] + [[m,m+4,m+8] for m in range(5,12)]
+threshold_sets = [[64, 64, 64]]
 #t = [32, 32, 32]
 
 for t in threshold_sets:

@@ -296,15 +296,15 @@ In order to understand this relationship, we will measure these distributions fo
 
 
 \chapter{MINLP Modeling}\label{chap:minlp}
-We introduce a Mixed Integer Non Linear Programming (MINLP) aiming to optimize the level parameters. First we model the runtime and space needed by RSHash on \nameref{sec:minlp_oneLevel} in dependence of the level parameters and minimizers distribution. We then extend this to the general case of \nameref{sec:minlp_severalLevels}.\\
-For a given Sequence we can then compute the minimizer distribution as outlined in \nameref{chap:minimizerDistribution} and use a MINLP solver like SCIP \Cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023} to find those level parameters leading to the optimization goal.
+We introduce a Mixed Integer Non Linear Programming (MINLP) aiming to optimize the level parameters. In \cref{sec:minlp_oneLevel} we model the runtime and space needed by RSHash on one level in dependence of the level parameters and minimizers distribution. We then extend this to the general case of several levels in \cref{sec:minlp_severalLevels}.\\
+In \cref{chap:experiments} we show how ....... \todo{..} for a given Sequence we can then compute the minimizer distribution as outlined in \cref{chap:minimizerDistribution} and use a MINLP solver like SCIP \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023} to find those level parameters leading to the optimization goal.
 
 \section{Notation}\label{sec:minlp_notation}
 Let $q$ be a k-mer. We refer to its minimizer $m(q)$ and the minimizers frequency $f(m(q))$.\\
 We denote the time needed to perform an $operation$ on a $data ~ structure$ with $\timeForOperationOnStructure{operation}{data ~ structure}$ - e.g. the time for a rank query on the bit vector $R$ is $\timeForOperationOnStructure{\rank}{R}$.\todo{model these times as part of the optimization OR measure in advance?}
 \\
 We use $\possibleMinimizerLengths$ and $\possibleThresholds$ to denote the sets of minimizer lengths and thresholds considered when searching for optimal parameters.\\
-We denote the optimal minimizer length $\minimizerLength$ and threshold $\threshold$.\\
+We denote the optimal minimizer length and threshold by $\minimizerLength$ and $\threshold$.\\
 Closely following the notation introduced by \cite{schulte-mattler_rshash_2026} $\percKmers$ denotes the percentage of appearing k-mers $q$ with infrequent minimizers of length $\minimizerLength$ ($f(m(q)) \leq \threshold$). $\percKmersEmpiric(m,t)$ on the other hand is the empirically measured percentage on a fixed sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$.\\
 Similarly $\averageFrequency$ describes the average frequency of all infrequent minimizers when using $\minimizerLength, \threshold$, whilst $\averageFrequencyEmpiric(m,t)$ is the empirically measured average frequency for a specific sequence and a given pair $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$. $\averageFrequencyEmpiric(m,t)$ can be derived from $\percKmersEmpiric(m,t)$:
 \begin{align*}
@@ -315,54 +315,6 @@ Similarly $\averageFrequency$ describes the average frequency of all infrequent 
 
 \section{One Level}\label{sec:minlp_oneLevel}
 \subsection{Runtime}
-\subsubsection{Times for Operations on Datastructure}
-\todo[inline]{incomplete. measure or model?}
-\textbf{Vector Access}
-Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
-\begin{align*}
-	\timeForOperationOnStructure{\access}{R} &= ...\\
-	\timeForOperationOnStructure{\access}{O} &= ...\\
-\end{align*}
-
-\textbf{Hash Table Access}
-Accessing an element of a Hash Table can be done in constant time, we use the following values based on measurements:
-\begin{align*}
-	\timeForOperationOnStructure{lookup}{H} &= ...
-\end{align*}
-
-\textbf{Bit Vector Rank Query}
-A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log U/n \rceil + 3n$ many bits supporting rank in $O(log(U/n)$ time (Okanohara and Sadakane, 2007).
-\todo[inline]{does that help here? Doesn't the model require actual time instead of O notation - maybe measurements would be more suited}
-
-\textbf{Bit Vector Select Query}
-???
-
-\textbf{Comparison with Text}
-???
-
-%\begin{table}
-%	\caption{Constants and Variables for One Level}
-%	\begin{tabularx}{\columnwidth}{|| l | X ||}
-%		\hline
-%		Constants	&  \\
-%		\hline
-%		$\timeForS$		& time to lookup a k-mer in vector S \\
-%		$\timeForOperationOnStructure{lookup}{H}$		& time to lookup a k-mer in the hash table \\
-%		$\percKmersEmpiric(m, t)$ & empirically estimated value for a k-mer with a minimizer \\
-%		& of length $m$ to have a frequency less than $t$ \\
-%		\hline
-%		\hline
-%		Variables	&  \\
-%		\hline
-%		$\percKmers \in \left[0,1\right]$ & probability of a k-mer to have a minimizer with frequency $\leq t$ \\
-%		$\selectorm_m \in \left\{0, 1\right\}$	& binary selector for every minimizer length $m \in \possibleMinimizerLengths$\\
-%		$\selectort_t \in \left\{0, 1\right\}$	& binary selector for every threshold $t \in \possibleThresholds$\\
-%		\minimizerLength & optimal minimizer length\\
-%		\threshold & optimal threshold\\
-%		\hline 
-%	\end{tabularx}
-%\end{table}
-
 \subsubsection{Lookup}
 In order to model the time $\timeForOperationOnStructure{lookup}{RSHash}$ needed for a lookup using RSHash, we closely follow the lookup procedure as described by \cite{schulte-mattler_rshash_2026}:\\
 A k-mer $q$ is looked up by first computing its minimizer $m(q)$ and checking whether the bit $R[m(q)]$ is set.\\
@@ -372,77 +324,100 @@ This offset interval contains an average of $\averageFrequency$ offsets. In the 
 For $1-\percKmers$ $m(q)$ does not appear at all or has a $f(m(q)) > t$. In this case the lookup is completed through a lookup of $q$ in the hash table.
 
 The lookup time $\timeForOperationOnStructure{lookup}{RSHash}$ for one level can thus be modeled as:
-\newcommand{\lookupTimeExpression}{%
+\begin{equation}
 \begin{aligned}
-	\timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + (\averageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
-	&+ (1-\percKmers) \cdot \timeForOperationOnStructure{lookup}{H}
-\end{aligned}%
-}
-\[ \timeForOperationOnStructure{lookup}{RSHash} = 
-\lookupTimeExpression
- \]
+	\timeForOperationOnStructure{lookup}{RSHash} = \timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + (\averageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
+		&+ (1-\percKmers) \cdot \timeForOperationOnStructure{lookup}{H}
+\end{aligned}
+\end{equation}
+
 
 
 In order to determine $\minimizerLength$ and $\threshold$ we introduce binary selector variables $\selectorm_m$, $\selectort_t$ for each possible $m \in \possibleMinimizerLengths$, $t \in \possibleThresholds$. $\selectorm_m$ should be $1$ exactly when the optimal minimizer length is $m$ and $\selectort_t$ should be $1$ exactly when the optimal threshold is $t$. This is ensured through:
-\begin{align*}
+\begin{align}
 	\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
 	\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t
-\end{align*}
+\end{align}
 The following constraints force the selectors for $\minimizerLength$ and $\threshold$ to be binary and mutually exclusive:
-\[ 
-\begin{array}{rl}
+\begin{align}
 	\selectorm_m &\in \{0,1\} \mid \forall m \in \possibleMinimizerLengths \\
 	\selectort_t &\in \{0,1\} \mid \forall t \in \possibleThresholds \\
 	\sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m &= 1 \\
 	\sum\limits_{t \in \possibleThresholds} \selectort_t &= 1
-\end{array} 
-\]
+\end{align} 
 
 With $\percKmersEmpiric(m, t)$ being the empirically determined percentage of k-mers $q$ with $1 \leq f(m(q)) \leq t$ (for a fixed $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$) we can then model a constraint forcing $\percKmers$ to take the value of the only $\percKmersEmpiric(m,t)$ for which $\selectorm_m = 1$ and $\selectort_t = 1$:
-\[ \percKmers = \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right) \]
+\begin{equation}
+	\percKmers = \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)
+\end{equation}
 
 Analogously with $\averageFrequencyEmpiric(m, t)$ being the empirically determined average frequency of k-mers $q$ with $1 \leq f(m(q)) \leq t$ (for a fixed $(m,t) \in \possibleMinimizerLengths \times \possibleThresholds$)  we can then model $\averageFrequency$ with:
-\newcommand{\averageFrequencyExpression}{
-	\sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric(m, t) \cdot \selectort_t\right)
-}
-\[ \averageFrequency = \averageFrequencyExpression \]
+\begin{equation}
+	\averageFrequency = \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric(m, t) \cdot \selectort_t\right)
+\end{equation}
 
 Without further constraints, solving the described MINLP for minimal $\timeForOperationOnStructure{lookup}{RSHash}$ results in a solution where the $\selectorm_m$, $\selectort_t$ corresponding to the smallest $m \in \possibleMinimizerLengths$, $t \in \possibleThresholds$ will be set to one.\\
 This is expected, as this leads to the smallest possible $\percKmers$ which minimizes the k-mers having to be looked up in the text and maximizes the lookups in the (faster) hash table.\\
-This however results in maximal space consumption, as each entry in the hash table is significantly larger than an entry in $O$ as described in \nameref{sec:problemDefinition}.\\
+This however results in maximal space consumption, as each entry in the hash table is significantly larger than an entry in $O$ as described in \cref{sec:problemDefinition}.\\
 In order to account for that, we have to add constraints modeling the space consumption.
 
 \subsection{Space Consumption}
 The space consumption of RSHash can be decomposed into the space needed for the data structures components: the text $T$, the vectors $R$, $S$ and $O$ as well as the hash table $H$. Instead of modeling the total space used by RSHash we will focus on the bits per k-mer (bpk) used by the data structure as this metric allows to compare compression independent of the inputs length.\\
+We use that using Elias-Fano Coding, bit vector of length $U$ with $n$ 1 s can be encoded with $n \lceil log(U/n) \rceil + 3n$ many bits \cite{okanohara2007practical}\\
 
-\textbf{The text $T$} is much longer then k. Because of this the bits per k-mer for storing the text $T$ can be be approximated to be $bpk_T \approx 1$.
+\textbf{The text $T$} is much longer then k. Because of this the bits per k-mer for storing the text $T$ can be be approximated to be $1$:
+\begin{equation}
+	bpk_T = 1
+\end{equation}
 
-\textbf{Bit vectors $R$ and $S$} can likely be disregarded when modeling the space consumption. \todo{explain why}\\
-$R$ is a Bit Vector of length $4^\minimizerLength$ that contains $n$ \todo{the code for computing the minimizer stats already uses n - it could easily be used} 1s marking the existence of each encountered minimizer. Using Elias-Fano-Encoding, its size can be compressed to
-\[ n \lceil log(4^\minimizerLength/n) \rceil + 3n\]
+\todo[inline]{model or measure $bpk_R$ and $bpk_S$??}
+\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ that contains $n_{minimizers}$ \todo{the code for computing the minimizer stats already uses n - it could easily be used} 1s marking the appearance of each encountered minimizer in the sequences k-mers. Using Elias-Fano-Encoding, its size can be compressed to
+$n_{minimizers} \lceil log(4^\minimizerLength/n_{minimizers}) \rceil + 3n_{minimizers}$ \cite{okanohara2007practical}. For a total number of k-mers $n_{kmers}$ \todo{define stats vector, to simplify model input} the bits per k-mer of $R$ are:
+\begin{equation}
+	bpk_{R} = \frac{1}{n_{kmers}} \cdot \left( n_{minimizers} \lceil log\frac{4^\minimizerLength}{n_{minimizers}} \rceil + 3n_{minimizers} \right)
+\end{equation}
+
+\textbf{Bit vector $S$} has length $|O|+1 = n_{skmers} + 1$. Each minimizer appears $\averageFrequency$ times on average, which means that the bit vector contains $(n_{skmers} + 1)/\averageFrequency$ 1s marking the the boundaries of the offsets for each minimizers. Using Elias-Fano-Encoding, its size can be compressed to
+$((n_{skmers} + 1)/\averageFrequency) \lceil log((n_{skmers} + 1)/((n_{skmers} + 1)/\averageFrequency)) \rceil + 3((n_{skmers} + 1)/\averageFrequency)$ \cite{okanohara2007practical}. For a total number of kmers $n_{kmers}$ the bits per k-mer of $S$ are:
+\begin{align}
+	\nonumber bpk_{S} &= \frac{1}{n_{kmers}} \cdot \left( \frac{n_{skmers} + 1}{\averageFrequency} \lceil log\frac{n_{skmers} + 1}{\frac{n_{skmers} + 1}{\averageFrequency}} \rceil + 3\frac{n_{skmers} + 1}{\averageFrequency} \right) \\
+		&= \frac{1}{n_{kmers}} \cdot \left( \frac{n_{skmers} + 1}{\averageFrequency} \lceil log\averageFrequency \rceil + 3\frac{n_{skmers} + 1}{\averageFrequency} \right)
+\end{align}
 
 \textbf{The offset vector $O$} contains one entry of size $log |T|$ for the offset of each super-k-mer having an infrequent minimizer.\\
 Since $\percKmers$ describes the percentage of k-mers with infrequent minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $O$ as:
 \newcommand{\bpkOExpression}{\frac{\percKmers}{(k-\minimizerLength+2)/2} \cdot log |T|}
-\[ bpk_O = \bpkOExpression\]
+\begin{equation}
+	bpk_O = \bpkOExpression
+\end{equation}
 
 \textbf{The hash table $H$} contains an entry $(key:q, value:offset(q))$ for $1-\percKmers$ of the k-mers $q$ in $T$.
 Each entry has size $size(key) + size(value) = 64 + log |T|$. We introduce the load factor $\alpha$\todo{reminder to include somewhere that we set $\alpha = 0.75$ in practice and explain why that is a reasonable value} to the model, in order to account for empty buckets in the hash table.
 The bits per k-mer required for the hash table can thus be modeled by
 \newcommand{\bpkHExpression}{(1-\percKmers) \cdot \frac{(64 + log|T|)}{\alpha}}
-\[ bpk_H = \bpkHExpression\]
+\begin{equation}
+	bpk_H = \bpkHExpression
+\end{equation}
 
 \textbf{The total bits per k-mer} can be modeled by simply adding up the space requirements of each component:
 \newcommand{\bpkTotalExpression}{bpk_T + bpk_R + bpk_S + bpk_O + bpk_H}
-\[ bpk_{total} = \bpkTotalExpression\]
+\begin{equation}
+	bpk_{total} = \bpkTotalExpression
+\end{equation}
 
 \subsection{Optimization Goal}
 Having defined all constraints regarding the lookup time and space consumption of RSHash, we can now build a MINLP in order to find the optimal level parameters.\\
 The sets of possible minimizer lengths $\possibleMinimizerLengths$ and thresholds $\possibleThresholds$, the measured minimizer statistics $\percKmersEmpiric$ and $\averageFrequencyEmpiric$ for those sets as well as the times needed for the access, rank and select queries on the data structures different components are passed as arguments to the MINLP.\\
-We introduce three more arguments: The optimization goal $OptGoal$ which specifies whether to minimize $\timeForOperationOnStructure{lookup}{RSHash}$ or $bpk_{total}$ and upper bounds $Bound_{time}, Bound_{bpk}$ for the lookup time and space consumption. When using the MINLP, the upper bound belonging to the optimization goal should be set to $\infty$. In addition to the already defined constraints, $\timeForOperationOnStructure{lookup}{RSHash} \leq Bound_{time}$ and $bpk_{total} \leq Bound_{bpk}$ are added to the MINLP to enforce these bounds. \nameref{algo:minlp} shows the constructed MINLP.\\
+We introduce three more arguments: The optimization goal $OptGoal$ which specifies whether to minimize $\timeForOperationOnStructure{lookup}{RSHash}$ or $bpk_{total}$ and upper bounds $Bound_{time}, Bound_{bpk}$ for the lookup time and space consumption. 
+\begin{align}
+	OptGoal			&\in \{\timeForOperationOnStructure{lookup}{RSHash}, bpk_{total}\} \\
+	Bound_{time}	&\in \mathbb{R}_0^+ \geq 0 \\
+	Bound_{bpk}		&\in \mathbb{R}_0^+ \geq 0 
+\end{align}
+When using the MINLP, the upper bound belonging to the optimization goal should be set to $\infty$. In addition to the already defined constraints, $\timeForOperationOnStructure{lookup}{RSHash} \leq Bound_{time}$ and $bpk_{total} \leq Bound_{bpk}$ are added to the MINLP to enforce these bounds. \cref{algo:minlp} shows the constructed MINLP.\\
 One could for example search for level parameters minimizing the lookup time whilst not exceeding eight bits per k-mer by setting $OptGoal \leftarrow \timeForOperationOnStructure{lookup}{RSHash}, Bound_{time} \leftarrow \infty, Bound_{bpk} \leftarrow 8$.
 
-\begin{algorithm}
+\begin{figure}
 	\caption{Complete MINLP For One Level}\label{algo:minlp}
 	\begin{algorithmic}[1]
 		\Input{$
@@ -467,9 +442,10 @@ One could for example search for level parameters minimizing the lookup time whi
 				&OptGoal\\
 			\text{SUBJECT TO}\\
 			\timeForOperationOnStructure{lookup}{RSHash} &\leq Bound_{time}\\
-			\timeForOperationOnStructure{lookup}{RSHash} &= \lookupTimeExpression\\
+			\timeForOperationOnStructure{lookup}{RSHash} &= \timeForOperationOnStructure{\access}{R} + \percKmers \cdot (\timeForOperationOnStructure{\rank}{R} + 			2\timeForOperationOnStructure{\select}{S} + (\averageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
+				&\phantom{= \timeForOperationOnStructure{\access}{R}} + (1-\percKmers) \cdot \timeForOperationOnStructure{lookup}{H}\\
 			\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric(m, t) \cdot \selectort_t\right)\\
-			\averageFrequency &= \averageFrequencyExpression\\
+			\averageFrequency &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric(m, t) \cdot \selectort_t\right)\\
 			\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \selectorm_m \cdot m \\
 			\threshold &= \sum\limits_{t \in \possibleThresholds} \selectort_t \cdot t \\
 			\sum\limits_{m \in M} \selectorm_m &= 1 \\
@@ -489,10 +465,11 @@ One could for example search for level parameters minimizing the lookup time whi
 		\end{array} 
 		\]
 		\end{algorithmic}
-\end{algorithm}
+\end{figure}
+\todo[inline]{add equation references in MINLP}
 
 \section{Several Levels}\label{sec:minlp_severalLevels}
-In the following, we generalize the constraints defined in \nameref{sec:minlp_oneLevel} to model the use of $L \geq 1$ levels. We extend the \nameref{sec:minlp_notation} by adding a superscript $l$ in order to indicate an instance belonging to level $1 \leq l \leq L$.
+In the following, we generalize the constraints defined in \cref{sec:minlp_oneLevel} to model the use of $L \geq 1$ levels. We extend the \cref{sec:minlp_notation} by adding a superscript $l$ in order to indicate an instance belonging to level $1 \leq l \leq L$.
 We still assume, that the times $\timeForOperationOnStructure{\access}{R^l},\timeForOperationOnStructure{\rank}{R^l},\timeForOperationOnStructure{\select}{S^l},\timeForOperationOnStructure{\access}{O^l},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{lookup}{H}$ are (practically) independent of the parameters $\minimizerLength^l, \threshold^l$ and the level $l$. \todo{reason}
 
 \subsection{Runtime}
@@ -513,12 +490,10 @@ We can thus model the lookup time for all levels $1\leq l \leq L$ recursively as
 As an example for $L=2$ levels, this results in:
 \begin{align*}
 	\timeForOperationOnStructure{lookup}{RSHash} =
-	\timeForOperationOnStructure{\access}{R^\levelOne} &+ \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
-		&\begin{aligned}
-			+ (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} &+ \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
-			&+(1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{lookup}{H} \Bigg)
-		\end{aligned}
-\end{align*}\todo[inline]{Ist das Besipiel nötig? Falls ja: Besser formatieren}
+		\timeForOperationOnStructure{\access}{R^\levelOne} +& \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
+			+& (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} + \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
+			&\phantom{(1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2}} + (1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{lookup}{H} \Bigg)
+\end{align*}
 
 
 Unique sets of binary selector variables $\selectorm^l_m$ and $\selectort^l$ are needed for the level parameters $\minimizerLength^l$ and $\threshold^l$ of each level $l$.
@@ -532,7 +507,7 @@ The constraints regarding these variables are analog to those when using only on
 	\sum\limits_{t \in \possibleThresholds} \selectort_t^l &= 1 & \mid \forall l
 \end{array} \]
 
-For each level $l$ $\percKmers^l$ and $\averageFrequency^l$ can also be modeled analogously to using only one level by making use of the \nameref{sec:minimizerDistribution_severalLevels}:
+For each level $l$ $\percKmers^l$ and $\averageFrequency^l$ can also be modeled analogously to using only one level by making use of the \cref{sec:minimizerDistribution_severalLevels}:
 \begin{align*}
 	\percKmers^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m^l \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric^l(m, t) \cdot \selectort_t^l\right) & \mid \forall l \in \{1,...,L\}\\
 	\averageFrequency^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \selectorm_m^l \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric^l(m, t) \cdot \selectort_t^l\right) & \mid \forall l \in \{1,...,L\}
@@ -559,18 +534,18 @@ The bits per k-mer for the hash table can thus be modeled as
 \section{Limitations}
 The MINLP approach for finding optimal level parameters has the advantage of finding the optimal level parameters for the specified optimization goal. \todo[inline]{rather: should have the advantage... - wie kann ich die Korrektheit des MINLP Zeigen/Argumentieren??}
 
-However, finding the empirical values $\percKmersEmpiric^l(m,t)$ for each level becomes increasingly time consuming for large genomes and more levels used as outlined in \nameref{sec:minimizerDistribution_severalLevels}. \todo{noch nicht geschrieben} This renders the approach implausible.
+However, finding the empirical values $\percKmersEmpiric^l(m,t)$ for each level becomes increasingly time consuming for large genomes and more levels used as outlined in \cref{sec:minimizerDistribution_severalLevels}. \todo{noch nicht geschrieben} This renders the approach implausible.
 
 For this reason, an approach yielding only an approximation of the optimal level parameters but taking less time to do so could be of interest.
 
-We will further explore the method of \nameref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution.\todo{TODO}
+We will further explore the method of \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution.\todo{TODO}
 
 In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get arround the exponential \todo{is it exponential?} cost of computing those values. \todo{TODO}
 
 \chapter{Subsampling}\label{chap:subsampling}
 \section{Motivation}
 The time for processing a genome in order to find the minimizer distribution $\percKmers(m,t)$ for possible minimizer lengths $m \in \possibleMinimizerLengths$ and thresholds $t \in \possibleThresholds$ is directly proportional to the size of the genome.\\
-For large genomes, this processing can become the dominating factor when searching for optimal parameters using the \nameref{chap:minlp} approach. In order to speed up the search for the empirical values, we introduce a subsampling method.
+For large genomes, this processing can become the dominating factor when searching for optimal parameters using the \cref{chap:minlp} approach. In order to speed up the search for the empirical values, we introduce a subsampling method.
 
 \section{Subsampling Method}
 Instead of calculating the distribution over the full genome, we sample $\numberOfSamples$ sequences of length $\lengthOfSamples \geq k$ at random positions in the genome.\\
@@ -595,7 +570,31 @@ If instead $\numberOfSamples$ is chosen relative to $|\genomeText|$, $\frac{|\sa
 \\
 For a large enough $\numberOfSamples$, the probability of choosing a bad representation becomes highly unlikely.\todo{zu vage, begründen}\\
 
-%\include{vorlagen_beispiele/vorlagen_beispiele}
+\chapter{Experiments}\label{chap:experiments}
+\section{Times for Operations on Datastructure}
+\todo[inline]{incomplete. measure or model?}
+\textbf{Vector Access}
+Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
+\begin{align*}
+	\timeForOperationOnStructure{\access}{R} &= ...\\
+	\timeForOperationOnStructure{\access}{O} &= ...\\
+\end{align*}
+
+\textbf{Hash Table Access}
+Accessing an element of a Hash Table can be done in constant time, we use the following values based on measurements:
+\begin{align*}
+	\timeForOperationOnStructure{lookup}{H} &= ...
+\end{align*}
+
+\textbf{Bit Vector Rank Query}
+A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log U/n \rceil + 3n$ many bits supporting rank in $O(log(U/n)$ time (Okanohara and Sadakane, 2007).
+\todo[inline]{does that help here? Doesn't the model require actual time instead of O notation - maybe measurements would be more suited}
+
+\textbf{Bit Vector Select Query}
+???
+
+\textbf{Comparison with Text}
+???
 
 \printbibliography[heading=bibintoc,title={Bibliography}]
 
