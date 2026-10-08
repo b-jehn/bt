@@ -71,7 +71,7 @@
 %=========== Pseudocode
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\algnewcommand\algorithmicinput{\textbf{Input:}}
+\algnewcommand\algorithmicinput{\textbf{Model Input:}}
 \algnewcommand\algorithmicoutput{\textbf{Output:}}
 \algnewcommand\Input{\item[\algorithmicinput]}
 \algnewcommand\Output{\item[\algorithmicoutput]}
@@ -256,9 +256,9 @@ authority.\\
 \todo[inline]{Wie detailiert soll ich RSHash beschreiben? Reicht eine grobe Beschreibung und ein Verweis auf \cite{schulte-mattler_rshash_2026}?}
 RSHash is a minimizer based fast, compressed hash table for storing DNA k-mers that answers lookup and can be extended for supporting locate. It was recently introduced by the Reinert Group.\\
 The data structure works with one, two or three levels and a hash table. For each level $l$ a pair of level parameters has to be specified: the minimizer length $m_l$ and a threshold $t_l$.\\
-Each level $l$ works in the following way: The minimizer of length $m_l$ is computed for each super-k-mer in the input whilst also counting the frequency (occurrences) of all appearing minimizers.\\
+Each level $l$ works in the following way: The minimizer of length $m_l$ is computed for each super-k-mer in the sequences whilst also counting the frequency (occurrences) of all appearing minimizers.\\
 All super-k-mers with minimizers whose frequency does not succeed $t_l$ are marked in a bit vector $R$, their offsets in the Text are stored in a vector $O$ and a bit vector $S$ marks the boundaries of the offsets for each minimizer.\\
-Those super-k-mers with minimizers of a frequency larger than $t_l$ make up the input for the next higher level $l+1$ which works exactly like the previous apart from having its own level parameters.\\
+Those super-k-mers with minimizers of a frequency larger than $t_l$ make up the input sequences for the next higher level $l+1$ which works exactly like the previous apart from having its own level parameters.\\
 Only k-mers with frequent minimizers on all specified levels end up being stored in the hash table.\cite{schulte-mattler_rshash_2026}.
 
 \section{Problem Definition}\label{sec:problemDefinition}
@@ -396,9 +396,9 @@ A k-mer $q$ is looked up by first computing its minimizer $m(q)$ and checking wh
 If the bit is set, the lookup is completed by searching for $q$ on the level. We introduce the variable $\timeForOperationOnStructure{level}{} \in \mathbb{R}^+_0$ to describe the time needed for this.\\
 If the bit $R[m(q)]$ is not set, the lookup is completed through a lookup in the hash table $H$ taking $\timeForOperationOnStructure{lookup}{H}$ time. The variable $\timeForOperationOnStructure{lookup}{RSHash} \in \mathbb{R}^+_0$ describing the lookup time can thus be modeled as:
 \begin{align}
-	\timeForOperationOnStructure{lookup}{RSHash} \in \mathbb{R}^+_0\\
-	\nonumber \timeForOperationOnStructure{lookup}{RSHash} = \timeForOperationOnStructure{\access}{R} &+ \percKmers \cdot \timeForOperationOnStructure{level}{}\\
-	&+ (1-\percKmers) \cdot \timeForOperationOnStructure{lookup}{H}
+	\timeForOperationOnStructure{lookup}{RSHash} \in&~ \mathbb{R}^+_0\\
+	\nonumber \timeForOperationOnStructure{lookup}{RSHash} =&~ \timeForOperationOnStructure{\access}{R} + \percKmers \cdot \timeForOperationOnStructure{level}{}\\
+	&~\phantom{\timeForOperationOnStructure{\access}{R}}+ (1-\percKmers) \cdot \timeForOperationOnStructure{lookup}{H}
 \end{align}
 
 The search for those k-mers $q$ for which the bit $R[m(q)]$ is set continues on the level by first computing the minimizer’s rank $r = \rank_R(m(q))$ taking $\timeForOperationOnStructure{\rank}{R}$ time.\\
@@ -417,16 +417,24 @@ This however results in maximal space consumption, as each entry in the hash tab
 In order to account for that, we have to add constraints modeling the space consumption.
 
 \subsection{Space Consumption}
-The space consumption of RSHash can be decomposed into the space needed for the data structures components: the text $T$, the vectors $R$, $S$ and $O$ as well as the hash table $H$. Instead of modeling the total space used by RSHash we will focus on the bits per k-mer (bpk) used by the data structure as this metric allows to compare compression independent of the inputs length.\\
-We use that using Elias-Fano Coding, bit vector of length $U$ with $n$ 1 s can be encoded with $n \lceil log(U/n) \rceil + 3n$ many bits \cite{okanohara2007practical}\\
+Instead of modeling the total space used by RSHash we will focus on the bits per k-mer (bpk) used by the data structure as this metric allows to compare compression independent of the sequence length.\\
+The space consumption of RSHash can be decomposed into the space needed for the data structures components: the text $T$, the vectors $R$, $S$ and $O$ as well as the hash table $H$. We use one variable to describe the bits per k-mer needed by each of the components:
+\begin{align}
+	bpk_T &\in \mathbb{R}_0^+\\
+	bpk_R &\in \mathbb{R}_0^+\\
+	bpk_S &\in \mathbb{R}_0^+\\
+	bpk_O &\in \mathbb{R}_0^+\\
+	bpk_H &\in \mathbb{R}_0^+
+\end{align}
 
-\textbf{The text $T$} is much longer then k. Because of this the bits per k-mer for storing the text $T$ can be be approximated to be $1$:
+\textbf{The text $T$} is much longer than k. Because of this the bits per k-mer for storing the text $T$ can be set to a constant of $2$ bits needed to store one base:
 \begin{equation}
-	bpk_T = 1
+	bpk_T = 2
 \end{equation}
 
 \todo[inline]{model or measure $bpk_R$ and $bpk_S$??}
-\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ that contains $n_{minimizers}$ \todo{the code for computing the minimizer stats already uses n - it could easily be used} 1s marking the appearance of each encountered minimizer in the sequences k-mers. Using Elias-Fano-Encoding, its size can be compressed to
+\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ that contains $n_{minimizers}$ \todo{the code for computing the minimizer stats already uses n - it could easily be used} 1s marking the appearance of each encountered minimizer in the sequences k-mers.\\
+Using Elias-Fano-Encoding, its size can be compressed to
 $n_{minimizers} \lceil log(4^\minimizerLength/n_{minimizers}) \rceil + 3n_{minimizers}$ \cite{okanohara2007practical}. For a total number of k-mers $n_{kmers}$ \todo{define stats vector, to simplify model input} the bits per k-mer of $R$ are:
 \begin{equation}
 	bpk_{R} = \frac{1}{n_{kmers}} \cdot \left( n_{minimizers} \lceil log\frac{4^\minimizerLength}{n_{minimizers}} \rceil + 3n_{minimizers} \right)
@@ -434,16 +442,17 @@ $n_{minimizers} \lceil log(4^\minimizerLength/n_{minimizers}) \rceil + 3n_{minim
 
 \textbf{Bit vector $S$} has length $|O|+1 = n_{skmers} + 1$. Each minimizer appears $\averageFrequency$ times on average, which means that the bit vector contains $(n_{skmers} + 1)/\averageFrequency$ 1s marking the the boundaries of the offsets for each minimizers. Using Elias-Fano-Encoding, its size can be compressed to
 $((n_{skmers} + 1)/\averageFrequency) \lceil log((n_{skmers} + 1)/((n_{skmers} + 1)/\averageFrequency)) \rceil + 3((n_{skmers} + 1)/\averageFrequency)$ \cite{okanohara2007practical}. For a total number of kmers $n_{kmers}$ the bits per k-mer of $S$ are:
-\begin{align}
-	\nonumber bpk_{S} &= \frac{1}{n_{kmers}} \cdot \left( \frac{n_{skmers} + 1}{\averageFrequency} \lceil log\frac{n_{skmers} + 1}{\frac{n_{skmers} + 1}{\averageFrequency}} \rceil + 3\frac{n_{skmers} + 1}{\averageFrequency} \right) \\
-		&= \frac{1}{n_{kmers}} \cdot \left( \frac{n_{skmers} + 1}{\averageFrequency} \lceil log\averageFrequency \rceil + 3\frac{n_{skmers} + 1}{\averageFrequency} \right)
-\end{align}
 
-\textbf{The offset vector $O$} contains one entry of size $log |T|$ for the offset of each super-k-mer having an infrequent minimizer.\\
-Since $\percKmers$ describes the percentage of k-mers with infrequent minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $O$ as:
-\newcommand{\bpkOExpression}{\frac{\percKmers}{(k-\minimizerLength+2)/2} \cdot log |T|}
+\textbf{Bit vector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can however be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
+Since $\percKmers$ describes the percentage of k-mers with infrequent minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $S$ through:
 \begin{equation}
-	bpk_O = \bpkOExpression
+	\nonumber bpk_{S} = \frac{\percKmers}{(k-\minimizerLength+2)/2}
+\end{equation}
+
+\textbf{The offset vector $O$} contains one entry of size $log |T|$ for the offset of each infrequent minimizer.\\
+Since $bpk_S$ already describes the number of offsets per k-mer, we can model the bits per k-mer in $O$ with:
+\begin{equation}
+	bpk_O = bpk_S \cdot log |T|
 \end{equation}
 
 \textbf{The hash table $H$} contains an entry $(key:q, value:offset(q))$ for $1-\percKmers$ of the k-mers $q$ in $T$.
@@ -511,10 +520,10 @@ One could for example search for level parameters minimizing the lookup time whi
 			
 			bpk_{total} &\leq Bound_{bpk} = 8\\
 			bpk_{total} &= \bpkTotalExpression\\
-			bpk_T &= 1\\
+			bpk_T &= 2\\
 			bpk_R &= ??\\
 			bpk_S &= ??\\
-			bpk_O &= \bpkOExpression\\
+			bpk_O &= \frac{\percKmers}{(k-\minimizerLength+2)/2} \cdot log |T|\\
 			bpk_H &= \bpkHExpression\\
 			%		\minimizerLength &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m \cdot m \\
 			%		\threshold &= \sum\limits_{t \in \possibleThresholds} \indicatort_t \cdot t
@@ -561,9 +570,9 @@ We can thus model the lookup time for all levels $1\leq l \leq L$ recursively as
 As an example for $L=2$ levels, this results in:
 \begin{align*}
 	\timeForOperationOnStructure{lookup}{RSHash} =
-		\timeForOperationOnStructure{\access}{R^\levelOne} +& \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
-			+& (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} + \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
-			&\phantom{(1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2}} + (1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{lookup}{H} \Bigg)
+		\timeForOperationOnStructure{\access}{R^\levelOne} +&~ \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
+			+&~ (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} + \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
+			&~\phantom{(1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2}} + (1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{lookup}{H} \Bigg)
 \end{align*}
 
 
@@ -646,7 +655,7 @@ For a large enough $\numberOfSamples$, the probability of choosing a bad represe
 
 \chapter{Experiments}\label{chap:experiments}
 \section{Solving the MINLP}
-For a given Sequence, we can compute the minimizer distribution as outlined in \cref{chap:minimizerDistribution} and use a MINLP solver like SCIP \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023} to solve the MINLP defined in \cref{chap:minlp} and find those level parameters leading to the optimization goal:
+For a given sequence, we can compute the minimizer distribution as outlined in \cref{chap:minimizerDistribution} and use a MINLP solver like SCIP \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023} to solve the MINLP defined in \cref{chap:minlp} and find those level parameters leading to the optimization goal:
 
 \printbibliography[heading=bibintoc,title={Bibliography}]
 
