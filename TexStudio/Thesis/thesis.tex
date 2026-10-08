@@ -551,53 +551,61 @@ One could for example search for level parameters minimizing the lookup time whi
 \todo[inline]{add equation references in MINLP}
 
 \section{Model for Several Levels}\label{sec:minlp_severalLevels}
-In the following, we generalize the constraints defined in \cref{sec:minlp_oneLevel} to model the use of $L \geq 1$ levels.
+\newcommand{\levels}{\mathcal{L}}
+In the following, we generalize the constraints defined for one level in \cref{sec:minlp_oneLevel} to model the use of $L \geq 1$ levels with $\levels := \{1,...,L\}$ being the set of used levels.
 We still assume, that the times $\timeForOperationOnStructure{\access}{R^l},\timeForOperationOnStructure{\rank}{R^l},\timeForOperationOnStructure{\select}{S^l},\timeForOperationOnStructure{\access}{O^l},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{lookup}{H}$ are (practically) independent of the parameters $\minimizerLength^l, \threshold^l$ and the level $l$. \todo{reason}
+\\
+
+Unique sets of binary indicator variables $\indicatorm^l_m$ and $\indicatort^l$ are needed for the level parameters $\minimizerLength^l$ and $\threshold^l$ of each level $l$.
+The constraints regarding these variables are analog to those when using only one level:
+\[ \begin{array}{rll}
+	\indicatorm_m^l &\in \{0,1\} & \mid \forall (l,m) \in (\levels \times \possibleMinimizerLengths) \\
+	\indicatort_t^l &\in \{0,1\} & \mid \forall (l,t) \in (\levels \times \possibleThresholds) \\
+	\sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m^l &= 1 & \mid \forall l \in \levels\\
+	\sum\limits_{t \in \possibleThresholds} \indicatort_t^l &= 1 & \mid \forall l \in \levels\\
+	\minimizerLength^l &\in \mathbb{R}^+_0 & \mid \forall l \in \levels\\
+	\threshold^l &\in \mathbb{R}^+_0 & \mid \forall l \in \levels\\
+	\minimizerLength^l &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m^l \cdot m^l & \mid \forall l \in \levels \\
+	\threshold^l &= \sum\limits_{t \in \possibleThresholds} \indicatort_t^l \cdot t^l & \mid \forall l \in \levels
+\end{array} \]
 
 \subsection{Lookup Time}
-When using $L$ levels, the probability of a k-mer belonging to a higher level is dependent on the probability of k-mers belonging to the levels below.\\
-For $\percKmers^l$ of the k-mers on a level $1 \leq l \leq L$ the lookup is completed by a search through the offsets on that level whilst the remaining $(1-\percKmers^l)$ of queries result in a lookup on the next level.\\
-We can thus model the lookup time for all levels $1\leq l \leq L$ recursively as:
+The lookup time on a level $l \in \levels$ can be leveled analogously to that on one level:
+\begin{equation*}
+	\timeForOperationOnStructure{level}{}^l = \timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency^\levelL+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^l} + \timeForOperationOnStructure{\compare}{T}) \mid \forall l \in \levels
+\end{equation*}
+
+For $\percKmers^l$ of the k-mers on a level $l \in \levels$ the lookup is completed by a search through the offsets on that level whilst the remaining $(1-\percKmers^l)$ of queries result in a lookup on the next level.\\
+We can thus model the lookup time recursively:
 \[ 
 \timeForOperationOnStructure{lookup}{RSHash}^{\levelL} = 
 \begin{cases}
 	\begin{aligned}
-		\timeForOperationOnStructure{\access}{R^\levelL} &+ \percKmers^\levelL \cdot (\timeForOperationOnStructure{\rank}{R^\levelL} + 2\timeForOperationOnStructure{\select}{S^\levelL} + \frac{\averageFrequency^\levelL+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^l} + \timeForOperationOnStructure{\compare}{T})) \\
+		\timeForOperationOnStructure{\access}{R^\levelL} &+ \percKmers^\levelL \cdot \timeForOperationOnStructure{level}{}^l\\
 		&+ (1-\percKmers^l) \cdot \timeForOperationOnStructure{lookup}{RSHash}^{\levelL+1}
-	\end{aligned} &\mid 1\leq l \leq L\\
-	\timeForOperationOnStructure{lookup}{H} &\mid l=L+1
+	\end{aligned} &\mid l \in \levels\\
+	\timeForOperationOnStructure{lookup}{H} &\mid l \notin \levels
 \end{cases}
 \]
 
+Let $\bar{m}^l := [m^i \mid \forall 1 \leq i \leq l]$ be the vector containing a minimizer lengths for each of the current and all previous levels and $\bar{t}^l := [t^i \mid \forall 1 \leq i \leq l]$ the corresponding thresholds.\\
+For each level $l$ $\percKmers^l$ and $\averageFrequency^l$ can then be modeled analogously to using only one level by making use of the \cref{sec:minimizerDistribution_severalLevels}:
+\todo[inline]{WRONG! both values are highly dependent of the parameter choices on levels below. that means there would have to be a sum for each level parameter to cover each possible combination of level parameters!! either model it that way or search for a different way}
+\begin{align*}
+	\percKmers^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \indicatorm_m^l \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric^l(\bar{m}^l, \bar{t}^l) \cdot \indicatort_t^l\right) & \mid \forall l \in \levels\\
+	\averageFrequency^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \indicatorm_m^l \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric^l(\bar{m}^l, \bar{t}^l) \cdot \indicatort_t^l\right) & \mid \forall l \in \levels
+\end{align*}
+
 As an example for $L=2$ levels, this results in:
 \begin{align*}
-	\timeForOperationOnStructure{lookup}{RSHash} =
+	\timeForOperationOnStructure{lookup}{RSHash}^1 =
 		\timeForOperationOnStructure{\access}{R^\levelOne} +&~ \percKmers^\levelOne \cdot (\timeForOperationOnStructure{\rank}{R^\levelOne} + 2\timeForOperationOnStructure{\select}{S^\levelOne} + \frac{\averageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
 			+&~ (1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2} + \percKmers^\levelTwo \cdot (\timeForOperationOnStructure{\rank}{R^\levelTwo} + 2\timeForOperationOnStructure{\select}{S^\levelTwo} + \frac{\averageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
 			&~\phantom{(1-\percKmers^\levelOne) \cdot \Bigg(\timeForOperationOnStructure{\access}{R^2}} + (1-\percKmers^\levelTwo) \cdot \timeForOperationOnStructure{lookup}{H} \Bigg)
 \end{align*}
 
-
-Unique sets of binary indicator variables $\indicatorm^l_m$ and $\indicatort^l$ are needed for the level parameters $\minimizerLength^l$ and $\threshold^l$ of each level $l$.
-The constraints regarding these variables are analog to those when using only one level:
-\[ \begin{array}{rll}
-	\minimizerLength^l &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m^l \cdot m^l & \mid \forall l \\
-	\threshold^l &= \sum\limits_{t \in \possibleThresholds} \indicatort_t^l \cdot t^l & \mid \forall l \\
-	\indicatorm_m^l &\in \{0,1\} & \mid \forall (l,m) \in (\{1,...,L\} \times \possibleMinimizerLengths) \\
-	\indicatort_t^l &\in \{0,1\} & \mid \forall (l,t) \in (\{1,...,L\} \times \threshold) \\
-	\sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m^l &= 1 & \mid \forall l \\
-	\sum\limits_{t \in \possibleThresholds} \indicatort_t^l &= 1 & \mid \forall l
-\end{array} \]
-
-Let $\bar{m}^l := [m^i \mid \forall 1 \leq i \leq l]$ be the vector containing a minimizer lengths for each of the current and all previous levels and $\bar{t}^l := [t^i \mid \forall 1 \leq i \leq l]$ the corresponding thresholds.\\
- For each level $l$ $\percKmers^l$ and $\averageFrequency^l$ can then be modeled analogously to using only one level by making use of the \cref{sec:minimizerDistribution_severalLevels}:
-\todo[inline]{WRONG! both values are highly dependent of the parameter choices on levels below. that means there would have to be a sum for each level parameter to cover each possible combination of level parameters!! either model it that way or search for a different way}
-\begin{align*}
-	\percKmers^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \indicatorm_m^l \sum\limits_{t \in \possibleThresholds} \percKmersEmpiric^l(\bar{m}^l, \bar{t}^l) \cdot \indicatort_t^l\right) & \mid \forall l \in \{1,...,L\}\\
-	\averageFrequency^l &= \sum\limits_{m \in \possibleMinimizerLengths} \left( \indicatorm_m^l \sum\limits_{t \in \possibleThresholds} \averageFrequencyEmpiric^l(\bar{m}^l, \bar{t}^l) \cdot \indicatort_t^l\right) & \mid \forall l \in \{1,...,L\}
-\end{align*}
-
-
+\todo[inline]{TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday\\TODOOOO ON Friday:\\
+}
 \subsection{Space Consumption}
 \textbf{The text $T$} is only being stored once, so $bpk_T \approx 1$ still holds.
 
@@ -605,7 +613,7 @@ Let $\bar{m}^l := [m^i \mid \forall 1 \leq i \leq l]$ be the vector containing a
 
 \textbf{The offset vector $O^l$} on level $l$ only contains an entry for a k-mer $q$, if the k-mers minimizer is frequent on all previous levels but infrequent on level $l$. 
 The bits per k-mer for the Offset vector on level $l$ can thus be modeled as:
-\[bpk_{O^l} = \prod_{i=1}^{l-1} (1-\percKmers^i) \cdot \frac{ \percKmers^l}{(k-\minimizerLength^l+2)/2} \cdot log_2 |T| \mid \forall l \in \{1,...,L\}\]
+\[bpk_{O^l} = \prod_{i=1}^{l-1} (1-\percKmers^i) \cdot \frac{ \percKmers^l}{(k-\minimizerLength^l+2)/2} \cdot log_2 |T| \mid \forall l \in \levels\]
 
 \textbf{The hash table $H$} only contains an entry for k-mers $q$, which have frequent minimizers on all levels.
 The bits per k-mer for the hash table can thus be modeled as 
