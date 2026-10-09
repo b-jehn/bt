@@ -191,7 +191,7 @@ for t in threshold_sets:
             
             parameters = fit_loglogistic4P(x,y)
             all_parameters[level-1].append(parameters)
-            plotDataAgainstModel(x,y,parameters, m,t, level)
+            #plotDataAgainstModel(x,y,parameters, m,t, level)
             print(f"level{level}: a={all_parameters[level-1][m_index][0]}, b={all_parameters[level-1][m_index][1]}")
             residuals = loglogistic4P(x, parameters) - y
             print(f"residuals={np.sum(residuals**2)}")

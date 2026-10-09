@@ -10,20 +10,10 @@
 \maketitle
 
 \begin{itemize}
-	\item Wir berechnen minimizer stats lediglich für das erste level. Kann davon ausgegangen werden, dass die Verteilung in den höheren ebenso ausfällt, da die Hashfunktion random ist?\\
-	Oder ist es möglich, dass die Verteilung in höheren Leveln anders ausfällt, da die Abdeckung der Minimizer nicht 1:1 mit der Abdeckung der k-mere einhergeht? - überprüfen!
 	\item greedy idee: für ein level lösen, dann für ein weiteres, dann für ein weiteres - wird nicht optimal werden aber eventuell besser als nur für ein level
 	\item suchräume verkleinern: sind die parameter tatsächlich non-decreasing? Wenn ja, Begründen und eventuell ausnutzen
-	\item lässt sich $p_K$ eventuell anhand von $m, t$ und der Textlänge $T$ bestimmen, anstatt die Werte empirisch zu bestimmen? Dafür würde sprechen, dass die Hashfunktion zufällig ist. Dagegen könnte sprechen, dass repetitivität auf unbearbeiteten Genomen eine Rolle spielen könnte.\\
-	Vermutlich ist das aber nicht der Fall und würde ansonsten den Sinn der Arbeit hinterfragen..\\
-	Idee zur Untersuchung:
-	\begin{itemize}
-		\item Aus verschiedenen Genomen jeweils die gleiche Menge an Abschnitten gleicher Länge samplen und für diese die Verteilung berechnen - sollten die Werte $p_K(m,t,T)$ vom Genom unabhängig sein und lediglich  von $m,t$ und $T$ abhängen, dann müsste dies in ungefähr gleichen Verteilungen resultieren. Ist dies der Fall, müsste man überlegen, welchen Einfluss die jeweiligen parameter haben.\\
-		Erste Annahme:\\
-		$p_K(m,t,T)$ wird größer, je größer $t,m$ sind und je kleiner $T$ ist.
-	\end{itemize}
-	\item ist $f_{avg}$ wirklich nötig für eine ausreichend gute modellierung? - die Werte sind für z.B. das menschliche Genom zwischen 1 und 3, bedeuten also nur einen kleinen unterschied in der Laufzeit, machen das lösen des MINLPs aber bedeutend zeitintensiver
 	\item locate case modellieren - einfach nur $f_{avg}/2$ durch $f_{avg}$ ersetzten?
+	\item $p_M$ bzw. $p_K$ als 6-dimensionale funktion mit parametern $(m^1,m^2,m^3,t^1,t^2,t^3)$ betrachten. oder vllt erst mal als 3-dimensionale mit fixen thresholds um ein gefühl dafür zu bekommen
 \end{itemize}
 	
 	

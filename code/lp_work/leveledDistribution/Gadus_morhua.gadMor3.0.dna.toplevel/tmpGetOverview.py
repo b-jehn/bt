@@ -9,7 +9,7 @@ overview_dir = base_dir / "overview"
 overview_dir.mkdir(exist_ok=True)
 
 for m in range(10, 20):
-    source_dir = base_dir / f"m={m},{m},{m}_t=32,64,128"
+    source_dir = base_dir / f"m={m},{m},{15}_t=64,64,64"
     source_file = source_dir / "cumulated_p_M_per_level.png"
 
     # Rename the copied file using the value of m
