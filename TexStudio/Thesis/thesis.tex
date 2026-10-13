@@ -312,7 +312,7 @@ We aim to analyze how these two percentages describing the minimizer distributio
 The distribution of minimizers on higher levels should be highly dependent on the choice of the level parameters off the levels below, as those influence which k-mers appear on higher levels.\\
 In order to understand this relationship, we will measure these distributions for a selection of sequences and analyze the results. It should be noted that this alone is not sufficient to argue about the general case.\\
 
-\section{Average Frequencies $\averageFrequencyEmpiric(m,t)$}
+\section{Average Frequencies $\averageFrequencyEmpiric(m,t)$}\label{sec:averagefrequencies}
 Let $k$ be a k-mer with an \textit{infrequent} minimizer $m(k)$. The lookup of $k$ is completed by a search for $k$ in $T$ at every offset of $m(k)$ in the offset vector $O$. In order to model the lookups runtime in \cref{chap:minlp}, we introduce the value $\averageFrequencyEmpiric(m,t)$ to describe the average frequency of $m(k)$ and thus the average amount of relevant offsets in $O$ when looking up $k$ whilst using minimizer length $m$ and threshold $t$..\\
 We recall that $\percKmersEmpiric(m,t)$ is the percentage of k-mers with \textit{infrequent} minimizers when using minimizer length $m$ and threshold $t$. Then $(\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1))/\percKmersEmpiric(m,t)$\footnote{Note that $\percKmersEmpiric(m,0) = 0$ per definition} percent of those k-mers with \textit{infrequent} minimizers have minimizers of exact frequency $f(m(k)) = f$.\\
 We can derive $\averageFrequencyEmpiric(m,t)$ from $\percKmersEmpiric(m,t)$ by computing a sum over every frequency $1 \leq f \leq t$ weighed with the percentage of \textit{\textit{infrequent}} k-mers with that frequency:
@@ -388,7 +388,7 @@ There values can be modeled through a sum over the indicator variables multiplie
 	\optimalT \label{constraint:optimalT}
 \end{align}
 
-We introduce the variable $\percKmers \in [0,1]$ to take the value of $\percKmersEmpiric(\minimizerLength, \threshold)$.\\
+We introduce the variable $\percKmers \in [0,1]$ to take the value of $\percKmersEmpiric(\minimizerLength, \threshold)$ (\cref{sec:minimizerDistribution_severalLevels}).\\
 As it is not possible to directly evaluate this value\todo{explain why}, we use the indicator variables to model a constraint forcing $\percKmers$ to take the value of the only $\percKmersEmpiric(m,t)$ for which $\indicatorm_m = 1$ and $\indicatort_t = 1$:
 \newcommand{\percKmersExpression}{
 	\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m \cdot \sum\limits_{t \in \possibleThresholds} \indicatort_t \cdot \percKmersEmpiric(m, t)}
@@ -397,7 +397,7 @@ As it is not possible to directly evaluate this value\todo{explain why}, we use 
 	\percKmersExpression \label{constraint:percKmers}
 \end{align}
 
-Analogously we introduce $\averageFrequency \in \mathbb{R}^+_0$ to represent $\averageFrequencyEmpiric(\minimizerLength, \threshold)$:
+Analogously we introduce $\averageFrequency \in \mathbb{R}^+_0$ to represent $\averageFrequencyEmpiric(\minimizerLength, \threshold)$ (\cref{sec:averagefrequencies}):
 \newcommand{\averageFrequencyExpression}{
 	\averageFrequency &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m \cdot \sum\limits_{t \in \possibleThresholds} \indicatort_t \cdot \averageFrequencyEmpiric(m, t)}
 \begin{align}

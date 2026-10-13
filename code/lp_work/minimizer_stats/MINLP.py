@@ -20,7 +20,7 @@ if THRESHOLDS[-1] >= T:
     sys.exit(f"maximum threshold t: {THRESHOLDS[-1]} has to be smaller than T: {T}")
 
 logfile_path = f'logs/log_{SEQUENCE_NAME}'
-sequence_path = f'../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
+sequence_path = f'../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
 sequence_length = 0
 if os.path.isfile(sequence_path):
     sequence_length = os.path.getsize(sequence_path)
@@ -46,7 +46,7 @@ the empirically measured percentage of
 """ 
 P_K_empirical = [[0] for m in MINIMIZER_LENGTHS] #percentage of appearing minimizers with f==0 is 0
 for i, m in enumerate(MINIMIZER_LENGTHS):  
-    reader = csv.reader(open(f'./minimizer_stats/{SEQUENCE_NAME}/stats_m{m}_t{T}.csv'), delimiter=',')
+    reader = csv.reader(open(f'./{SEQUENCE_NAME}/stats_m{m}_t{T}.csv'), delimiter=',')
     for t, row in enumerate(reader):
         if(t==0):
             continue    #skip first line - describtion of the values
