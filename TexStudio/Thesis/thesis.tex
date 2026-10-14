@@ -480,6 +480,7 @@ The bits per k-mer required for the hash table can thus be modeled by:
 \begin{align}
 	\bpkH \label{constraint:bpkH}
 \end{align}
+\todo[inline]{nur hashset für lookup, 1 statt log2T}
 
 \textbf{The total bits per k-mer} $bpk_{total} \in \mathbb{R}^+_0$ can be modeled by simply adding up the space requirements of each component:
 \newcommand{\bpkTotal}{bpk_{total} &= bpk_T + bpk_R + bpk_S + bpk_O + bpk_H}
@@ -631,16 +632,16 @@ As an example for $L=2$ levels, this results in:
 \subsection{Space Consumption}
 \textbf{The text $T$} is only being stored once, so the constant approximation $bpk_T \approx 2$ still holds.
 
-\textbf{Bit vector $R^l$} is modeled analogously to using only one level with $n_{DIM}^l$ being the number of distinct \textit{infrequent} minimizers on level $l$:
+\textbf{Bit vector $R^l$} is modeled analogously to using only one level:
 \begin{align*}
 	bpk_{R^l} & \in \mathbb{R}^+_0 &\mid \forall l \in \levels\\
-	bpk_{R^l} &= \frac{1}{n_{kmers}} \cdot \left( n_{DIM}^l \lceil log_2\frac{4^\minimizerLength}{n_{DIM}^l} \rceil + 3n_{DIM}^l \right) &\mid \forall l \in \levels
+	bpk_{R^l} &= \frac{1}{n_{kmers}^l} \cdot \left( n_{DIM}^l \lceil log_2\frac{4^{\minimizerLength^l}}{n_{DIM}^l} \rceil + 3n_{DIM}^l \right) &\mid \forall l \in \levels
 \end{align*}
 
 \textbf{Bit vector $S^l$} on level $l$ has length $|O^l|+1 \approx |O^l|$. Only k-mers that have frequent minimizers on all previous levels but an \textit{infrequent} minimizer on level $l$ lead to an offset in $O^l$ and thus to a bit in $S^l$:
 \begin{align*}
 	bpk_{S^l} & \in \mathbb{R}^+_0 &\mid \forall l \in \levels\\
-	bpk_{S^l} &= \prod_{i=1}^{l-1} (1-\percKmers^i) \cdot \frac{\percKmers^l}{(k-\minimizerLength^l+2)/2} &\mid \forall l \in \levels
+	bpk_{S^l} &= \left(\prod_{i=1}^{l-1} 1-\percKmers^i\right) \cdot \frac{\percKmers^l}{(k-\minimizerLength^l+2)/2} &\mid \forall l \in \levels
 \end{align*}
 
 \textbf{The offset vector $O^l$} is modeled analogously to using only one level:
@@ -651,7 +652,7 @@ As an example for $L=2$ levels, this results in:
 
 \textbf{The hash table $H$} only contains an entry for k-mers $q$, which have frequent minimizers on all levels.
 The bits per k-mer for the hash table can thus be modeled as 
-\[ bpk_H = \prod_{l=1}^{L} (1-\percKmers^l) \cdot \frac{(64 + log_2|T|)}{\alpha}\]
+\[ bpk_H = \left(\prod_{l=1}^{L} 1-\percKmers^l\right) \cdot \frac{(64 + log_2|T|)}{\alpha}\]
 
 \textbf{The total bits per k-mer} for $L$ levels only differ to those on one level, as there are now a vector $R,S$ and $O$ on each level:
 \[ bpk_{total} = bpk_T + \sum_{l=1}^{L} \left(bpk_{R^l} + bpk_{S^l} + bpk_{O^l}\right) + bpk_H\]
