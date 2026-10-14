@@ -31,6 +31,13 @@ and finally freq_kmers_t=n-1.fa as input for the computation using highest thres
         - pK for f <= the previous threshould should be 0 as those k-mers should not be part of the input
         - they can thus be simply copied from the previous computation
     - store freq_kmers_t=tn.fa
+    
+    
+further idea: cut of branches of the computation, if freq k_mers is to large
+- this would mean that those parameters would never be considered optimal
+- this would also mean that the information about cut of branches and thus uninteresting 
+    parameters would have to be saved and used by MINLP.py so that those -non existent- values
+    are never used when solving the MINLP
 """ 
 
 GENOME = "freq_skmers"

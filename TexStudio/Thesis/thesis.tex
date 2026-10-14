@@ -389,7 +389,7 @@ There values can be modeled through a sum over the indicator variables multiplie
 \end{align}
 
 We introduce the variable $\percKmers \in [0,1]$ to take the value of $\percKmersEmpiric(\minimizerLength, \threshold)$ (\cref{sec:minimizerDistribution_severalLevels}).\\
-As it is not possible to directly evaluate this value\todo{explain why}, we use the indicator variables to model a constraint forcing $\percKmers$ to take the value of the only $\percKmersEmpiric(m,t)$ for which $\indicatorm_m = 1$ and $\indicatort_t = 1$:
+As it is not possible to directly evaluate this value as both $\minimizerLength$ and $\threshold$ are variables of the model. Instead we use the indicator variables to model a constraint forcing $\percKmers$ to take the value of the only $\percKmersEmpiric(m,t)$ for which $\indicatorm_m = 1$ and $\indicatort_t = 1$:
 \newcommand{\percKmersExpression}{
 	\percKmers &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_m \cdot \sum\limits_{t \in \possibleThresholds} \indicatort_t \cdot \percKmersEmpiric(m, t)}
 \begin{align}
