@@ -621,6 +621,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     size_t no_minimizers1 = minimizers1.size();    //needed for stats
     minimizers1.clear();
 
+    /*
     std::cout << "mark skmers1...\n";
     switch(level){
         case 1: 
@@ -637,6 +638,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     //=================================
     //for minimizer distribution stats:
     //=================================
+    
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
     getDistributionOnLevel(
         input,
@@ -652,6 +654,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     //=================================
 
     minimizers1_occurences.clear(); 
+    */
 
     std::cout << "get frequent skmers...\n";
     size_t freq_kmers;
