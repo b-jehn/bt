@@ -1,0 +1,46 @@
+2026-10-16 19:54:57.341884---------------------------------------------
+solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
+with optimization goal: t_lookup, MAX_LOOKUP_TIME = inf and MAX_BPK_TOTAL = inf
+for 3 levels and k = 31
+considered minimizer lengths: [15]
+considered thresholds: [64, 128]
+
+total time to solve MINLP: 0.027599
+
+found solution:
+m_0: 15.0
+m_1: 15.0
+m_2: 15.0
+
+t_0: 64.0
+t_1: 64.0
+t_2: 64.0
+
+p_K_0: 0.8023495398226704
+p_K_1: 0.1551142775276572
+p_K_2: 0.08241140603661343
+
+f_avg_0: 6.394607896850786
+f_avg_1: 17.208807235893723
+f_avg_2: 19.65159686968941
+
+
+ modeled lookup time:
+t_lookup: 200.66994113661312
+
+ modeled space consumption:
+bpk_total: 26.925546046567334
+more specifically:
+bpk_T: 2
+bpk_R_0: 0.0891499488691856
+bpk_S_0: 0.0891499488691856
+bpk_O_0: 2.615959993045442
+bpk_R_1: 0.0034064898148239396
+bpk_S_1: 0.0034064898148239396
+bpk_O_1: 0.09995789324985631
+bpk_R_2: 0.0015291166432662223
+bpk_S_2: 0.0015291166432662223
+bpk_O_2: 0.0448694364295592
+bpk_H: 19.0706731685152
+
+

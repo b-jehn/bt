@@ -1,5 +1,6 @@
 import subprocess
 import os
+import csv
 
 from pathlib import Path
 import pandas as pd
@@ -19,24 +20,27 @@ if(not genome_directory.is_dir()):
 print(f"computing cascading distribution on GENOME: {GENOME}")
 
 possible_minimizers = [m for m in range(15,20)]
-possible_thresholds = [2**t for t in range(7)]
+possible_thresholds = [64, 128] #[2**t for t in range(7)]
 
-def get_parameter_info(minimizer_lengths, thresholds, level):
-    parts = []
-
-    for l in range(1,level):
-        parts.append(f"(m{l}={minimizer_lengths[l]})")
-        parts.append(f"(t{l}={thresholds[l]})")
+def get_p_K_distinct(level_path, level):
+    n_kmers = int((level_path / f"t{level}={possible_thresholds[0]}" / "n_kmers.txt").open().readline())
+    (level_path / "n_kmers.txt").write_text(str(n_kmers))
+    with (level_path / "p_K_distinct.csv").open("w") as f:
+        f.write("f, percentage of kmers having minimizers of frequency == f on the level\n")
+        previous_threshold = 0
+        for t in possible_thresholds:
+            stats_path = level_path / f"t{level}={t}" / "infrequent_kmers.csv"
+            reader = csv.reader(stats_path.open())
+            for freq in range(previous_threshold+1): next(reader)              #Skip the header and all values already computed for lower thresholds
+            for row in reader:
+                f.write(f"{int(row[1])/n_kmers}\n")    #write distinct percentages for every row left over
+            previous_threshold = t
+            stats_path.unlink(missing_ok=True)  #delete file as it is no longer needed
+            (level_path / f"t{level}={t}" / "n_kmers.txt").unlink(missing_ok=True)
         
-    parts.append(f"m{level}={minimizer_lengths[level]}")
-    parts.append(f"t{level}={thresholds[level]}")
-
-    return f"{', '.join(parts)}\n"
-    
-        
-def call_subprocess(level_path, minimizer_lengths, thresholds,level, previous_threshold):
+def call_subprocess(level_path, minimizer_length, threshold,level, previous_threshold):
     logfile_path = level_path / "build.log"
-    if(thresholds[level] == possible_thresholds[0]):
+    if(threshold == possible_thresholds[0]):
         if(level==1):
             infile = f"../../rshash/DNA_datasets/{GENOME}.fa"
         else:
@@ -53,8 +57,8 @@ def call_subprocess(level_path, minimizer_lengths, thresholds,level, previous_th
                 "-i", infile,
                 "-d", f"../../rshash/DNA_datasets/{GENOME}.rshash",
                 "-k", "31",
-                "--m1", str(minimizer_lengths[level]),
-                "--t1", str(thresholds[level]),
+                "--m1", str(minimizer_length),
+                "--t1", str(threshold),
                 "--level", str(level),
                 "--stats_directory", str(level_path),
             ],
@@ -67,7 +71,7 @@ def call_subprocess(level_path, minimizer_lengths, thresholds,level, previous_th
         time_file.write_text(f"{elapsed_seconds:.6f}\n")
 
 
-def stats_recursive(level_path, minimizer_lengths, thresholds, level, maxlevel, top_level_minimizer):
+def stats_recursive(level_path, level, maxlevel, top_level_minimizer):
     if(level>maxlevel):
         return
     
@@ -78,25 +82,21 @@ def stats_recursive(level_path, minimizer_lengths, thresholds, level, maxlevel, 
     )
     
     previous_threshold = 0
-    minimizer_lengths.append(0)
-    thresholds.append(0)
-    for minimizer_lengths[level] in minimizers:
-        level_path = level_path / f"m{level}={minimizer_lengths[level]}"
+    for m in minimizers:
+        level_path = level_path / f"m{level}={m}"
         if(not level_path.is_dir()): level_path.mkdir()
-        for thresholds[level] in possible_thresholds:
-            level_path = level_path / f"t{level}={thresholds[level]}"
+        for t in possible_thresholds:
+            level_path = level_path / f"t{level}={t}"
             if(not level_path.is_dir()):
                 level_path.mkdir()
-                print(get_parameter_info(minimizer_lengths, thresholds,level) + " - computing stats")
+                print(str(level_path.parts[-2*level:]) + " - computing stats")
                 call_subprocess(level_path, 
-                                minimizer_lengths, 
-                                thresholds,
+                                m, 
+                                t,
                                 level,
                                 previous_threshold)
-            #else: print(get_parameter_info(minimizer_lengths, thresholds,level) + " - stats already exist")
-            stats_recursive(level_path, 
-                            minimizer_lengths, 
-                            thresholds,
+            else: print(str(level_path.parts[-2*level:]) + " - stats already exist")
+            stats_recursive(level_path,
                             level+1,
                             maxlevel,
                             top_level_minimizer)
@@ -106,8 +106,9 @@ def stats_recursive(level_path, minimizer_lengths, thresholds, level, maxlevel, 
                                 / f"t{level}={previous_threshold}"
                                 / "freq_skmers.fasta")
             previous_output.unlink(missing_ok=True)
-            previous_threshold = thresholds[level]
-
+            previous_threshold = t
+            
+        get_p_K_distinct(level_path, level)
             
         #delete freq_skmers.fasta from previous computation, which is no longer needed
         previous_output = (level_path 
@@ -120,8 +121,6 @@ def run_top_level_minimizer(minimizer):
     print(f"running thread for m1={minimizer}")
     stats_recursive(
         level_path=genome_directory,
-        minimizer_lengths=[0],
-        thresholds=[0],
         level=1,
         maxlevel=3,
         top_level_minimizer=minimizer

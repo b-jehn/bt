@@ -451,12 +451,20 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 	\bpkT \label{constraint:bpkT}
 \end{align}
 
-\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \textit{\textit{infrequent}} minimizer in the sequences. The number of distinct \textit{infrequent} minimizers $n_{DIM}$ is part of the model input (\cref{sec:minlp_modelInput}). \todo{compute $n_{DIM}$ and add it to the model input}\\
+\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \textit{\textit{infrequent}} minimizer in the sequences. The number of distinct \textit{infrequent} minimizers can be computed by dividing the number of k-mers with infrequent minimizers through the average frequency of their minimizers: $\frac{\percKmers * n_{kmers}}{\averageFrequency}$. \todo{make $n_{kmers}$ part of model}\\
 Using Elias-Fano-Encoding, its size can be compressed to
-$n_{DIM} \lceil log_2(4^\minimizerLength/n_{DIM}) \rceil + 3n_{DIM}$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. For a total number $n_{kmers}$ of k-mers the bits per k-mer of $R$ are:
-\newcommand{\bpkR}{bpk_{R} &= \frac{1}{n_{kmers}} \cdot \left( n_{DIM} \lceil log_2\frac{4^\minimizerLength}{n_{DIM}} \rceil + 3n_{DIM} \right)}
+$\frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2(4^\minimizerLength/\frac{\percKmers * n_{kmers}}{\averageFrequency}) \rceil + 3\frac{\percKmers * n_{kmers}}{\averageFrequency}$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. Dividing this by the total number $n_{kmers}$ of k-mers yields the constraint describing the bits per k-mer of $R$:
+\newcommand{\bpkR}{bpk_{R} &= \frac{1}{n_{kmers}} \cdot \left( \frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\frac{\percKmers * n_{kmers}}{\averageFrequency} \right)}
 \begin{align}
 	\bpkR \label{constraint:bpkR}
+	\\
+	\nonumber &= \frac{\percKmers}{\averageFrequency} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\frac{\percKmers}{\averageFrequency}
+	\\
+	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\right)
+	\\
+	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil log_24^\minimizerLength - log_2\frac{\percKmers * n_{kmers}}{\averageFrequency} \rceil + 3 \right)
+	\\
+	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil 2\minimizerLength - log_2\frac{\percKmers * n_{kmers}}{\averageFrequency} \rceil + 3 \right)
 \end{align}
 
 \textbf{Bit vector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can however be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
@@ -635,7 +643,7 @@ As an example for $L=2$ levels, this results in:
 \textbf{Bit vector $R^l$} is modeled analogously to using only one level:
 \begin{align*}
 	bpk_{R^l} & \in \mathbb{R}^+_0 &\mid \forall l \in \levels\\
-	bpk_{R^l} &= \frac{1}{n_{kmers}^l} \cdot \left( n_{DIM}^l \lceil log_2\frac{4^{\minimizerLength^l}}{n_{DIM}^l} \rceil + 3n_{DIM}^l \right) &\mid \forall l \in \levels
+	bpk_{R^l} &= \frac{1}{n_{kmers}^l} \cdot \left( \frac{\percKmers^l * n_{kmers}^l}{\averageFrequency^l} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers^l * n_{kmers}^l}{\averageFrequency^l}} \rceil + 3\frac{\percKmers^l * n_{kmers}^l}{\averageFrequency^l} \right) &\mid \forall l \in \levels
 \end{align*}
 
 \textbf{Bit vector $S^l$} on level $l$ has length $|O^l|+1 \approx |O^l|$. Only k-mers that have frequent minimizers on all previous levels but an \textit{infrequent} minimizer on level $l$ lead to an offset in $O^l$ and thus to a bit in $S^l$:

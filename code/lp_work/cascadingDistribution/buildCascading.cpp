@@ -524,7 +524,7 @@ void getDistributionOnLevel(
     stats_filePath = stats_directory / (stats_fileName + ".csv");
     stats_file.open(stats_filePath);
 
-    stats_file << "f, p_M: percentage of minimizers with frequency == f on the level, p_k: percentage of kmers having minimizers of frequency == f on the level, total kmers\n";
+    stats_file << "f, p_M: percentage of minimizers with frequency == f on the level, p_k: percentage of kmers having minimizers of frequency == f on the level\n";
     for(uint8_t j=0; j < t; j++) {
         stats_file << (j+1) << ',' << (double) (j+1)*minimizer_frequency_counter[j]/no_skmers_in_input*100 << ',' << (double) (no_kmers-kmers_uncovered[j])/no_kmers*100 << '\n';
     }
