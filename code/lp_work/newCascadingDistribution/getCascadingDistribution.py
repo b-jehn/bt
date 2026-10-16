@@ -8,7 +8,7 @@ from time import perf_counter
 
 from concurrent.futures import ThreadPoolExecutor
 
-N_THREADS = 2  # Set the number of concurrent workers.
+N_THREADS = 1  # Set the number of concurrent workers.
 
 GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
 genome_directory = Path(f"./{GENOME}")
@@ -100,16 +100,18 @@ def stats_recursive(level_path, minimizer_lengths, thresholds, level, maxlevel, 
                             level+1,
                             maxlevel,
                             top_level_minimizer)
+            level_path = level_path.parent
             #delete freq_skmers.fasta from previous computation, which is no longer needed
-            previous_output = (level_path.parent 
+            previous_output = (level_path
                                 / f"t{level}={previous_threshold}"
                                 / "freq_skmers.fasta")
             previous_output.unlink(missing_ok=True)
             previous_threshold = thresholds[level]
-            level_path = level_path.parent
+
+            
         #delete freq_skmers.fasta from previous computation, which is no longer needed
-        previous_output = (level_path.parent 
-                            / f"t{level}={possible_thresholds[-1]}"
+        previous_output = (level_path 
+                            / f"t{level}={previous_threshold}"
                             / "freq_skmers.fasta")
         previous_output.unlink(missing_ok=True)
         level_path = level_path.parent
