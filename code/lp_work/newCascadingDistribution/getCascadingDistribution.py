@@ -1,5 +1,4 @@
 import subprocess
-import os
 import csv
 
 from pathlib import Path
@@ -23,7 +22,10 @@ possible_minimizers = [m for m in range(15,20)]
 possible_thresholds = [64, 128] #[2**t for t in range(7)]
 
 def get_p_K_distinct(level_path, level):
-    n_kmers = int((level_path / f"t{level}={possible_thresholds[0]}" / "n_kmers.txt").open().readline())
+    kmers_path = level_path / f"t{level}={possible_thresholds[0]}" / "n_kmers.txt"
+    if(not kmers_path.exists()):
+        return
+    n_kmers = int(kmers_path.open().readline())
     (level_path / "n_kmers.txt").write_text(str(n_kmers))
     with (level_path / "p_K_distinct.csv").open("w") as f:
         f.write("f, percentage of kmers having minimizers of frequency == f on the level\n")

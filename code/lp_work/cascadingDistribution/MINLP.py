@@ -1,6 +1,5 @@
 from pyscipopt import Model, quicksum, quickprod
 from datetime import datetime
-from time import perf_counter
 import math
 import csv
 import sys
@@ -8,22 +7,24 @@ import os
 
 from itertools import product
 from dataclasses import dataclass, field
-from pathlib import Path
 
 #temporary!! TODO: measure and pass as part of cascading stats
 K = 31  #kmer length that is/was used to gain minimizer_stats
+T = 255 #max threshold - the .csv files in ./minimizer_stats/{SEQUENCE_NAME}/ have to contain values for all t <= T
 LOAD_FACTOR = 0.75  #of the hash table
 
 SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel"
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
-MAX_BPK_TOTAL = math.inf
-
+MAX_BPK_TOTAL = 5               
 LEVELS = 3
-MINIMIZER_LENGTHS = [15] #[m for m in range(15,20)]
-THRESHOLDS = [64,128] #[2**i for i in range(0,7)]
+MINIMIZER_LENGTHS = [m for m in range(15,20)]
+THRESHOLDS = [2**i for i in range(0,7)]
 
-logfile_path = f'MINLP_logs/{SEQUENCE_NAME}.txt'
+if THRESHOLDS[-1] >= T:
+    sys.exit(f"maximum threshold t: {THRESHOLDS[-1]} has to be smaller than T: {T}")
+
+logfile_path = f'logs/log_{SEQUENCE_NAME}'
 sequence_path = f'../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
 sequence_length = 0
 if os.path.isfile(sequence_path):
@@ -41,55 +42,75 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
+
+"""
+P_K_empirical[i][j]: 
+the empirically measured percentage of 
+    minimizers with length == MINIMIZER_LENGTHS[i] 
+    which have a frequency < j
+""" 
 @dataclass
 class Stats:
     n_kmers: int = field(default_factory=int)
-    p_K: float = field(default_factory=float)
-    f_avg: float = field(default_factory=float)
-    next_level: dict[(int, int), "Stats | None"] = field(default_factory=dict)  #links to next stats item depending on (m,t)
+    p_K: list[float] = field(default_factory=list)
+    f_avg: list[float] = field(default_factory=list)
+    next_level: dict[int, "Stats | None"] = field(default_factory=dict)
 
+cascading_stats = Stats(p_K=[], f_avg=[], next_level={m: None for m in MINIMIZER_LENGTHS})
 
-def readStatsFromFiles(stats_directory):
-    n_kmers = int((stats_directory / "n_kmers.txt").read_text().strip())
-
-    reader = csv.reader((stats_directory / "p_K_distinct.csv").open())
-    next(reader)  # Skip the header
-    p_K_distinct = [0]+[float(row[0]) for row in reader if row]
+#get p_k and f_avg
+print("getting minimizer stats")
+for m1 in MINIMIZER_LENGTHS: 
+    curr_level1_stats = Stats(p_K=[], f_avg=[], next_level={m: None for m in MINIMIZER_LENGTHS})
+    cascading_stats.next_level[m1] = curr_level1_stats
     
-    p_K = [0]
-    f_avg = [0]
-    weighted_frequency_sum = 0
-    for f, p in enumerate(p_K_distinct[1:]):
-        p_K.append(p_K[-1] + p) 
-        weighted_frequency_sum += p * (f+1)
-        f_avg.append(weighted_frequency_sum/p_K[-1])
+    reader = csv.reader(open(f'./{SEQUENCE_NAME}/m1={m1}/cumulatedStats.csv'), delimiter=',')
+    freq_weight_sum = 0 
+    for t, row in enumerate(reader):
+        if(t==0):
+            curr_level1_stats.p_K.append(0) #percentage of appearing minimizers with f==0 is 0
+            curr_level1_stats.f_avg.append(0) #average frequency of minimizers with f==0 is 0
+        else:
+            curr_level1_stats.p_K.append(float(row[2])/100)   #convert to percentage
+            freq_weight_sum = freq_weight_sum + (curr_level1_stats.p_K[-1] - curr_level1_stats.p_K[-2])*t
+            curr_level1_stats.f_avg.append(freq_weight_sum / curr_level1_stats.p_K[-1])
+
+    for m2 in MINIMIZER_LENGTHS: 
+        curr_level2_stats = Stats(p_K=[], f_avg=[], next_level={m: None for m in MINIMIZER_LENGTHS})
+        curr_level1_stats.next_level[m2] = curr_level2_stats
         
-    return n_kmers, p_K, f_avg
-
-def fill_cascading_stats(root_stats, level_path, level, maxLevel):
-    if(level>maxLevel):
-        return 
-    previous_threshold = 0
-    for m in MINIMIZER_LENGTHS:
-        level_path = level_path / f"m{level}={m}"
-        n_kmers, p_K, f_avg = readStatsFromFiles(level_path)
-        for t in THRESHOLDS:
-            current_stats = Stats(n_kmers, p_K[t], f_avg[t], next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)})
-            root_stats.next_level[(m,t)] = current_stats
-            level_path = level_path / f"t{level}={t}"
-            fill_cascading_stats(current_stats, level_path, level+1, maxLevel)
-            level_path = level_path.parent
-        level_path = level_path.parent
-
-cascading_stats = Stats(n_kmers=0, p_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)}) 
-stats_directory = Path(f"./{SEQUENCE_NAME}")
-fill_cascading_stats(cascading_stats, stats_directory, 1, 3)
+        reader = csv.reader(open(f'./{SEQUENCE_NAME}/m1={m1}/m2={m2}/cumulatedStats.csv'), delimiter=',')
+        freq_weight_sum = 0
+        for t, row in enumerate(reader):
+            if(t==0):
+                curr_level2_stats.p_K.append(0) #percentage of appearing minimizers with f==0 is 0
+                curr_level2_stats.f_avg.append(0) #average frequency of minimizers with f==0 is 0
+            else:
+                curr_level2_stats.p_K.append(float(row[2])/100)   #convert to percentage
+                freq_weight_sum = freq_weight_sum + (curr_level2_stats.p_K[-1] - curr_level2_stats.p_K[-2])*t
+                curr_level2_stats.f_avg.append(freq_weight_sum / curr_level2_stats.p_K[-1])
+        
+        for m3 in MINIMIZER_LENGTHS: 
+            curr_level3_stats = Stats(p_K=[])
+            curr_level2_stats.next_level[m3] = curr_level3_stats
+            
+            reader = csv.reader(open(f'./{SEQUENCE_NAME}/m1={m1}/m2={m2}/m3={m3}/cumulatedStats.csv'), delimiter=',')
+            freq_weight_sum = 0
+            for t, row in enumerate(reader):
+                if(t==0):
+                    curr_level3_stats.p_K.append(0) #percentage of appearing minimizers with f==0 is 0
+                    curr_level3_stats.f_avg.append(0) #average frequency of minimizers with f==0 is 0
+                else:
+                    curr_level3_stats.p_K.append(float(row[2])/100)   #convert to percentage
+                    freq_weight_sum = freq_weight_sum + (curr_level3_stats.p_K[-1] - curr_level3_stats.p_K[-2])*t
+                    curr_level3_stats.f_avg.append(freq_weight_sum / curr_level3_stats.p_K[-1])
 
 def getCascadingStats(minimizer_lengths,thresholds):
     stats = cascading_stats
     for m, t in zip(minimizer_lengths, thresholds):
-        stats = stats.next_level[(m,t)]
-    return stats.n_kmers, stats.p_K, stats.f_avg
+        stats = stats.next_level[m]
+        thresh = t
+    return stats.p_K[thresh], stats.f_avg[thresh]
 
 #============================#
 #Set up SCIP Model
@@ -125,9 +146,8 @@ it_vars = {                                             #binary indicators for t
 m_vars = [scip.addVar(f"m_{l}") for l in range(LEVELS)]         #minimizer length on each level
 t_vars = [scip.addVar(f"t_{l}") for l in range(LEVELS)]         #threshold on each level
 
-n_kmers_vars = [scip.addVar(f"n_kmers_{l}") for l in range(LEVELS)] #number of kmers on level l for each level l
-p_K_vars = [scip.addVar(f"p_K_{l}") for l in range(LEVELS)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
-f_avg_vars = [scip.addVar(f"f_avg_{l}") for l in range(LEVELS)]     #average frequency of minimizers of length m with a frequency <= t for each level
+p_K_vars = [scip.addVar(f"p_K_{l}") for l in range(LEVELS)]     #percentage of kmers that have minimizers of length m with a frequency <= t for each level
+f_avg_vars = [scip.addVar(f"f_avg_{l}") for l in range(LEVELS)] #average frequency of minimizers of length m with a frequency <= t for each level
 
 t_level_vars = [scip.addVar(f"t_level_{l}") for l in range(LEVELS)] #time spent for finding k-mer with an infrequent minimizer on level l
 t_lookup = scip.addVar("t_lookup")  #total lookup time
@@ -165,7 +185,6 @@ for l in range(LEVELS):
     scip.addCons(t_vars[l] - quicksum(it_vars[(t,l)] * t for t in THRESHOLDS) == 0, name=f"get_t_{l}")          #determine t
     
     #determine p_K_l and f_avg_l
-    n_kmers_terms = []
     p_K_sum_terms = []
     f_avg_sum_terms = []
     for minimizer_lengths in product(MINIMIZER_LENGTHS, repeat=l+1):
@@ -176,26 +195,21 @@ for l in range(LEVELS):
             t_indicator = 1
             for i, t in enumerate(thresholds):
                 t_indicator *= it_vars[(t, l)]
-            n_kmers, p_K_empiric, f_avg_empiric = getCascadingStats(minimizer_lengths, thresholds)
-            n_kmers_terms.append(m_indicator * t_indicator * n_kmers)
+            p_K_empiric, f_avg_empiric = getCascadingStats(minimizer_lengths, thresholds)
             p_K_sum_terms.append(m_indicator * t_indicator * p_K_empiric)
             f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric)
     
-    scip.addCons(n_kmers_vars[l] - quicksum(n_kmers_terms) == 0)
     scip.addCons(p_K_vars[l] - quicksum(p_K_sum_terms) == 0)
     scip.addCons(f_avg_vars[l] - quicksum(f_avg_sum_terms) == 0)
     
     scip.addCons(t_level_vars[l] - (t_rank_R + 2*t_select_S + (f_avg_vars[l]+1)/2*(t_access_O+t_compare_T)) == 0)
 
-    scip.addCons(bpk_R_vars[l] == 1)
-    #TODO: use real calculation for R
-    #n_DIM = p_K_vars[l]*n_kmers_vars[l] #number of distinct infrequent minimizers on level
-    #scip.addCons(bpk_R_vars[l] - 
-    #            (1/n_kmers_vars[l] * 
-    #            (n_DIM
-    #                * math.ceil(math.log(4**m_vars[l]/n_DIM, 2))
-    #                + 3*n_DIM)
-    #            ) == 0)
+    scip.addCons(bpk_R_vars[l] - 
+                (1/n_kmers[l] * 
+                (n_DIM[l]
+                    * math.ceil(math.log(4**m_vars[l]/n_DIM[l], 2))
+                    + 3*n_DIM[l])
+                ) == 0)
     
     scip.addCons(bpk_S_vars[l] - 
                 (quickprod(1-p_K_vars[i] for i in range(l))
@@ -223,9 +237,7 @@ scip.addCons(bpk_total <= MAX_BPK_TOTAL)
 #SOLVE
 #============================#
 print("start solving")
-start_time = perf_counter()
 scip.optimize()
-elapsed_seconds = perf_counter() - start_time
 sol = scip.getBestSol()
 
 #============================#
@@ -268,13 +280,13 @@ print(f"bpk_H: {format(sol[bpk_H])}")
 #============================#
 #WRITE SOLUTION TO LOG
 #============================#
-with open(logfile_path, "w") as logfile:
-    logfile.write(f"{datetime.now()}---------------------------------------------\n")
-    logfile.write(f"solved MINLP for sequence: {SEQUENCE_NAME}\n")
+with open(logfile_path, "a") as logfile:
+    date_time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    with open(logfile_path, "a") as logfile:
+        logfile.write(f"{date_time}----------------------------------------\nsolved MINLP for sequence: {SEQUENCE_NAME}\n")
     logfile.write(f"with optimization goal: {OPTIMIZATION_GOAL}, MAX_LOOKUP_TIME = {MAX_LOOKUP_TIME} and MAX_BPK_TOTAL = {MAX_BPK_TOTAL}\n")
     logfile.write(f"for {LEVELS} levels and k = {K}\nconsidered minimizer lengths: {MINIMIZER_LENGTHS}\nconsidered thresholds: {THRESHOLDS}\n")
 
-    logfile.write(f"\ntotal time to solve MINLP: {elapsed_seconds:.6f}\n")
     logfile.write("\nfound solution:\n")
     for l in range(LEVELS):
         logfile.write(f"m_{l}: {format(sol[m_vars[l]])}\n")
@@ -301,12 +313,4 @@ with open(logfile_path, "w") as logfile:
         logfile.write(f"bpk_S_{l}: {format(sol[bpk_S_vars[l]])}\n")
         logfile.write(f"bpk_O_{l}: {format(sol[bpk_O_vars[l]])}\n")
 
-    logfile.write(f"bpk_H: {format(sol[bpk_H])}\n\n\n")
-
-
-
-    
-
-
-
-    
+    logfile.write(f"bpk_H: {format(sol[bpk_H])}\n")

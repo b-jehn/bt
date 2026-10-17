@@ -491,6 +491,45 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
     return no_skmers_in_input;
 }
 
+void getDistributionOnLevel(
+    const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> &sequences,
+    std::vector<SkmerInfo> &freq_skmers,
+    sux::bits::EliasFano<sux::util::AllocType::MALLOC> &r,
+    sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> &s_select,
+    std::vector<uint8_t> &minimizers_occurences,
+    size_t no_kmers,
+    uint64_t level, uint64_t m, uint64_t t, uint64_t k, uint64_t seed,
+    std::filesystem::path stats_directory
+)
+{
+    std::cout << "getting uncovered kmers out of " << no_kmers << " kmers left over\n";
+    std::vector<size_t> kmers_uncovered(t, 0);
+    size_t no_skmers_in_input = get_uncovered_kmers(kmers_uncovered, sequences, freq_skmers, m, t, k, seed, level, r, s_select);
+
+    size_t minimizer_frequency_counter[t] = {0};
+    for(uint8_t frequency : minimizers_occurences) {
+        minimizer_frequency_counter[frequency-1]++;     //TODO: possibly clean up indecees at some point
+    }
+
+    //write number of k-mers in input to file
+    std::filesystem::path stats_filePath = stats_directory / "n_kmers.txt";
+    std::ofstream stats_file(stats_filePath);
+    stats_file << no_kmers;
+    stats_file.close();
+
+    //getting distinct stats
+    // Create and open output file
+    stats_filePath = stats_directory / "infrequent_kmers.csv";
+    stats_file.open(stats_filePath);
+    stats_file << "f, number of kmers with minimizers of frequency == f\n";
+    for(uint8_t j=0; j < t; j++) {
+        stats_file << (j+1) << ',' << no_kmers-kmers_uncovered[j] << '\n';
+    }
+    stats_file.close();
+
+    kmers_uncovered.clear();
+}
+
 void print_freq_skmers(
     const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> & input,
     const std::vector<SkmerInfo> & freq_skmers,
@@ -558,9 +597,9 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     std::cout << "build R_1...\n";
     const uint64_t M1 = 1ULL << (m1+m1);
     r1 = sux::bits::EliasFano(minimizers1, M1);
+    size_t no_minimizers1 = minimizers1.size();    //needed for stats
     minimizers1.clear();
 
-    /*
     std::cout << "mark skmers1...\n";
     switch(level){
         case 1: 
@@ -574,9 +613,25 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     }
     
 
+    //=================================
+    //for minimizer distribution stats:
+    //=================================
+    
+    sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
+    getDistributionOnLevel(
+        input,
+        freq_skmers,
+        r1,
+        s1_select,
+        minimizers1_occurences,
+        no_text_kmers,
+        1, m1, m_thres1, k, seed,
+        stats_directory);
+    //=================================
+    //end of distribution computation for level one
+    //=================================
 
-    minimizers1_occurences.clear(); 
-    */
+    minimizers1_occurences.clear();
 
     std::cout << "get frequent skmers...\n";
     size_t freq_kmers;
@@ -591,15 +646,5 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
             freq_kmers = get_frequent_skmers<3>(input, freq_skmers, freq_skmers);
     }
     
-    //write number of k-mers in input to file
-    std::ofstream stats_file(stats_directory / "n_kmers.txt");
-    stats_file << no_text_kmers;
-    stats_file.close();
-
-    //write number of frequent k-mers in input to file
-    stats_file.open(stats_directory / "n_infreq_kmers.txt");
-    stats_file << no_text_kmers-freq_kmers;
-    stats_file.close();
-
-    print_freq_skmers(input, freq_skmers, (stats_directory / ("freq_skmers.fasta")).string());
+    print_freq_skmers(input, freq_skmers, (stats_directory / "freq_skmers.fasta").string());
 }

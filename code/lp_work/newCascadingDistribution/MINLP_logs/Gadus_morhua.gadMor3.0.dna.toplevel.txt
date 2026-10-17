@@ -1,46 +1,162 @@
-2026-10-16 19:54:57.341884---------------------------------------------
+2026-10-17 15:06:33.761524---------------------------------------------
 solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
-with optimization goal: t_lookup, MAX_LOOKUP_TIME = inf and MAX_BPK_TOTAL = inf
+with optimization goal: bpk_total,
+MAX_LOOKUP_TIME = inf and
+MAX_BPK_TOTAL = inf
+
 for 3 levels and k = 31
-considered minimizer lengths: [15]
+considered minimizer lengths: [19]
+considered thresholds: [128]
+
+using:
+t_access_R_empirical = 30
+t_access_O_empirical = 10
+t_access_H_empirical = 20
+t_rank_R_empirical = 35
+t_select_S_empirical = 35
+t_compare_T_empirical = 10
+
+total time to solve MINLP: 0.005102 seconds
+found solution:
+LEVEL PARAMETERS:
+m_1: 19.0
+m_2: 19.0
+m_3: 19.0
+
+t_1: 128.0
+t_2: 128.0
+t_3: 128.0
+
+LOOKUP TIME AND SPACE CONSUPTION:
+t_lookup: 207.0605027421655
+bpk_total: 16.68359190958644
+
+DETAILS:
+p_K_1: 0.8664948809901099
+p_K_2: 0.09842765657888038
+p_K_3: 0.04005691145890336
+
+f_avg_1: 6.708125467316549
+f_avg_2: 38.067602284241744
+f_avg_3: 47.56126531672257
+
+bpk_T: 2
+bpk_R_1: 0.33
+bpk_R_2: 0.33
+bpk_R_3: 0.33
+bpk_S_1: 0.12378498185544422
+bpk_S_2: 0.001877226967575882
+bpk_S_3: 0.0006887748228580476
+bpk_O_1: 3.6322686034161507
+bpk_O_2: 0.055084166702667685
+bpk_O_3: 0.02021097492111297
+bpk_H: 9.859677180900633
+
+2026-10-17 15:20:45.031288---------------------------------------------
+solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
+with optimization goal: bpk_total,
+MAX_LOOKUP_TIME = inf and
+MAX_BPK_TOTAL = inf
+
+for 3 levels and k = 31
+considered minimizer lengths: [15, 16, 17, 18, 19]
 considered thresholds: [64, 128]
 
-total time to solve MINLP: 0.027599
+using:
+t_access_R_empirical = 30
+t_access_O_empirical = 10
+t_access_H_empirical = 20
+t_rank_R_empirical = 35
+t_select_S_empirical = 35
+t_compare_T_empirical = 10
 
+total time to solve MINLP: 801.192600 seconds
 found solution:
-m_0: 15.0
+LEVEL PARAMETERS:
 m_1: 15.0
-m_2: 15.0
+m_2: 19.0
+m_3: 19.0
 
-t_0: 64.0
+t_1: 128.0
+t_2: 64.0
+t_3: 128.0
+
+LOOKUP TIME AND SPACE CONSUPTION:
+t_lookup: 235.61747179687382
+bpk_total: 15.953383840099905
+
+DETAILS:
+p_K_1: 0.8369955042125954
+p_K_2: 0.2308371009649553
+p_K_3: 0.07094570764991082
+
+f_avg_1: 9.965904646552607
+f_avg_2: 15.217817002095058
+f_avg_3: 43.750228472638575
+
+bpk_T: 2
+bpk_R_1: 0.33
+bpk_R_2: 0.33
+bpk_R_3: 0.33
+bpk_S_1: 0.09299949946806614
+bpk_S_2: 0.005375355035974105
+bpk_S_3: 0.0012707086764967806
+bpk_O_1: 2.728918783102094
+bpk_O_2: 0.1577310351928198
+bpk_O_3: 0.037286875681880216
+bpk_H: 9.939801582942573
+
+2026-10-17 15:41:30.730278---------------------------------------------
+solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
+with optimization goal: t_lookup,
+MAX_LOOKUP_TIME = inf and
+MAX_BPK_TOTAL = inf
+
+for 3 levels and k = 31
+considered minimizer lengths: [15, 16, 17, 18, 19]
+considered thresholds: [64, 128]
+
+using:
+t_access_R_empirical = 30
+t_access_O_empirical = 10
+t_access_H_empirical = 20
+t_rank_R_empirical = 35
+t_select_S_empirical = 35
+t_compare_T_empirical = 10
+
+total time to solve MINLP: 289.819685 seconds
+found solution:
+LEVEL PARAMETERS:
+m_1: 19.0
+m_2: 15.0
+m_3: 15.0
+
 t_1: 64.0
 t_2: 64.0
+t_3: 64.0
 
-p_K_0: 0.8023495398226704
-p_K_1: 0.1551142775276572
-p_K_2: 0.08241140603661343
+LOOKUP TIME AND SPACE CONSUPTION:
+t_lookup: 177.1931721608293
+bpk_total: 18.965620564043537
 
-f_avg_0: 6.394607896850786
-f_avg_1: 17.208807235893723
-f_avg_2: 19.65159686968941
+DETAILS:
+p_K_1: 0.839557873207687
+p_K_2: 0.061568410615048
+p_K_3: 0.04417130606320197
 
+f_avg_1: 3.9618960697687737
+f_avg_2: 19.184364218484433
+f_avg_3: 20.709151801795834
 
- modeled lookup time:
-t_lookup: 200.66994113661312
-
- modeled space consumption:
-bpk_total: 26.925546046567334
-more specifically:
 bpk_T: 2
-bpk_R_0: 0.0891499488691856
-bpk_S_0: 0.0891499488691856
-bpk_O_0: 2.615959993045442
-bpk_R_1: 0.0034064898148239396
-bpk_S_1: 0.0034064898148239396
-bpk_O_1: 0.09995789324985631
-bpk_R_2: 0.0015291166432662223
-bpk_S_2: 0.0015291166432662223
-bpk_O_2: 0.0448694364295592
-bpk_H: 19.0706731685152
-
+bpk_R_1: 0.33
+bpk_R_2: 0.33
+bpk_R_3: 0.33
+bpk_S_1: 0.11993683902966953
+bpk_S_2: 0.0010975718824778706
+bpk_S_3: 0.0007389563068285317
+bpk_O_1: 3.5193511221675338
+bpk_O_2: 0.032206458561930884
+bpk_O_3: 0.02168346880499686
+bpk_H: 12.280606147290099
 

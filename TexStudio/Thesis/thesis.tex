@@ -288,7 +288,7 @@ Problems:
 
 \section{Minimizer Distribution}\label{sec:minimizerDistribution_severalLevels}
 The skewness of minimizer distributions has been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}.\\
-We will focus on the percentages $p_M \in [0,1]$ and $p_K \in [0,1]$ as introduced by \citet{schulte-mattler_rshash_2026}:
+We will focus on the percentages $p_M \in [0,1]$ and $\percKmersEmpiric \in [0,1]$ as introduced by \citet{schulte-mattler_rshash_2026}:
 
 Consider a fixed sequence $S$, minimizer length $m$ and threshold $t$:\\
 Let $\mathbf{M}$ be the multiset of minimizers in $S$ and $\mathbf{M}_{\textit{infrequent}} \subseteq \mathbf{M}$ be the submultiset of those minimizers that are \textit{infrequent}. It is important to note that the multisets contain each minimizers as many times as there are super-k-mers $sk$ in the sequence which have that minimizer:
@@ -304,8 +304,8 @@ Let $\mathbf{K}$ be the multiset of all k-mers $k$ in the sequence and $\mathbf{
 	\mathbf{K} &:= \{k \forall k \in S\}\\
 	\mathbf{K}_{\textit{infrequent}} &:= \{k \mid \forall k \in S . f(m(k)) \leq t\} \subseteq \mathbf{K}
 \end{align*}
-Then $p_K(m,t)$ describes how likely a k-mer in the sequence is to have an \textit{infrequent} minimizer:
-\[ p_K(m,t) = \frac{|\mathbf{K}_{\textit{infrequent}}|}{|\mathbf{K}|} \in [0,1] \]
+Then $\percKmers(m,t)$ describes how likely a k-mer in the sequence is to have an \textit{infrequent} minimizer:
+\[ \percKmers(m,t) = \frac{|\mathbf{K}_{\textit{infrequent}}|}{|\mathbf{K}|} \in [0,1] \]
 
 We aim to analyze how these two percentages describing the minimizer distribution behave for several levels as used by RSHash in order to gain a better understanding of how to chose the level parameters.
 
@@ -466,6 +466,7 @@ $\frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2(4^\minimizerLengt
 	\\
 	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil 2\minimizerLength - log_2\frac{\percKmers * n_{kmers}}{\averageFrequency} \rceil + 3 \right)
 \end{align}
+\todo[inline]{argue in experiments section, that $n_{kmers}$ has only a small effect on the size of $R$ and can thus be disregarded as it is not needed for anything else}
 
 \textbf{Bit vector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can however be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
 Since $\percKmers$ describes the percentage of k-mers with \textit{infrequent} minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $S$ through:
@@ -481,14 +482,14 @@ Since $bpk_S$ already describes the number of offsets per k-mer, we can model th
 	\bpkO \label{constraint:bpkO}
 \end{align}
 
-\textbf{The hash table $H$} contains an entry $(key:q, value:offset(q))$ for $1-\percKmers$ of the k-mers $q$ in $T$.
-Each entry has size $size(key) + size(value) = 64 + log_2 |T|$. We introduce the load factor $\alpha$\todo{reminder to include somewhere that we set $\alpha = 0.75$ in practice and explain why that is a reasonable value} to the model, in order to account for empty buckets in the hash table.
+\textbf{The hash set $H$}\todo{überall hash table durch hash set ersetzten} contains an entry $(key:q)$ for each k-mer $q$ with an infrequent minimizer, which are $1-\percKmers$ of all k-mers in $T$.
+Each entry has size $size(key) = 64$. We introduce the load factor $\alpha$\todo{reminder to include somewhere that we set $\alpha = 0.75$ in practice and explain why that is a reasonable value} to the model, in order to account for empty buckets in the hash table.
 The bits per k-mer required for the hash table can thus be modeled by:
-\newcommand{\bpkH}{bpk_H &= (1-\percKmers) \cdot \frac{(64 + log_2|T|)}{\alpha}}
+\newcommand{\bpkH}{bpk_H &= (1-\percKmers) \cdot \frac{64}{\alpha}}
 \begin{align}
 	\bpkH \label{constraint:bpkH}
 \end{align}
-\todo[inline]{nur hashset für lookup, 1 statt log2T}
+\todo[inline]{Locate benötigt eine Liste mit allen offsets: $bpk_H = (1-\percKmers) \cdot \frac{(64 + (log_2|T|\cdot frequency))}{\alpha}$ nur hashset für lookup, 1 statt log2T}
 
 \textbf{The total bits per k-mer} $bpk_{total} \in \mathbb{R}^+_0$ can be modeled by simply adding up the space requirements of each component:
 \newcommand{\bpkTotal}{bpk_{total} &= bpk_T + bpk_R + bpk_S + bpk_O + bpk_H}
@@ -660,7 +661,7 @@ As an example for $L=2$ levels, this results in:
 
 \textbf{The hash table $H$} only contains an entry for k-mers $q$, which have frequent minimizers on all levels.
 The bits per k-mer for the hash table can thus be modeled as 
-\[ bpk_H = \left(\prod_{l=1}^{L} 1-\percKmers^l\right) \cdot \frac{(64 + log_2|T|)}{\alpha}\]
+\[ bpk_H = \left(\prod_{l=1}^{L} 1-\percKmers^l\right) \cdot \frac{64}{\alpha}\]
 
 \textbf{The total bits per k-mer} for $L$ levels only differ to those on one level, as there are now a vector $R,S$ and $O$ on each level:
 \[ bpk_{total} = bpk_T + \sum_{l=1}^{L} \left(bpk_{R^l} + bpk_{S^l} + bpk_{O^l}\right) + bpk_H\]
