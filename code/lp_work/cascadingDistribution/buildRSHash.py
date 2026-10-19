@@ -1,8 +1,8 @@
 import subprocess
 
 GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
-MINIMIZER_LENGTHS = [19,19,19]
-THRESHOLDS = [128,128,128]
+MINIMIZER_LENGTHS = [15,15,15]
+THRESHOLDS = [64,64,64]
 
 args = [
     "../../rshash/build/source/rshash",
@@ -19,5 +19,6 @@ args.extend(["--level", str(len(MINIMIZER_LENGTHS))])
 
 subprocess.run(
     args,
+    stderr=subprocess.STDOUT,
     check=True,
 )

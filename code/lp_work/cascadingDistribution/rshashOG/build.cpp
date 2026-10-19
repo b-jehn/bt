@@ -509,9 +509,10 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     minimizers1_occurences.clear();
 
     std::cout << "get frequent skmers...\n";
-    size_t freq_kmers;
-    freq_kmers = get_frequent_skmers<1>(input, freq_skmers, freq_skmers);
-
+    size_t freq_kmers1, freq_kmers2, freq_kmers3;
+    freq_kmers1 = get_frequent_skmers<1>(input, freq_skmers, freq_skmers);
+    std::cout << "number of freq kmers on level 1: " << freq_kmers1 << "\n";
+    std::cout << "=> p_K_1 = " << (1.0-float(freq_kmers1)/float(no_text_kmers)) << " (= (1-freq_kmers1/no_text_kmers) = (1-" << freq_kmers1 << "/" << no_text_kmers << "))\n";
     if(level > 1)
     {
         std::cout << "count minimizers2...\n";
@@ -534,9 +535,11 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
 
         std::cout << "get frequent skmers...\n";
         std::vector<SkmerInfo> freq_skmers2;
-        freq_kmers = get_frequent_skmers<2>(input, freq_skmers, freq_skmers2);
+        freq_kmers2 = get_frequent_skmers<2>(input, freq_skmers, freq_skmers2);
         freq_skmers.clear();
         freq_skmers = freq_skmers2;
+        std::cout << "number of freq kmers on level 2: " << freq_kmers2 << "\n";
+        std::cout << "=> p_K_2 = " << (1.0-float(freq_kmers2)/float(freq_kmers1)) << " (= (1-freq_kmers2/freq_kmers1) = (1-" << freq_kmers2 << "/" << freq_kmers1 << "))\n";
     }
 
     if(level > 2)
@@ -561,9 +564,11 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
 
         std::cout << "get frequent skmers...\n";
         std::vector<SkmerInfo> freq_skmers3;
-        freq_kmers = get_frequent_skmers<3>(input, freq_skmers, freq_skmers3);
+        freq_kmers3 = get_frequent_skmers<3>(input, freq_skmers, freq_skmers3);
         freq_skmers.clear();
         freq_skmers = freq_skmers3;
+        std::cout << "number of freq kmers on level 3: " << freq_kmers2 << "\n";
+        std::cout << "=> p_K_3 = " << (1.0-float(freq_kmers3)/float(freq_kmers2)) << " (= (1-freq_kmers3/freq_kmers2) = (1-" << freq_kmers3 << "/" << freq_kmers2 << "))\n";
     }
 
     std::cout << "build last level...\n";

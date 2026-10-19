@@ -406,6 +406,7 @@ Analogously we introduce $\averageFrequency \in \mathbb{R}^+_0$ to represent $\a
 \end{align}
 
 \subsection{Lookup Time}
+\todo[inline]{note that this is the average lookup time for k-mers that appear in the sequence! k-mers that do not appear in the sequence will simply have a lookup time of a check in R on every level and then a check in H}
 In order to model the time needed for a lookup using RSHash, we closely follow the lookup procedure as described by \citet{schulte-mattler_rshash_2026}:\\
 A k-mer $q$ is looked up by first computing its minimizer $m(q)$ and checking whether the bit $R[m(q)]$ is set, taking $\timeForOperationOnStructure{\access}{R}$ time (part of the model input \cref{sec:minlp_modelInput}).\\
 For the percentage $\percKmers$ (\cref{constraint:percKmers}) of the k-mers this bit is set and the lookup is completed by searching for $q$ on the level. We introduce the variable $\timeForOperationOnStructure{level}{} \in \mathbb{R}^+_0$ to describe the time needed for this.\\
@@ -451,18 +452,14 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 	\bpkT \label{constraint:bpkT}
 \end{align}
 
-\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \textit{\textit{infrequent}} minimizer in the sequences. The number of distinct \textit{infrequent} minimizers can be computed by dividing the number of k-mers with infrequent minimizers through the average frequency of their minimizers: $\frac{\percKmers * n_{kmers}}{\averageFrequency}$. \todo{make $n_{kmers}$ part of model}\\
+\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \textit{\textit{infrequent}} minimizer in the sequences. The number of distinct \textit{infrequent} minimizers can be computed by dividing the number of k-mers with infrequent minimizers through the average frequency of their minimizers: $\frac{\percKmers * n_{kmers}}{\averageFrequency}$. \todo{make $n_{kmers}$ part of model - either through sum of products or simply product of pKs times number of k-mers in the genome}\\
 Using Elias-Fano-Encoding, its size can be compressed to
 $\frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2(4^\minimizerLength/\frac{\percKmers * n_{kmers}}{\averageFrequency}) \rceil + 3\frac{\percKmers * n_{kmers}}{\averageFrequency}$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. Dividing this by the total number $n_{kmers}$ of k-mers yields the constraint describing the bits per k-mer of $R$:
 \newcommand{\bpkR}{bpk_{R} &= \frac{1}{n_{kmers}} \cdot \left( \frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\frac{\percKmers * n_{kmers}}{\averageFrequency} \right)}
 \begin{align}
 	\bpkR \label{constraint:bpkR}
 	\\
-	\nonumber &= \frac{\percKmers}{\averageFrequency} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\frac{\percKmers}{\averageFrequency}
-	\\
 	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\right)
-	\\
-	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil log_24^\minimizerLength - log_2\frac{\percKmers * n_{kmers}}{\averageFrequency} \rceil + 3 \right)
 	\\
 	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil 2\minimizerLength - log_2\frac{\percKmers * n_{kmers}}{\averageFrequency} \rceil + 3 \right)
 \end{align}
@@ -652,6 +649,7 @@ As an example for $L=2$ levels, this results in:
 	bpk_{S^l} & \in \mathbb{R}^+_0 &\mid \forall l \in \levels\\
 	bpk_{S^l} &= \left(\prod_{i=1}^{l-1} 1-\percKmers^i\right) \cdot \frac{\percKmers^l}{(k-\minimizerLength^l+2)/2} &\mid \forall l \in \levels
 \end{align*}
+\todo[inline]{For levels > 1 the input consist of the super-k-mers with frequent minimizers on the previous level. Because those fragments are fairly short (sometimes close to k bases), every minimizer NO LONGER covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers - Find a way to account for that!}
 
 \textbf{The offset vector $O^l$} is modeled analogously to using only one level:
 \begin{align*}

@@ -1,4 +1,4 @@
-from pyscipopt import Model, quicksum, quickprod
+from pyscipopt import Model, quicksum, quickprod, log
 from datetime import datetime
 from time import perf_counter
 import math
@@ -20,8 +20,8 @@ MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
 
 LEVELS = 3
-MINIMIZER_LENGTHS = [m for m in range(15,20)]
-THRESHOLDS = [64,128] #[2**i for i in range(0,7)]
+MINIMIZER_LENGTHS = [15] #[m for m in range(15,21)]
+THRESHOLDS = [64] #[2**i for i in range(5,8)]
 
 logfile_path = f'MINLP_logs/{SEQUENCE_NAME}.txt'
 sequence_path = f'../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
@@ -70,6 +70,7 @@ def fill_cascading_stats(root_stats, level_path, level, maxLevel):
     if(level>maxLevel):
         return 
     for m in MINIMIZER_LENGTHS:
+        if level == 1: print(f"filling cascading stats for m1={m}")
         level_path = level_path / f"m{level}={m}"
         n_kmers, p_K, f_avg = readStatsFromFiles(level_path)
         for t in THRESHOLDS:
@@ -79,16 +80,16 @@ def fill_cascading_stats(root_stats, level_path, level, maxLevel):
             fill_cascading_stats(current_stats, level_path, level+1, maxLevel)
             level_path = level_path.parent
         level_path = level_path.parent
-
-cascading_stats = Stats(n_kmers=0, p_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)}) 
-stats_directory = Path(f"./{SEQUENCE_NAME}")
-fill_cascading_stats(cascading_stats, stats_directory, 1, 3)
-
+        
 def getCascadingStats(minimizer_lengths,thresholds):
     stats = cascading_stats
     for m, t in zip(minimizer_lengths, thresholds):
         stats = stats.next_level[(m,t)]
     return stats.n_kmers, stats.p_K, stats.f_avg
+
+cascading_stats = Stats(n_kmers=0, p_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)}) 
+stats_directory = Path(f"./{SEQUENCE_NAME}")
+fill_cascading_stats(cascading_stats, stats_directory, 1, 3)
 
 #============================#
 #Set up SCIP Model
@@ -149,18 +150,18 @@ else:
 #CONSTRAINTS
 #============================#
 #constraints regarding the structure operation times
-scip.addCons(t_access_R - t_access_R_empirical == 0)
-scip.addCons(t_access_O - t_access_O_empirical == 0)
-scip.addCons(t_access_H - t_access_H_empirical == 0)
-scip.addCons(t_rank_R - t_rank_R_empirical == 0)
-scip.addCons(t_select_S - t_select_S_empirical == 0)
-scip.addCons(t_compare_T - t_compare_T_empirical == 0)
+scip.addCons(t_access_R == t_access_R_empirical)
+scip.addCons(t_access_O == t_access_O_empirical)
+scip.addCons(t_access_H == t_access_H_empirical)
+scip.addCons(t_rank_R == t_rank_R_empirical)
+scip.addCons(t_select_S == t_select_S_empirical)
+scip.addCons(t_compare_T == t_compare_T_empirical)
 
 for l in range(LEVELS):
     scip.addCons(quicksum(im_vars[(m,l)] for m in MINIMIZER_LENGTHS) == 1, name=f"im_mutually_exclusive_{l}")   #mutually exclusive indicators for m
     scip.addCons(quicksum(it_vars[(t,l)] for t in THRESHOLDS) == 1, name=f"it__mutually_exclusive_{l}")         #mutually exclusive indicators for t
-    scip.addCons(m_vars[l] - quicksum(im_vars[(m,l)] * m for m in MINIMIZER_LENGTHS) == 0, name=f"get_m_{l}")   #determine m
-    scip.addCons(t_vars[l] - quicksum(it_vars[(t,l)] * t for t in THRESHOLDS) == 0, name=f"get_t_{l}")          #determine t
+    scip.addCons(m_vars[l] == quicksum(im_vars[(m,l)] * m for m in MINIMIZER_LENGTHS), name=f"get_m_{l}")   #determine m
+    scip.addCons(t_vars[l] == quicksum(it_vars[(t,l)] * t for t in THRESHOLDS), name=f"get_t_{l}")          #determine t
     
     #determine p_K_l and f_avg_l
     n_kmers_terms = []
@@ -179,29 +180,28 @@ for l in range(LEVELS):
             p_K_sum_terms.append(m_indicator * t_indicator * p_K_empiric)
             f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric)
     
-    scip.addCons(n_kmers_vars[l] - quicksum(n_kmers_terms) == 0)
-    scip.addCons(p_K_vars[l] - quicksum(p_K_sum_terms) == 0)
-    scip.addCons(f_avg_vars[l] - quicksum(f_avg_sum_terms) == 0)
+    scip.addCons(n_kmers_vars[l] == quicksum(n_kmers_terms))
+    scip.addCons(p_K_vars[l] == quicksum(p_K_sum_terms))
+    scip.addCons(f_avg_vars[l] == quicksum(f_avg_sum_terms))
     
-    scip.addCons(t_level_vars[l] - (t_rank_R + 2*t_select_S + (f_avg_vars[l]+1)/2*(t_access_O+t_compare_T)) == 0)
+    scip.addCons(t_level_vars[l] == t_rank_R + 2*t_select_S + (f_avg_vars[l]+1)/2*(t_access_O+t_compare_T))
 
-    scip.addCons(bpk_R_vars[l] == 0.33)
-    #TODO: use real calculation for R
-    #n_DIM = p_K_vars[l]*n_kmers_vars[l] #number of distinct infrequent minimizers on level
-    #scip.addCons(bpk_R_vars[l] - 
-    #            (1/n_kmers_vars[l] * 
-    #            (n_DIM
-    #                * math.ceil(math.log(4**m_vars[l]/n_DIM, 2))
-    #                + 3*n_DIM)
-    #            ) == 0)
+    scip.addCons(bpk_R_vars[l] == 
+                (p_K_vars[l]/f_avg_vars[l]) * ((2*m_vars[l] - (log(p_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l])/log(2.0))) + 3))
     
-    scip.addCons(bpk_S_vars[l] - 
-                (quickprod(1-p_K_vars[i] for i in range(l))
-                * p_K_vars[l] * 2/(K-m_vars[l]+2)
-                ) == 0)
+    #TODO: use real calculation for R
+    #scip.addCons(bpk_R_vars[l] == 
+    #            p_K_vars[l]/f_avg_vars[l] * 
+    #            (math.ceil(2*m_vars[l] - math.log(p_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l], 2)) + 3)
+    #            )
+    
+    scip.addCons(bpk_S_vars[l] == 
+                quickprod(1-p_K_vars[i] for i in range(l))
+                    * p_K_vars[l] * 2/(K-m_vars[l]+2)
+                )
     
     #bits per k-mer in O
-    scip.addCons(bpk_O_vars[l] - (bpk_S_vars[l] * log_sequence_length) == 0)
+    scip.addCons(bpk_O_vars[l] == bpk_S_vars[l] * log_sequence_length)
 
 
 #recursivly build the t_lookup constraint level by level
@@ -209,12 +209,12 @@ remaining_time = t_access_H
 for l in reversed(range(LEVELS)):
     remaining_time = t_access_R + p_K_vars[l] * t_level_vars[l] + (1 - p_K_vars[l]) * remaining_time
 
-scip.addCons(t_lookup - remaining_time == 0, name="t_lookup")
+scip.addCons(t_lookup == remaining_time, name="t_lookup")
 scip.addCons(t_lookup <= MAX_LOOKUP_TIME)
 
 #bits per k-mer in H
-scip.addCons(bpk_H - (quickprod(1-p_K_vars[l] for l in range(LEVELS)) * (64)/LOAD_FACTOR) == 0)
-scip.addCons(bpk_total - (bpk_T + quicksum(bpk_R_vars[l] + bpk_S_vars[l] + bpk_O_vars[l] for l in range(LEVELS)) + bpk_H) == 0)
+scip.addCons(bpk_H == quickprod(1-p_K_vars[l] for l in range(LEVELS)) * (64)/LOAD_FACTOR)
+scip.addCons(bpk_total == bpk_T + quicksum(bpk_R_vars[l] + bpk_S_vars[l] + bpk_O_vars[l] for l in range(LEVELS)) + bpk_H)
 scip.addCons(bpk_total <= MAX_BPK_TOTAL)
 
 #TODO: remove
@@ -266,6 +266,9 @@ info.append(f"t_lookup: {format(sol[t_lookup])}\n")
 info.append(f"bpk_total: {format(sol[bpk_total])}\n\n")
 
 info.append("DETAILS:\n")
+for l in range(LEVELS):  
+    info.append(f"n_kmers_vars{l+1}: {format(sol[n_kmers_vars[l]])}\n")
+info.append("\n") 
 for l in range(LEVELS):  
     info.append(f"p_K_{l+1}: {format(sol[p_K_vars[l]])}\n")
 info.append("\n") 

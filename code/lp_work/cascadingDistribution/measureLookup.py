@@ -22,16 +22,16 @@ N_QUERIES = 100000
 query_path = (DATA_DIRECTORY / "query.fastq.gz")
 generate_random_31mers(query_path, N_QUERIES)
 
-start_time = perf_counter() #TODO: Watch out, loading kmers shouldnt be part of timer
-subprocess.run(
-    [
-        "../../rshash/build/source/rshash",
-        "lookup",
-        "-d", str(DATA_DIRECTORY / f"{GENOME}.rshash"),
-        "-q", str(query_path),
-    ],
-    check=True,
-)
-query_seconds = perf_counter() - start_time
-print(f"average query time: {(query_seconds/N_QUERIES):.6f} seconds")
-print("Watch out, loading kmers shouldnt be part of timer")
+logfile_path = Path("./lookup_log.txt")
+
+with logfile_path.open("w") as logfile:
+    subprocess.run(
+        [
+            "../../rshash/build/source/rshash",
+            "lookup",
+            "-d", str(DATA_DIRECTORY / f"{GENOME}.rshash"),
+            "-q", str(query_path),
+        ],
+        stdout=logfile,
+        check=True,
+    )

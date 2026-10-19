@@ -18,11 +18,12 @@ if(not genome_directory.is_dir()):
 
 print(f"computing cascading distribution on GENOME: {GENOME}")
 
-POSSIBLE_MINIMIZER_LENGTHS = [m for m in range(15,20)]
-POSSIBLE_THRESHOLDS = [64, 128] #[2**t for t in range(7)]
+MAX_LEVEL = 3
+POSSIBLE_MINIMIZER_LENGTHS = [[m for m in range(15,24)] for _ in range(MAX_LEVEL)]
+POSSIBLE_THRESHOLDS = [[2**t for t in range(5,8)] for _ in MAX_LEVEL]
 
 def get_p_K_distinct(level_path, level):
-    kmers_path = level_path / f"t{level}={POSSIBLE_THRESHOLDS[0]}" / "n_kmers.txt"
+    kmers_path = level_path / f"t{level}={POSSIBLE_THRESHOLDS[level-1][0]}" / "n_kmers.txt"
     if(not kmers_path.exists()):
         return
     n_kmers = int(kmers_path.open().readline())
@@ -30,7 +31,7 @@ def get_p_K_distinct(level_path, level):
     with (level_path / "p_K_distinct.csv").open("w") as f:
         f.write("f, percentage of kmers having minimizers of frequency == f on the level\n")
         previous_threshold = 0
-        for t in POSSIBLE_THRESHOLDS:
+        for t in POSSIBLE_THRESHOLDS[level-1]:
             stats_path = level_path / f"t{level}={t}" / "infrequent_kmers.csv"
             reader = csv.reader(stats_path.open())
             for freq in range(previous_threshold+1): next(reader)              #Skip the header and all values already computed for lower thresholds
@@ -42,7 +43,7 @@ def get_p_K_distinct(level_path, level):
         
 def call_subprocess(level_path: Path, minimizer_length, threshold,level,previous_threshold,lastLevel=False):
     logfile_path = level_path / "build.log"
-    if(lastLevel or threshold == POSSIBLE_THRESHOLDS[0]):
+    if(lastLevel or threshold == POSSIBLE_THRESHOLDS[level-1][0]):
         if(level==1):
             infile = f"../../rshash/DNA_datasets/{GENOME}.fa"
         else:
@@ -87,7 +88,7 @@ def handleMaxLevel(level_path: Path, level: int, minimizers: list):
         print(str(level_path.parts[-2*level:]) + " - computing stats on last level")
         call_subprocess(level_path, 
                 m, 
-                POSSIBLE_THRESHOLDS[-1],
+                POSSIBLE_THRESHOLDS[level-1][-1],
                 level,
                 0,
                 lastLevel=True)
@@ -110,7 +111,7 @@ def stats_recursive(level_path, level, maxlevel, first_level_minimizer_length):
     minimizers = (
         [first_level_minimizer_length]
         if level == 1 and first_level_minimizer_length is not None
-        else POSSIBLE_MINIMIZER_LENGTHS
+        else POSSIBLE_MINIMIZER_LENGTHS[level-1]
     )
     
     if(level == maxlevel): #directly compute p_K instead of computing freq_kmer.fa for every possible t
@@ -121,9 +122,9 @@ def stats_recursive(level_path, level, maxlevel, first_level_minimizer_length):
     for m in minimizers:
         level_path = level_path / f"m{level}={m}"
         if(not level_path.is_dir()): level_path.mkdir()
-        for t in POSSIBLE_THRESHOLDS:
+        for t in POSSIBLE_THRESHOLDS[level-1]:
             level_path = level_path / f"t{level}={t}"
-            if(not level_path.is_dir()):
+            if(not (level_path / "seconds_for_computation.txt").exists()):
                 level_path.mkdir()
                 print(str(level_path.parts[-2*level:]) + " - computing stats")
                 call_subprocess(level_path, 
@@ -158,10 +159,10 @@ def run_first_level_minimizer_length(minimizer):
     stats_recursive(
         level_path=genome_directory,
         level=1,
-        maxlevel=3,
+        maxlevel=MAX_LEVEL,
         first_level_minimizer_length=minimizer
     )
 
 if __name__ == "__main__":
     with ThreadPoolExecutor(max_workers=N_THREADS) as executor:
-        list(executor.map(run_first_level_minimizer_length, POSSIBLE_MINIMIZER_LENGTHS))
+        list(executor.map(run_first_level_minimizer_length, POSSIBLE_MINIMIZER_LENGTHS[0]))
