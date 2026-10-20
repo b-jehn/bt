@@ -14,14 +14,14 @@ from pathlib import Path
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel"
+SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
 
 LEVELS = 3
 MINIMIZER_LENGTHS = [15] #[m for m in range(15,21)]
-THRESHOLDS = [64] #[2**i for i in range(5,8)]
+THRESHOLDS = [128] #[2**i for i in range(5,8)]
 
 logfile_path = f'MINLP_logs/{SEQUENCE_NAME}.txt'
 sequence_path = f'../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
@@ -213,7 +213,7 @@ scip.addCons(t_lookup == remaining_time, name="t_lookup")
 scip.addCons(t_lookup <= MAX_LOOKUP_TIME)
 
 #bits per k-mer in H
-scip.addCons(bpk_H == quickprod(1-p_K_vars[l] for l in range(LEVELS)) * (64)/LOAD_FACTOR)
+scip.addCons(bpk_H == quickprod(1-p_K_vars[l] for l in range(LEVELS)) * (64 + 8)/LOAD_FACTOR)
 scip.addCons(bpk_total == bpk_T + quicksum(bpk_R_vars[l] + bpk_S_vars[l] + bpk_O_vars[l] for l in range(LEVELS)) + bpk_H)
 scip.addCons(bpk_total <= MAX_BPK_TOTAL)
 

@@ -616,3 +616,61 @@ bpk_O_2: 0.09994919919273701
 bpk_O_3: 0.04486727705880354
 bpk_H: 13.076488985205216
 
+2026-10-20 11:49:13.671739---------------------------------------------
+solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
+with optimization goal: t_lookup,
+MAX_LOOKUP_TIME = inf and
+MAX_BPK_TOTAL = inf
+
+for 3 levels and k = 31
+considered minimizer lengths: [15]
+considered thresholds: [64]
+
+using:
+t_access_R_empirical = 30
+t_access_O_empirical = 10
+t_access_H_empirical = 20
+t_rank_R_empirical = 35
+t_select_S_empirical = 35
+t_compare_T_empirical = 10
+
+total time to solve MINLP: 0.005625 seconds
+found solution:
+LEVEL PARAMETERS:
+m_1: 15.0
+m_2: 15.0
+m_3: 15.0
+
+t_1: 64.0
+t_2: 64.0
+t_3: 64.0
+
+LOOKUP TIME AND SPACE CONSUPTION:
+t_lookup: 200.66509696864063
+bpk_total: 18.94377620812991
+
+DETAILS:
+n_kmers_vars1: 669942933.0
+n_kmers_vars2: 132410983.0
+n_kmers_vars3: 111874308.99999999
+
+p_K_1: 0.8023427467067552
+p_K_2: 0.15509550291609878
+p_K_3: 0.0824028329864366
+
+f_avg_1: 6.394373017712391
+f_avg_2: 17.204590660423168
+f_avg_3: 19.65032867660957
+
+bpk_T: 2
+bpk_R_1: 0.8375609980424461
+bpk_R_2: 0.11550671280542807
+bpk_R_3: 0.059380793943496844
+bpk_S_1: 0.08914919296719499
+bpk_S_2: 0.00340619352789688
+bpk_S_3: 0.0015290430535351222
+bpk_O_1: 2.615937812333157
+bpk_O_2: 0.09994919919273701
+bpk_O_3: 0.04486727705880354
+bpk_H: 13.076488985205216
+

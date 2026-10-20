@@ -342,6 +342,7 @@ void RSHash::process_freq_kmers(AddForward&& add, AddReverse&& add_rc,
     gtl::flat_hash_map<uint64_t, uint16_t> &kmer_counts)
 {
     const bool use_shape = shape.value != std::numeric_limits<uint32_t>::max();
+    size_t n_kmers_in_hashtable = 0;
 
     for (const auto& skmer_info : freq_skmers) {
         size_t s = (skmer_info.start > overlap) ? skmer_info.start - overlap : 0;
@@ -373,12 +374,14 @@ void RSHash::process_freq_kmers(AddForward&& add, AddReverse&& add_rc,
             else {
                 uint64_t canonical_kmer = std::min<uint64_t>(kmer.value, kmer.value_rev);
                 if(threshold == 0 || kmer_counts[canonical_kmer] < threshold)
+                    n_kmers_in_hashtable++;
                     add(canonical_kmer, pos);
             }
 
             ++p;
         }
     }
+    std::cout << "added " << n_kmers_in_hashtable << " k-mers to hashtable\n";
     
 }
 
@@ -431,7 +434,9 @@ void RSHash::last_level(const std::vector<seqan3::bitpacked_sequence<seqan3::dna
         kmer_counts = count_kmers(input, freq_skmers);
 
     if(use_ht) {
+        std::cout << "using hash table\n";
         if(loc) {
+            std::cout << "enabeling locate\n";
             FlatMapBuilder builder, builder_rc;
             process_freq_kmers([&](uint64_t key, uint32_t pos) {builder.add(key, pos);},
                                [&](uint64_t key, uint32_t pos) {builder_rc.add(key, pos);},
@@ -441,12 +446,14 @@ void RSHash::last_level(const std::vector<seqan3::bitpacked_sequence<seqan3::dna
             hashmap_rc = std::move(builder_rc).build();
         }
         else {
+            std::cout << "only lookup\n";
             process_freq_kmers([&](uint64_t key, uint32_t) {hashset.insert(key);},
                                [&](uint64_t key, uint32_t) {hashset_rc.insert(key);},
                                input, freq_skmers, kmer_counts);
         }
     }
     else {
+        std::cout << "not using hash table\n";
         if(loc) {
             gtl::flat_hash_map<uint64_t, std::vector<uint64_t>> freq_kmers_map; // todo: 32 bit pos if possible
             gtl::flat_hash_map<uint64_t, std::vector<uint64_t>> freq_kmers_rc_map;
@@ -567,7 +574,7 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         freq_kmers3 = get_frequent_skmers<3>(input, freq_skmers, freq_skmers3);
         freq_skmers.clear();
         freq_skmers = freq_skmers3;
-        std::cout << "number of freq kmers on level 3: " << freq_kmers2 << "\n";
+        std::cout << "number of freq kmers on level 3: " << freq_kmers3 << "\n";
         std::cout << "=> p_K_3 = " << (1.0-float(freq_kmers3)/float(freq_kmers2)) << " (= (1-freq_kmers3/freq_kmers2) = (1-" << freq_kmers3 << "/" << freq_kmers2 << "))\n";
     }
 

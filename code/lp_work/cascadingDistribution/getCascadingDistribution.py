@@ -10,17 +10,17 @@ from concurrent.futures import ThreadPoolExecutor
 
 N_THREADS = 1  # Set the number of concurrent workers.
 
-GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
+GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
+MAX_LEVEL = 3
+POSSIBLE_MINIMIZER_LENGTHS = [[m for m in range(15,16)] for _ in range(MAX_LEVEL)]
+POSSIBLE_THRESHOLDS = [[2**t for t in range(7,8)] for _ in range(MAX_LEVEL)]
+
 genome_directory = Path(f"./{GENOME}")
 if(not genome_directory.is_dir()):
     print(f"creating directory for '{GENOME}' stats")
     genome_directory.mkdir()
 
 print(f"computing cascading distribution on GENOME: {GENOME}")
-
-MAX_LEVEL = 3
-POSSIBLE_MINIMIZER_LENGTHS = [[m for m in range(15,24)] for _ in range(MAX_LEVEL)]
-POSSIBLE_THRESHOLDS = [[2**t for t in range(5,8)] for _ in MAX_LEVEL]
 
 def get_p_K_distinct(level_path, level):
     kmers_path = level_path / f"t{level}={POSSIBLE_THRESHOLDS[level-1][0]}" / "n_kmers.txt"

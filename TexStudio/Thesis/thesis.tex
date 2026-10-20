@@ -486,6 +486,8 @@ The bits per k-mer required for the hash table can thus be modeled by:
 \begin{align}
 	\bpkH \label{constraint:bpkH}
 \end{align}
+\todo[inline]{in the used gtl::flat\_hash\_set there is one byte of metadata for each entry. because of this, it should be $bpk_H = (1-\percKmers) \cdot \frac{64 + 8}{\alpha}$ - should I add this here or in experiments?}
+\todo[inline]{This only models correctly for the unitigs. Figure out how to take into account that k-mers can appear many times in the Input but will only be added once to the hashtable}
 \todo[inline]{Locate benötigt eine Liste mit allen offsets: $bpk_H = (1-\percKmers) \cdot \frac{(64 + (log_2|T|\cdot frequency))}{\alpha}$ nur hashset für lookup, 1 statt log2T}
 
 \textbf{The total bits per k-mer} $bpk_{total} \in \mathbb{R}^+_0$ can be modeled by simply adding up the space requirements of each component:
