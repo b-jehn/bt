@@ -233,6 +233,7 @@ sol = scip.getBestSol()
 #============================#
 #CREATE INFO
 #============================#
+print(f"\n\npredicted number of distinct minimizers on level 1: {format(sol[p_K_vars[0]]*sol[n_kmers_vars[0]]/sol[f_avg_vars[0]])}\n\n")
 info = []
 info.append(f"{datetime.now()}---------------------------------------------\n")
 info.append(f"solved MINLP for sequence: {SEQUENCE_NAME}\n")
@@ -293,6 +294,6 @@ for line in info:
 #============================#
 #WRITE SOLUTION TO LOG
 #============================#
-with open(logfile_path, "a") as logfile:
-    for line in info:
-        logfile.write(line)
+#with open(logfile_path, "a") as logfile:
+#    for line in info:
+#        logfile.write(line)
