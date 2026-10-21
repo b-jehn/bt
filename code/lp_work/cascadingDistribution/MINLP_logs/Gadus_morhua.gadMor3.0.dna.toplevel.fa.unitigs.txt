@@ -1,10 +1,10 @@
-2026-10-20 11:49:50.974851---------------------------------------------
+2026-10-21 12:20:09.104862---------------------------------------------
 solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
 with optimization goal: t_lookup,
 MAX_LOOKUP_TIME = inf and
 MAX_BPK_TOTAL = inf
 
-for 3 levels and k = 31
+for 1 levels and k = 31
 considered minimizer lengths: [15]
 considered thresholds: [128]
 
@@ -16,333 +16,37 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
-total time to solve MINLP: 0.005699 seconds
+total time to solve MINLP: 0.002494 seconds
 found solution:
 LEVEL PARAMETERS:
 m_1: 15.0
-m_2: 15.0
-m_3: 15.0
 
 t_1: 128.0
-t_2: 128.0
-t_3: 128.0
 
-LOOKUP TIME AND SPACE CONSUPTION:
-t_lookup: 210.78635314351436
-bpk_total: 8.048088559376707
 
-DETAILS:
-n_kmers_vars1: 502465200.0
-n_kmers_vars2: 20615648.0
-n_kmers_vars3: 9945900.999999998
+LEVEL STATS:
+n_kmers_1: 502465199.99999994
+
+n_DIM_1: 79948677.82286696
 
 p_K_1: 0.9589709934140718
-p_K_2: 0.5175557421236529
-p_K_3: 0.41784349150469124
 
-f_avg_1: 6.026985875458483
-f_avg_2: 23.87195366488073
-f_avg_3: 26.48043519485738
+f_avg_1: 0.6696650972731648
 
+
+LOOKUP TIME:
+t_lookup: 147.52413841020459
+
+SPACE CONSUPTION:
 bpk_T: 2
-bpk_R_1: 1.0736027890471767
-bpk_R_2: 0.30851824131400263
-bpk_R_3: 0.24836899478347088
+
+bpk_R_1: 1.0736027847290477
+
 bpk_S_1: 0.10655233149023016
-bpk_S_2: 0.0023594209324970363
-bpk_S_3: 0.0009189855351948473
+
 bpk_O_1: 3.2252104529275725
-bpk_O_2: 0.0714168235262247
-bpk_O_3: 0.027816582825983725
-bpk_H: 0.9833239369943527
 
-2026-10-20 11:52:55.035426---------------------------------------------
-solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
-with optimization goal: t_lookup,
-MAX_LOOKUP_TIME = inf and
-MAX_BPK_TOTAL = inf
+bpk_H: 3.93878463224911
 
-for 3 levels and k = 31
-considered minimizer lengths: [15]
-considered thresholds: [128]
-
-using:
-t_access_R_empirical = 30
-t_access_O_empirical = 10
-t_access_H_empirical = 20
-t_rank_R_empirical = 35
-t_select_S_empirical = 35
-t_compare_T_empirical = 10
-
-total time to solve MINLP: 0.005948 seconds
-found solution:
-LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
-
-t_1: 128.0
-t_2: 128.0
-t_3: 128.0
-
-LOOKUP TIME AND SPACE CONSUPTION:
-t_lookup: 210.78635314351436
-bpk_total: 8.048088559376707
-
-DETAILS:
-n_kmers_vars1: 502465200.0
-n_kmers_vars2: 20615648.0
-n_kmers_vars3: 9945900.999999998
-
-p_K_1: 0.9589709934140718
-p_K_2: 0.5175557421236529
-p_K_3: 0.41784349150469124
-
-f_avg_1: 6.026985875458483
-f_avg_2: 23.87195366488073
-f_avg_3: 26.48043519485738
-
-bpk_T: 2
-bpk_R_1: 1.0736027890471767
-bpk_R_2: 0.30851824131400263
-bpk_R_3: 0.24836899478347088
-bpk_S_1: 0.10655233149023016
-bpk_S_2: 0.0023594209324970363
-bpk_S_3: 0.0009189855351948473
-bpk_O_1: 3.2252104529275725
-bpk_O_2: 0.0714168235262247
-bpk_O_3: 0.027816582825983725
-bpk_H: 0.9833239369943527
-
-2026-10-20 12:11:06.369830---------------------------------------------
-solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
-with optimization goal: t_lookup,
-MAX_LOOKUP_TIME = inf and
-MAX_BPK_TOTAL = inf
-
-for 3 levels and k = 31
-considered minimizer lengths: [15]
-considered thresholds: [128]
-
-using:
-t_access_R_empirical = 30
-t_access_O_empirical = 10
-t_access_H_empirical = 20
-t_rank_R_empirical = 35
-t_select_S_empirical = 35
-t_compare_T_empirical = 10
-
-total time to solve MINLP: 0.014215 seconds
-found solution:
-LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
-
-t_1: 128.0
-t_2: 128.0
-t_3: 128.0
-
-LOOKUP TIME AND SPACE CONSUPTION:
-t_lookup: 210.78635314351436
-bpk_total: 8.063452995892247
-
-DETAILS:
-n_kmers_vars1: 502465200.0
-n_kmers_vars2: 20615648.0
-n_kmers_vars3: 9945900.999999998
-
-p_K_1: 0.9589709934140718
-p_K_2: 0.5175557421236529
-p_K_3: 0.41784349150469124
-
-f_avg_1: 6.026985875458483
-f_avg_2: 23.87195366488073
-f_avg_3: 26.48043519485738
-
-bpk_T: 2
-bpk_R_1: 1.0736027890471767
-bpk_R_2: 0.30851824131400263
-bpk_R_3: 0.24836899478347088
-bpk_S_1: 0.10655233149023016
-bpk_S_2: 0.0023594209324970363
-bpk_S_3: 0.0009189855351948473
-bpk_O_1: 3.2252104529275725
-bpk_O_2: 0.0714168235262247
-bpk_O_3: 0.027816582825983725
-bpk_H: 0.9986883735098928
-
-2026-10-20 12:20:37.128964---------------------------------------------
-solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
-with optimization goal: t_lookup,
-MAX_LOOKUP_TIME = inf and
-MAX_BPK_TOTAL = inf
-
-for 3 levels and k = 31
-considered minimizer lengths: [15]
-considered thresholds: [128]
-
-using:
-t_access_R_empirical = 30
-t_access_O_empirical = 10
-t_access_H_empirical = 20
-t_rank_R_empirical = 35
-t_select_S_empirical = 35
-t_compare_T_empirical = 10
-
-total time to solve MINLP: 0.013096 seconds
-found solution:
-LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
-
-t_1: 128.0
-t_2: 128.0
-t_3: 128.0
-
-LOOKUP TIME AND SPACE CONSUPTION:
-t_lookup: 210.78635314351436
-bpk_total: 7.802257575128114
-
-DETAILS:
-n_kmers_vars1: 502465200.0
-n_kmers_vars2: 20615648.0
-n_kmers_vars3: 9945900.999999998
-
-p_K_1: 0.9589709934140718
-p_K_2: 0.5175557421236529
-p_K_3: 0.41784349150469124
-
-f_avg_1: 6.026985875458483
-f_avg_2: 23.87195366488073
-f_avg_3: 26.48043519485738
-
-bpk_T: 2
-bpk_R_1: 1.0736027890471767
-bpk_R_2: 0.30851824131400263
-bpk_R_3: 0.24836899478347088
-bpk_S_1: 0.10655233149023016
-bpk_S_2: 0.0023594209324970363
-bpk_S_3: 0.0009189855351948473
-bpk_O_1: 3.2252104529275725
-bpk_O_2: 0.0714168235262247
-bpk_O_3: 0.027816582825983725
-bpk_H: 0.737492952745761
-
-2026-10-20 12:21:51.557016---------------------------------------------
-solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
-with optimization goal: t_lookup,
-MAX_LOOKUP_TIME = inf and
-MAX_BPK_TOTAL = inf
-
-for 3 levels and k = 31
-considered minimizer lengths: [15]
-considered thresholds: [128]
-
-using:
-t_access_R_empirical = 30
-t_access_O_empirical = 10
-t_access_H_empirical = 20
-t_rank_R_empirical = 35
-t_select_S_empirical = 35
-t_compare_T_empirical = 10
-
-total time to solve MINLP: 0.008683 seconds
-found solution:
-LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
-
-t_1: 128.0
-t_2: 128.0
-t_3: 128.0
-
-LOOKUP TIME AND SPACE CONSUPTION:
-t_lookup: 210.78635314351436
-bpk_total: 8.171004051500999
-
-DETAILS:
-n_kmers_vars1: 502465200.0
-n_kmers_vars2: 20615648.0
-n_kmers_vars3: 9945900.999999998
-
-p_K_1: 0.9589709934140718
-p_K_2: 0.5175557421236529
-p_K_3: 0.41784349150469124
-
-f_avg_1: 6.026985875458483
-f_avg_2: 23.87195366488073
-f_avg_3: 26.48043519485738
-
-bpk_T: 2
-bpk_R_1: 1.0736027890471767
-bpk_R_2: 0.30851824131400263
-bpk_R_3: 0.24836899478347088
-bpk_S_1: 0.10655233149023016
-bpk_S_2: 0.0023594209324970363
-bpk_S_3: 0.0009189855351948473
-bpk_O_1: 3.2252104529275725
-bpk_O_2: 0.0714168235262247
-bpk_O_3: 0.027816582825983725
-bpk_H: 1.106239429118645
-
-2026-10-20 15:02:33.934032---------------------------------------------
-solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
-with optimization goal: t_lookup,
-MAX_LOOKUP_TIME = inf and
-MAX_BPK_TOTAL = inf
-
-for 3 levels and k = 31
-considered minimizer lengths: [15]
-considered thresholds: [128]
-
-using:
-t_access_R_empirical = 30
-t_access_O_empirical = 10
-t_access_H_empirical = 20
-t_rank_R_empirical = 35
-t_select_S_empirical = 35
-t_compare_T_empirical = 10
-
-total time to solve MINLP: 0.014972 seconds
-found solution:
-LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
-
-t_1: 128.0
-t_2: 128.0
-t_3: 128.0
-
-LOOKUP TIME AND SPACE CONSUPTION:
-t_lookup: 163.9560067248717
-bpk_total: 13.184032005600915
-
-DETAILS:
-n_kmers_vars1: 502465199.99999994
-n_kmers_vars2: 20615648.0
-n_kmers_vars3: 9945901.0
-
-p_K_1: 0.9589709934140718
-p_K_2: 0.5175557421236529
-p_K_3: 0.41784349150469124
-
-f_avg_1: 1.8183
-f_avg_2: 2.55891
-f_avg_3: 2.97039
-
-bpk_T: 2
-bpk_R_1: 2.6467993474909384
-bpk_R_2: 2.2265401650322234
-bpk_R_3: 1.7701784667214053
-bpk_S_1: 0.10655233149023016
-bpk_S_2: 0.0023594209324970363
-bpk_S_3: 0.0009189855351948473
-bpk_O_1: 3.2252104529275725
-bpk_O_2: 0.0714168235262247
-bpk_O_3: 0.027816582825983725
-bpk_H: 1.106239429118645
+=> bpk_total: 10.344150201395962
 

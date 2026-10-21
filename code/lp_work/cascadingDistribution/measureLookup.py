@@ -1,26 +1,35 @@
 import subprocess
 from pathlib import Path
 import gzip
-import secrets
-from time import perf_counter
-
-
-def generate_random_31mers(output_path: Path, n: int):
-    """Write n random 31-base DNA reads to path/query.fastq.gz."""
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    bases = "ACGT"
-
-    with gzip.open(output_path, "wt", encoding="ascii") as out:
-        for i in range(n):
-            sequence = "".join(secrets.choice(bases) for _ in range(31))
-            out.write(f"@read_{i + 1}\n{sequence}\n+\n{'I' * 31}\n")
+import random
 
 GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_QUERIES = 100000 
+K = 31
+
+def get_random_Kmers(source_path: Path, output_path: Path, n: int) -> None:
+    """write n K-base DNA reads from random positions in source to output_path"""
+    # Read sequence lines, ignoring FASTA headers and whitespace.
+    parts = []
+    with source_path.open() as source:
+        for line in source:
+            line = line.strip()
+            if line and not line.startswith(">"):
+                parts.append("".join(line.split()))
+
+    sequence = "".join(parts).upper()
+    if len(sequence) < K:
+        raise ValueError("Source sequence must contain at least K bases")
+
+    with gzip.open(output_path, "wt", encoding="ascii") as out:
+        for i in range(n):
+            start = random.randrange(len(sequence) - K + 1)
+            out.write(f"@read_{i+1}\n{sequence[start:start + K]}\n+\n{'I' * K}\n")
+
 
 query_path = (DATA_DIRECTORY / "query.fastq.gz")
-generate_random_31mers(query_path, N_QUERIES)
+get_random_Kmers((DATA_DIRECTORY / f"{GENOME}.fa"), query_path, N_QUERIES)
 
 logfile_path = Path("./lookup_log.txt")
 

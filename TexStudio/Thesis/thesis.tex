@@ -337,10 +337,9 @@ Let $k$ be a k-mer with an \textit{infrequent} minimizer $m(k)$. The lookup of $
 We recall that $\percKmersEmpiric(\placeholderMinimizerLength,\placeholderThreshold)$ is the percentage of k-mers with \textit{infrequent} minimizers when using minimizer length $m$ and threshold $t$. Then $(\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1))/\percKmersEmpiric(\placeholderMinimizerLength,\placeholderThreshold)$\footnote{Note that $\percKmersEmpiric(m,0) = 0$ per definition} percent of those k-mers with \textit{infrequent} minimizers have minimizers of exact frequency $f(m(k)) = f$.\\
 We can derive $\averageFrequencyEmpiric(\placeholderMinimizerLength,\placeholderThreshold)$ from $\percKmersEmpiric(\placeholderMinimizerLength,\placeholderThreshold)$ by computing a sum over every frequency $1 \leq f \leq t$ weighed with the percentage of \textit{\textit{infrequent}} k-mers with that frequency:
 \begin{equation*}
-	\averageFrequencyEmpiric(\placeholderMinimizerLength,\placeholderThreshold) = \frac{1}{\percKmersEmpiric(\placeholderMinimizerLength,\placeholderThreshold)} \cdot\sum\limits_{f=1}^\placeholderThreshold (\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1)) \cdot f 
+	\averageFrequencyEmpiric(\placeholderMinimizerLength,\placeholderThreshold) = \frac{1}{\percKmersEmpiric(\placeholderMinimizerLength,\placeholderThreshold) \cdot (k-\minimizerLength+2)/2} \cdot\sum\limits_{f=1}^\placeholderThreshold (\percKmersEmpiric(m,f) - \percKmersEmpiric(m,f-1)) \cdot f 
 \end{equation*}
 \todo{tabelle $f_avg(\placeholderMinimizerLength,\placeholderThreshold)$ mittels dynamischer programmierung bauen? - eigentlich nicht nötig, wenn distinct stats (also nicht die cumulativen verwendet werden)}
-It is important to note that $\averageFrequencyEmpiric(\placeholderMinimizerLength,\placeholderThreshold)$ is not the average frequency of minimizers but rather the expected frequency of a random k-mer $k$s minimizer $m(k)$ under the condition that this minimizer is definitely \textit{infrequent} i.e. $1 \leq m(k) \leq t$
 
 \section{Times for Operations on Datastructure}
 We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a rank query on the bit vector $R$ is $\timeForOperationOnStructure{\rank}{R}$.
@@ -473,22 +472,23 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 	\bpkT \label{constraint:bpkT}
 \end{align}
 
-\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \textit{\textit{infrequent}} minimizer in the sequences. If $\percKmers$ of the k-mers have infrequent minimizers and those minimizers  The number of distinct \textit{infrequent} minimizers can be computed by dividing the number of k-mers with infrequent minimizers through the average frequency of their minimizers: $\frac{\percKmers * n_{kmers}}{\averageFrequency}$. \todo{make $n_{kmers}$ part of model - either through sum of products or simply product of pKs times number of k-mers in the genome}\\
-Using Elias-Fano-Encoding, its size can be compressed to
-$\frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2(4^\minimizerLength/\frac{\percKmers * n_{kmers}}{\averageFrequency}) \rceil + 3\frac{\percKmers * n_{kmers}}{\averageFrequency}$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. Dividing this by the total number $n_{kmers}$ of k-mers yields the constraint describing the bits per k-mer of $R$:
-\newcommand{\bpkR}{bpk_{R} &= \frac{1}{n_{kmers}} \cdot \left( \frac{\percKmers * n_{kmers}}{\averageFrequency} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\frac{\percKmers * n_{kmers}}{\averageFrequency} \right)}
+\newcommand{\numberOfDistinctMinimizers}{n_{DIM}} 
+\textbf{Bit vector $R$} is a bit vector of length $4^\minimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \textit{\textit{infrequent}} minimizer in the sequences. We can compute the number of distinct \textit{infrequent} minimizers $\numberOfDistinctMinimizers$ by dividing the total number of minimizers through the average frequency of each minimizer:
+\[ \numberOfDistinctMinimizers = \frac{\percKmers \cdot n_{kmers}}{\averageFrequency} \cdot \frac{2}{k-\minimizerLength+2} \]
+\todo[inline]{figure out how to model the ratio between k-mers and super k-mers for fractured input sequences}
+Using Elias-Fano-Encoding, a bit vector of size $U$ with $n$ bits set to one can be compressed to
+$n \lceil log_2(U/n) \rceil + 3n$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. Compressing $R$ and dividing this by the total number $n_{kmers}$ of k-mers yields the constraint describing the bits per k-mer of $R$:\todo{make $n_{kmers}$ part of model - either through sum of products or simply product of pKs times number of k-mers in the genome}
+\newcommand{\bpkR}{bpk_{R} &= \frac{1}{n_{kmers}} \cdot \left( \numberOfDistinctMinimizers \lceil log_2\frac{4^\minimizerLength}{\numberOfDistinctMinimizers} \rceil + 3\numberOfDistinctMinimizers \right)}
 \begin{align}
 	\bpkR \label{constraint:bpkR}
 	\\
-	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers * n_{kmers}}{\averageFrequency}} \rceil + 3\right)
-	\\
-	\nonumber &= \frac{\percKmers}{\averageFrequency} \left(\lceil 2\minimizerLength - log_2\frac{\percKmers * n_{kmers}}{\averageFrequency} \rceil + 3 \right)
+	\nonumber &= \frac{\numberOfDistinctMinimizers}{n_{kmers}} \cdot \left(\lceil 2\minimizerLength - log_2\numberOfDistinctMinimizers \rceil + 3 \right)
 \end{align}
 \todo[inline]{argue in experiments section, that $n_{kmers}$ has only a small effect on the size of $R$ and can thus be disregarded as it is not needed for anything else}
 
 \textbf{Bit vector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can however be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
 Since $\percKmers$ describes the percentage of k-mers with \textit{infrequent} minimizers and every minimizer covers an average of $(k-\minimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $S$ through:
-\newcommand{\bpkS}{bpk_{S} &= \frac{\percKmers}{(k-\minimizerLength+2)/2}}
+\newcommand{\bpkS}{bpk_{S} &= \percKmers\cdot\frac{2}{k-\minimizerLength+2}}
 \begin{align}
 	\bpkS \label{constraint:bpkS}
 \end{align}
@@ -509,7 +509,7 @@ The bits per k-mer required for the hash table can thus be modeled by:
 \end{align}
 \todo[inline]{in the used gtl::flat\_hash\_set there is one byte of metadata for each entry. because of this, it should be $bpk_H = (1-\percKmers) \cdot \frac{64 + 8}{\alpha}$ - should I add this here or in experiments?}
 \todo[inline]{This only models correctly for the unitigs. Figure out how to take into account that k-mers can appear many times in the Input but will only be added once to the hashtable}
-\todo[inline]{Locate benötigt eine Liste mit allen offsets: $bpk_H = (1-\percKmers) \cdot \frac{(64 + (log_2|T|\cdot frequency))}{\alpha}$ nur hashset für lookup, 1 statt log2T}
+\todo[inline]{Locate benötigt eine Liste mit allen offsets: $bpk_H = (1-\percKmers) \cdot \frac{(64 + (log_2|T|\cdot frequency))}{\alpha}$}
 
 \textbf{The total bits per k-mer} $bpk_{total} \in \RR^+_0$ can be modeled by simply adding up the space requirements of each component:
 \newcommand{\bpkTotal}{bpk_{total} &= bpk_T + bpk_R + bpk_S + bpk_O + bpk_H}
@@ -664,7 +664,7 @@ As an example for $L=2$ levels, this results in:
 \textbf{Bit vector $R^\placeholderLevel$} is modeled analogously to using only one level:
 \begin{align*}
 	bpk_{R^\placeholderLevel} & \in \RR^+_0 &\mid \forall l \in \levels\\
-	bpk_{R^\placeholderLevel} &= \frac{1}{n_{kmers}^\placeholderLevel} \cdot \left( \frac{\percKmers^\placeholderLevel * n_{kmers}^\placeholderLevel}{\averageFrequency^\placeholderLevel} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers^\placeholderLevel * n_{kmers}^\placeholderLevel}{\averageFrequency^\placeholderLevel}} \rceil + 3\frac{\percKmers^\placeholderLevel * n_{kmers}^\placeholderLevel}{\averageFrequency^\placeholderLevel} \right) &\mid \forall l \in \levels
+	bpk_{R^\placeholderLevel} &= \frac{1}{n_{kmers}^1} \cdot \left( \frac{\percKmers^\placeholderLevel * n_{kmers}^\placeholderLevel}{\averageFrequency^\placeholderLevel} \lceil log_2\frac{4^\minimizerLength}{\frac{\percKmers^\placeholderLevel * n_{kmers}^\placeholderLevel}{\averageFrequency^\placeholderLevel}} \rceil + 3\frac{\percKmers^\placeholderLevel * n_{kmers}^\placeholderLevel}{\averageFrequency^\placeholderLevel} \right) &\mid \forall l \in \levels
 \end{align*}
 
 \textbf{Bit vector $S^\placeholderLevel$} on level $l$ has length $|O^\placeholderLevel|+1 \approx |O^\placeholderLevel|$. Only k-mers that have frequent minimizers on all previous levels but an \textit{infrequent} minimizer on level $l$ lead to an offset in $O^\placeholderLevel$ and thus to a bit in $S^\placeholderLevel$:

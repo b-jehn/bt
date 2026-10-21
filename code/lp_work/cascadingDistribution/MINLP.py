@@ -19,7 +19,7 @@ OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
 
-LEVELS = 3
+LEVELS = 1
 MINIMIZER_LENGTHS = [15] #[m for m in range(15,21)]
 THRESHOLDS = [128] #[2**i for i in range(5,8)]
 
@@ -131,6 +131,8 @@ f_avg_vars = [scip.addVar(f"f_avg_{l}") for l in range(LEVELS)]     #average fre
 t_level_vars = [scip.addVar(f"t_level_{l}") for l in range(LEVELS)] #time spent for finding k-mer with an infrequent minimizer on level l
 t_lookup = scip.addVar("t_lookup")  #total lookup time
 
+n_DIM_vars = [scip.addVar(f"n_DIM_{l}") for l in range(LEVELS)] #number of distinct infrequent minimizers on each level
+
 bpk_R_vars = [scip.addVar(f"bpk_R_{l}") for l in range(LEVELS)] #bits per kmer in R on each level
 bpk_S_vars = [scip.addVar(f"bpk_S_{l}") for l in range(LEVELS)] #bits per kmer in S on each level
 bpk_O_vars = [scip.addVar(f"bpk_O_{l}") for l in range(LEVELS)] #bits per kmer in O on each level
@@ -178,7 +180,7 @@ for l in range(LEVELS):
             n_kmers, p_K_empiric, f_avg_empiric = getCascadingStats(minimizer_lengths, thresholds)
             n_kmers_terms.append(m_indicator * t_indicator * n_kmers)
             p_K_sum_terms.append(m_indicator * t_indicator * p_K_empiric)
-            f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric)
+            f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric * 2/(K-minimizer_lengths[-1]+2))
     
     scip.addCons(n_kmers_vars[l] == quicksum(n_kmers_terms))
     scip.addCons(p_K_vars[l] == quicksum(p_K_sum_terms))
@@ -186,8 +188,10 @@ for l in range(LEVELS):
     
     scip.addCons(t_level_vars[l] == t_rank_R + 2*t_select_S + (f_avg_vars[l]+1)/2*(t_access_O+t_compare_T))
 
+    scip.addCons(n_DIM_vars[l] == p_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l] * 2/(K-m_vars[l]+2))
+
     scip.addCons(bpk_R_vars[l] == 
-                (p_K_vars[l]/f_avg_vars[l]) * ((2*m_vars[l] - (log(p_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l])/log(2.0))) + 3))
+                n_DIM_vars[l]/n_kmers_vars[l] * ((2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0))) + 3))
     
     #TODO: use real calculation for R
     #scip.addCons(bpk_R_vars[l] == 
@@ -260,31 +264,40 @@ for l in range(LEVELS):
 info.append("\n")
 for l in range(LEVELS):
     info.append(f"t_{l+1}: {format(sol[t_vars[l]])}\n") 
-info.append("\n") 
+info.append("\n\n") 
 
-info.append("LOOKUP TIME AND SPACE CONSUPTION:\n")
-info.append(f"t_lookup: {format(sol[t_lookup])}\n")
-info.append(f"bpk_total: {format(sol[bpk_total])}\n\n")
-
-info.append("DETAILS:\n")
+info.append("LEVEL STATS:\n")
 for l in range(LEVELS):  
-    info.append(f"n_kmers_vars{l+1}: {format(sol[n_kmers_vars[l]])}\n")
+    info.append(f"n_kmers_{l+1}: {format(sol[n_kmers_vars[l]])}\n")
+info.append("\n") 
+for l in range(LEVELS):  
+    info.append(f"n_DIM_{l+1}: {format(sol[n_DIM_vars[l]])}\n")
 info.append("\n") 
 for l in range(LEVELS):  
     info.append(f"p_K_{l+1}: {format(sol[p_K_vars[l]])}\n")
 info.append("\n") 
 for l in range(LEVELS):  
     info.append(f"f_avg_{l+1}: {format(sol[f_avg_vars[l]])}\n")
-info.append("\n")
+info.append("\n\n")
 
+info.append("LOOKUP TIME:\n")
+info.append(f"t_lookup: {format(sol[t_lookup])}\n\n")
+
+info.append("SPACE CONSUPTION:\n")
 info.append(f"bpk_T: {bpk_T}\n")
+info.append("\n")
 for l in range(LEVELS):
     info.append(f"bpk_R_{l+1}: {format(sol[bpk_R_vars[l]])}\n")
+info.append("\n")
 for l in range(LEVELS):
     info.append(f"bpk_S_{l+1}: {format(sol[bpk_S_vars[l]])}\n")
+info.append("\n")
 for l in range(LEVELS):
     info.append(f"bpk_O_{l+1}: {format(sol[bpk_O_vars[l]])}\n")
-info.append(f"bpk_H: {format(sol[bpk_H])}\n\n")
+info.append("\n")
+info.append(f"bpk_H: {format(sol[bpk_H])}\n")
+info.append("\n")
+info.append(f"=> bpk_total: {format(sol[bpk_total])}\n\n")
 
 #============================#
 #OUTPUT INFO
@@ -294,6 +307,6 @@ for line in info:
 #============================#
 #WRITE SOLUTION TO LOG
 #============================#
-#with open(logfile_path, "a") as logfile:
-#    for line in info:
-#        logfile.write(line)
+with open(logfile_path, "w") as logfile:    #TODO: change to mode a - append, once consistent
+    for line in info:
+        logfile.write(line)
