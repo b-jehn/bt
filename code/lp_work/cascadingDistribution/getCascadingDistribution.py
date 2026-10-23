@@ -13,7 +13,7 @@ N_THREADS = 1  # Set the number of concurrent workers.
 GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
 MAX_LEVEL = 3
 POSSIBLE_MINIMIZER_LENGTHS = [[m for m in range(15,16)] for _ in range(MAX_LEVEL)]
-POSSIBLE_THRESHOLDS = [[2**t for t in range(7,8)] for _ in range(MAX_LEVEL)]
+POSSIBLE_THRESHOLDS = [[2**t for t in range(6,8)] for _ in range(MAX_LEVEL)]
 
 genome_directory = Path(f"./{GENOME}")
 if(not genome_directory.is_dir()):
@@ -22,26 +22,35 @@ if(not genome_directory.is_dir()):
 
 print(f"computing cascading distribution on GENOME: {GENOME}")
 
-def get_p_K_distinct(level_path, level):
-    kmers_path = level_path / f"t{level}={POSSIBLE_THRESHOLDS[level-1][0]}" / "n_kmers.txt"
-    if(not kmers_path.exists()):
+
+
+def computePercentages(level_path: Path, level: int) -> None:
+    #get number of k-mers and minimizers in input on level -> number of k-mers and minimizers when using the smallest threshold
+    n_kmers_path = level_path / f"t{level}={POSSIBLE_THRESHOLDS[level-1][0]}" / "n_kmers.txt"
+    n_minimizers_path = level_path / f"t{level}={POSSIBLE_THRESHOLDS[level-1][0]}" / "n_minimizers.txt"
+    if(not n_kmers_path.exists() or not n_kmers_path.exists()):
         return
-    n_kmers = int(kmers_path.open().readline())
+    n_kmers = int(n_kmers_path.open().readline())
+    n_minimizers = int(n_minimizers_path.open().readline())
     (level_path / "n_kmers.txt").write_text(str(n_kmers))
-    with (level_path / "p_K_distinct.csv").open("w") as f:
-        f.write("f, percentage of kmers having minimizers of frequency == f on the level\n")
+    (level_path / "n_minimizers.txt").write_text(str(n_minimizers))
+    
+    with (level_path / "distinctStats.csv").open("w") as out:
+        out.write("f, percentage of minimizers with frequency == f, percentage of kmers with minimizers of frequency == f\n")
         previous_threshold = 0
         for t in POSSIBLE_THRESHOLDS[level-1]:
-            stats_path = level_path / f"t{level}={t}" / "infrequent_kmers.csv"
+            stats_path = level_path / f"t{level}={t}" / "kmer_minimizer_counts.csv"
             reader = csv.reader(stats_path.open())
-            for freq in range(previous_threshold+1): next(reader)              #Skip the header and all values already computed for lower thresholds
-            for row in reader:
-                f.write(f"{int(row[1])/n_kmers}\n")    #write distinct percentages for every row left over
+            for _ in range(previous_threshold+1): next(reader)   #Skip the header and all values already computed for lower thresholds
+            for f, row in enumerate(reader, start=previous_threshold+1):
+                out.write(f"{f},{int(row[1])/n_minimizers},{int(row[2])/n_kmers}\n")    #write distinct percentages for every row left over
             previous_threshold = t
-            stats_path.unlink(missing_ok=True)  #delete file as it is no longer needed
+            #delete files that are no longer needed
+            stats_path.unlink(missing_ok=True)
             (level_path / f"t{level}={t}" / "n_kmers.txt").unlink(missing_ok=True)
+            (level_path / f"t{level}={t}" / "n_minimizers.txt").unlink(missing_ok=True)
         
-def call_subprocess(level_path: Path, minimizer_length, threshold,level,previous_threshold,lastLevel=False):
+def call_subprocess(level_path: Path, minimizer_length: int, threshold: int, level: int, previous_threshold: int, lastLevel=False):
     logfile_path = level_path / "build.log"
     if(lastLevel or threshold == POSSIBLE_THRESHOLDS[level-1][0]):
         if(level==1):
@@ -85,22 +94,25 @@ def handleMaxLevel(level_path: Path, level: int, minimizers: list):
             return
         
         level_path.mkdir()
-        print(str(level_path.parts[-2*level:]) + " - computing stats on last level")
+        print(str(level_path.parts[-2*level+1:]) + " - computing stats for all thresholds on last level")
         call_subprocess(level_path, 
                 m, 
                 POSSIBLE_THRESHOLDS[level-1][-1],
                 level,
                 0,
                 lastLevel=True)
-        #get p_K_distinct.csv from infrequent_kmers.csv
+        
+        #get number of k-mers and minimizers in input on level -> number of k-mers and minimizers when using the smallest threshold
         n_kmers = int((level_path / "n_kmers.txt").open().readline())
-        with (level_path / "p_K_distinct.csv").open("w") as f:
-            f.write("f, percentage of kmers having minimizers of frequency == f on the level\n")
-            stats_path = level_path / "infrequent_kmers.csv"
+        n_minimizers = int((level_path / "n_minimizers.txt").open().readline())
+        with (level_path / "distinctStats.csv").open("w") as out:
+            out.write("f, percentage of minimizers with frequency == f, percentage of kmers with minimizers of frequency == f\n")
+            
+            stats_path = level_path / "kmer_minimizer_counts.csv"
             reader = csv.reader(stats_path.open())
-            next(reader)    #Skip the header
-            for row in reader:
-                f.write(f"{int(row[1])/n_kmers}\n")    #write distinct percentages for every row left over
+            next(reader)        #Skip the header
+            for f,row in enumerate(reader, start=1):  #write distinct percentages for every row
+                out.write(f"{f},{int(row[1])/n_minimizers},{int(row[2])/n_kmers}\n")    
             #delete files that are no longer needed
             stats_path.unlink(missing_ok=True)  
             (level_path / "freq_skmers.fasta").unlink(missing_ok=True) #TODO: dont even compute this in the first case
@@ -145,7 +157,7 @@ def stats_recursive(level_path, level, maxlevel, first_level_minimizer_length):
             previous_output.unlink(missing_ok=True)
             previous_threshold = t
             
-        get_p_K_distinct(level_path, level)
+        computePercentages(level_path, level)
             
         #delete freq_skmers.fasta from previous computation, which is no longer needed
         previous_output = (level_path 

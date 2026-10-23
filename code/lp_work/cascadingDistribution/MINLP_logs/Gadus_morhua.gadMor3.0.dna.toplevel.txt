@@ -1,12 +1,12 @@
-2026-10-21 11:21:13.644614---------------------------------------------
+2026-10-23 11:05:40.338240---------------------------------------------
 solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
 with optimization goal: t_lookup,
 MAX_LOOKUP_TIME = inf and
 MAX_BPK_TOTAL = inf
 
-for 1 levels and k = 31
+for 3 levels and k = 31
 considered minimizer lengths: [15]
-considered thresholds: [128]
+considered thresholds: [64]
 
 using:
 t_access_R_empirical = 30
@@ -16,37 +16,63 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
-total time to solve MINLP: 0.002791 seconds
+total time to solve MINLP: 0.008035 seconds
 found solution:
 LEVEL PARAMETERS:
 m_1: 15.0
+m_2: 15.0
+m_3: 15.0
 
-t_1: 128.0
+t_1: 64.0
+t_2: 64.0
+t_3: 64.0
 
 
 LEVEL STATS:
-n_kmers_1: 669942932.9999999
+n_kmers_1: 669942933.0
+n_kmers_2: 132414529.0
+n_kmers_3: 111875145.0
 
-n_DIM_1: 56266413.31164021
+n_minimizers_1: 72973356.0
+n_minimizers_2: 15431565.0
+n_minimizers_3: 13153804.0
 
-p_K_1: 0.8369887110966802
+n_DIM_1: 31898811.00000001
+n_DIM_2: 1716793.9999999995
+n_DIM_3: 806681.0
 
-f_avg_1: 1.107300941671275
+F_M_1: 0.8267870673235859
+F_M_2: 0.288075318349111
+F_M_3: 0.18263811746016598
+
+F_K_1: 0.8023495398226704
+F_K_2: 0.1551142775276572
+F_K_3: 0.08241140603661343
+
+f_avg_1: 1.891400497654912
+f_avg_2: 2.589392204306398
+f_avg_3: 2.97811154595187
 
 
 LOOKUP TIME:
-t_lookup: 138.78191143384043
+t_lookup: 157.76178398319396 (ns for querying an appearing k-mer)
 
-SPACE CONSUPTION:
+SPACE CONSUMPTION:
 bpk_T: 2
 
-bpk_R_1: 0.6092600490890513
+bpk_R_1: 0.38438964037094175
+bpk_R_2: 0.03149102747046442
+bpk_R_3: 0.016108938984921696
 
-bpk_S_1: 0.09299874456607553
+bpk_S_1: 0.09005756055484461
+bpk_S_2: 0.006635568636701531
+bpk_S_3: 0.003585955159074653
 
-bpk_O_1: 2.7288966317331798
+bpk_O_1: 2.64259237914348
+bpk_O_2: 0.1947099499764061
+bpk_O_3: 0.10522401136493091
 
-bpk_H: 15.649083734718701
+bpk_H: 14.71008019723375
 
-=> bpk_total: 21.080239160107006
+=> bpk_total: 20.184875228895518
 

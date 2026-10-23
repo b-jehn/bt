@@ -438,11 +438,10 @@ void RSHash::last_level(const std::vector<seqan3::bitpacked_sequence<seqan3::dna
 //this function was copied from rshahs/test/mini_stats.cpp and then edited to also alow a vector of frequent skmers as input instead of the wohle sequences
 size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
     const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> &sequences,
-    std::vector<SkmerInfo> &freq_skmers,
-    const size_t m, const size_t t, const size_t k, const uint64_t seed, const int level,
+    const size_t m, const size_t t, const size_t k, const uint64_t seed,
     sux::bits::EliasFano<sux::util::AllocType::MALLOC> &r, sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> &s)
 {
-    size_t no_skmers_in_input = 0;
+    size_t no_minimisers = 0;
     uint64_t minimiser_rank;
     auto skmerview = rshash::views::xor_minimiser_and_skmer_positions({.minimiser_size = m, .window_size = k, .seed = seed});
 
@@ -451,7 +450,6 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
         std::vector<size_t> start_positions(t, 0);
 
         for(auto && minimiser : sequence | skmerview) {
-            no_skmers_in_input++;
             if(minimiser_rank = r.rank(minimiser.minimiser_value), r.rank(minimiser.minimiser_value + 1) - minimiser_rank) {
                 size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                 for(size_t i=0; i < t; i++)
@@ -460,7 +458,7 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
             break;
         }
         for(auto && minimiser : sequence | skmerview) {
-            no_skmers_in_input++;
+            no_minimisers++;
             if(minimiser_rank = r.rank(minimiser.minimiser_value), r.rank(minimiser.minimiser_value + 1) - minimiser_rank) {
                 size_t frequency = s.select(minimiser_rank+1)-s.select(minimiser_rank);
                 
@@ -488,23 +486,22 @@ size_t get_uncovered_kmers(std::vector<size_t> &kmers_uncovered,
         }   
     }
 
-    return no_skmers_in_input;
+    return no_minimisers;
 }
 
 void getDistributionOnLevel(
     const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> &sequences,
-    std::vector<SkmerInfo> &freq_skmers,
     sux::bits::EliasFano<sux::util::AllocType::MALLOC> &r,
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> &s_select,
     std::vector<uint8_t> &minimizers_occurences,
     size_t no_kmers,
-    uint64_t level, uint64_t m, uint64_t t, uint64_t k, uint64_t seed,
+    uint64_t m, uint64_t t, uint64_t k, uint64_t seed,
     std::filesystem::path stats_directory
 )
 {
     std::cout << "getting uncovered kmers out of " << no_kmers << " kmers left over\n";
     std::vector<size_t> kmers_uncovered(t, 0);
-    size_t no_skmers_in_input = get_uncovered_kmers(kmers_uncovered, sequences, freq_skmers, m, t, k, seed, level, r, s_select);
+    size_t n_minimizers = get_uncovered_kmers(kmers_uncovered, sequences, m, t, k, seed, r, s_select);
 
     size_t minimizer_frequency_counter[t] = {0};
     for(uint8_t frequency : minimizers_occurences) {
@@ -517,13 +514,19 @@ void getDistributionOnLevel(
     stats_file << no_kmers;
     stats_file.close();
 
+    //write number of minimizers in input to file
+    stats_filePath = stats_directory / "n_minimizers.txt";
+    stats_file.open(stats_filePath);
+    stats_file << n_minimizers;
+    stats_file.close();
+
     //getting distinct stats
     // Create and open output file
-    stats_filePath = stats_directory / "infrequent_kmers.csv";
+    stats_filePath = stats_directory / "kmer_minimizer_counts.csv";
     stats_file.open(stats_filePath);
-    stats_file << "f, number of kmers with minimizers of frequency == f\n";
+    stats_file << "f,number of distinct minimizers with frequency == f,number of kmers with mimizers of frequency == f\n";
     for(uint8_t j=0; j < t; j++) {
-        stats_file << (j+1) << ',' << no_kmers-kmers_uncovered[j] << '\n';
+        stats_file << (j+1) << ',' << minimizer_frequency_counter[j] << ',' << no_kmers-kmers_uncovered[j] << '\n';
     }
     stats_file.close();
 
@@ -620,12 +623,11 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
     sux::bits::SimpleSelect<sux::util::AllocType::MALLOC> s1_select = sux::bits::SimpleSelect(reinterpret_cast<uint64_t*>(s1.data()), no_skmers1+1, 3);
     getDistributionOnLevel(
         input,
-        freq_skmers,
         r1,
         s1_select,
         minimizers1_occurences,
         no_text_kmers,
-        1, m1, m_thres1, k, seed,
+        m1, m_thres1, k, seed,
         stats_directory);
     //=================================
     //end of distribution computation for level one

@@ -1,12 +1,12 @@
-2026-10-21 12:20:09.104862---------------------------------------------
+2026-10-23 11:59:14.917795---------------------------------------------
 solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
 with optimization goal: t_lookup,
 MAX_LOOKUP_TIME = inf and
 MAX_BPK_TOTAL = inf
 
-for 1 levels and k = 31
+for 3 levels and k = 31
 considered minimizer lengths: [15]
-considered thresholds: [128]
+considered thresholds: [64]
 
 using:
 t_access_R_empirical = 30
@@ -16,37 +16,63 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
-total time to solve MINLP: 0.002494 seconds
+total time to solve MINLP: 0.005201 seconds
 found solution:
 LEVEL PARAMETERS:
 m_1: 15.0
+m_2: 15.0
+m_3: 15.0
 
-t_1: 128.0
+t_1: 64.0
+t_2: 64.0
+t_3: 64.0
 
 
 LEVEL STATS:
-n_kmers_1: 502465199.99999994
+n_kmers_1: 502465200.0
+n_kmers_2: 28353483.0
+n_kmers_3: 14088688.0
 
-n_DIM_1: 79948677.82286696
+n_minimizers_1: 61950130.0
+n_minimizers_2: 7021579.0
+n_minimizers_3: 4318629.0
 
-p_K_1: 0.9589709934140718
+n_DIM_1: 31923007.000000007
+n_DIM_2: 1547224.9999999986
+n_DIM_3: 658788.0000000001
 
-f_avg_1: 0.6696650972731648
+F_M_1: 0.9167105864023212
+F_M_2: 0.5012413874429098
+F_M_3: 0.3960201258316008
+
+F_K_1: 0.943571250307484
+F_K_2: 0.5031055620221332
+F_K_3: 0.3983415631036757
+
+f_avg_1: 1.7789784026298028
+f_avg_2: 2.274721517555624
+f_avg_3: 2.596076431264685
 
 
 LOOKUP TIME:
-t_lookup: 147.52413841020459
+t_lookup: 163.65306153710773 (ns for querying an appearing k-mer)
 
-SPACE CONSUPTION:
+SPACE CONSUMPTION:
 bpk_T: 2
 
-bpk_R_1: 1.0736027847290477
+bpk_R_1: 0.5128306133929219
+bpk_R_2: 0.03830223968434012
+bpk_R_3: 0.01792361175205747
 
-bpk_S_1: 0.10655233149023016
+bpk_S_1: 0.11302342816071789
+bpk_S_2: 0.0070044761119758625
+bpk_S_3: 0.0034037451612719287
 
-bpk_O_1: 3.2252104529275725
+bpk_O_1: 3.4210827377632684
+bpk_O_2: 0.21201703667739458
+bpk_O_3: 0.10302725730823104
 
-bpk_H: 3.93878463224911
+bpk_H: 1.6195181039403224
 
-=> bpk_total: 10.344150201395962
+=> bpk_total: 8.048133249952501
 

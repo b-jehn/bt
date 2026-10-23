@@ -19,9 +19,9 @@ OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
 
-LEVELS = 1
+LEVELS = 3
 MINIMIZER_LENGTHS = [15] #[m for m in range(15,21)]
-THRESHOLDS = [128] #[2**i for i in range(5,8)]
+THRESHOLDS = [64] #[2**i for i in range(5,8)]
 
 logfile_path = f'MINLP_logs/{SEQUENCE_NAME}.txt'
 sequence_path = f'../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
@@ -44,27 +44,32 @@ t_compare_T_empirical = 10
 @dataclass
 class Stats:
     n_kmers: int = field(default_factory=int)
-    p_K: float = field(default_factory=float)
+    n_minimizers: int = field(default_factory=int)
+    F_M: float = field(default_factory=float)
+    F_K: float = field(default_factory=float)
     f_avg: float = field(default_factory=float)
     next_level: dict[(int, int), "Stats | None"] = field(default_factory=dict)  #links to next stats item depending on (m,t)
 
 
-def readStatsFromFiles(stats_directory):
+def readStatsFromFiles(stats_directory: Path) -> int | int | list | list | list:
     n_kmers = int((stats_directory / "n_kmers.txt").read_text().strip())
+    n_minimizers = int((stats_directory / "n_minimizers.txt").read_text().strip())
 
-    reader = csv.reader((stats_directory / "p_K_distinct.csv").open())
+    reader = csv.reader((stats_directory / "distinctStats.csv").open())
     next(reader)  # Skip the header
-    p_K_distinct = [0]+[float(row[0]) for row in reader if row]
     
-    p_K = [0]
-    f_avg = [0]
-    weighted_frequency_sum = 0
-    for f, p in enumerate(p_K_distinct[1:]):
-        p_K.append(p_K[-1] + p) 
-        weighted_frequency_sum += p * (f+1)
-        f_avg.append(weighted_frequency_sum/p_K[-1])
+    think_of_better_name = 0.0
+    
+    F_M = [0.0]     #initialise cumulative minimizer frequency distribution
+    F_K = [0.0]     #initialise cumulative k-mer (minimizer) frequency distribution
+    f_avg = [0.0]   #initialise average frequency of k-mers
+    for f, row in enumerate(reader, start=1):
+        think_of_better_name += float(row[1])
+        F_M.append(F_M[-1] + float(row[1])*f)
+        F_K.append(F_K[-1] + float(row[2]))
+        f_avg.append(F_M[-1]/think_of_better_name)
         
-    return n_kmers, p_K, f_avg
+    return n_kmers, n_minimizers, F_K, F_M, f_avg
 
 def fill_cascading_stats(root_stats, level_path, level, maxLevel):
     if(level>maxLevel):
@@ -72,9 +77,9 @@ def fill_cascading_stats(root_stats, level_path, level, maxLevel):
     for m in MINIMIZER_LENGTHS:
         if level == 1: print(f"filling cascading stats for m1={m}")
         level_path = level_path / f"m{level}={m}"
-        n_kmers, p_K, f_avg = readStatsFromFiles(level_path)
+        n_kmers, n_minimizers, F_K, F_M, f_avg = readStatsFromFiles(level_path)
         for t in THRESHOLDS:
-            current_stats = Stats(n_kmers, p_K[t], f_avg[t], next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)})
+            current_stats = Stats(n_kmers, n_minimizers, F_M[t], F_K[t], f_avg[t], next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)})
             root_stats.next_level[(m,t)] = current_stats
             level_path = level_path / f"t{level}={t}"
             fill_cascading_stats(current_stats, level_path, level+1, maxLevel)
@@ -85,11 +90,11 @@ def getCascadingStats(minimizer_lengths,thresholds):
     stats = cascading_stats
     for m, t in zip(minimizer_lengths, thresholds):
         stats = stats.next_level[(m,t)]
-    return stats.n_kmers, stats.p_K, stats.f_avg
+    return stats.n_kmers, stats.n_minimizers, stats.F_M, stats.F_K, stats.f_avg
 
-cascading_stats = Stats(n_kmers=0, p_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)}) 
+cascading_stats = Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS, THRESHOLDS)}) 
 stats_directory = Path(f"./{SEQUENCE_NAME}")
-fill_cascading_stats(cascading_stats, stats_directory, 1, 3)
+fill_cascading_stats(cascading_stats, stats_directory, 1, LEVELS)
 
 #============================#
 #Set up SCIP Model
@@ -124,8 +129,12 @@ it_vars = {                                             #binary indicators for t
 m_vars = [scip.addVar(f"m_{l}") for l in range(LEVELS)]         #minimizer length on each level
 t_vars = [scip.addVar(f"t_{l}") for l in range(LEVELS)]         #threshold on each level
 
+#TODO: remove these two? if its possible to model without them
 n_kmers_vars = [scip.addVar(f"n_kmers_{l}") for l in range(LEVELS)] #number of kmers on level l for each level l
-p_K_vars = [scip.addVar(f"p_K_{l}") for l in range(LEVELS)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
+n_minimizers_vars = [scip.addVar(f"n_minimizers_{l}") for l in range(LEVELS)] #number of kmers on level l for each level l
+
+F_M_vars = [scip.addVar(f"F_M_{l}") for l in range(LEVELS)]         #percentage of minimizers of length m with a frequency <= t for each level
+F_K_vars = [scip.addVar(f"F_K_{l}") for l in range(LEVELS)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
 f_avg_vars = [scip.addVar(f"f_avg_{l}") for l in range(LEVELS)]     #average frequency of minimizers of length m with a frequency <= t for each level
 
 t_level_vars = [scip.addVar(f"t_level_{l}") for l in range(LEVELS)] #time spent for finding k-mer with an infrequent minimizer on level l
@@ -165,9 +174,11 @@ for l in range(LEVELS):
     scip.addCons(m_vars[l] == quicksum(im_vars[(m,l)] * m for m in MINIMIZER_LENGTHS), name=f"get_m_{l}")   #determine m
     scip.addCons(t_vars[l] == quicksum(it_vars[(t,l)] * t for t in THRESHOLDS), name=f"get_t_{l}")          #determine t
     
-    #determine p_K_l and f_avg_l
+    #determine F_K_l and f_avg_l
     n_kmers_terms = []
-    p_K_sum_terms = []
+    n_minimizers_terms = []
+    F_M_sum_terms = []
+    F_K_sum_terms = []
     f_avg_sum_terms = []
     for minimizer_lengths in product(MINIMIZER_LENGTHS, repeat=l+1):
         m_indicator = 1
@@ -177,32 +188,40 @@ for l in range(LEVELS):
             t_indicator = 1
             for i, t in enumerate(thresholds):
                 t_indicator *= it_vars[(t, l)]
-            n_kmers, p_K_empiric, f_avg_empiric = getCascadingStats(minimizer_lengths, thresholds)
+            n_kmers, n_minizers, F_M_empiric, F_K_empiric, f_avg_empiric = getCascadingStats(minimizer_lengths, thresholds)
             n_kmers_terms.append(m_indicator * t_indicator * n_kmers)
-            p_K_sum_terms.append(m_indicator * t_indicator * p_K_empiric)
-            f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric * 2/(K-minimizer_lengths[-1]+2))
+            n_minimizers_terms.append(m_indicator * t_indicator * n_minizers)
+            F_M_sum_terms.append(m_indicator * t_indicator * F_M_empiric)
+            F_K_sum_terms.append(m_indicator * t_indicator * F_K_empiric)
+            f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric)
     
     scip.addCons(n_kmers_vars[l] == quicksum(n_kmers_terms))
-    scip.addCons(p_K_vars[l] == quicksum(p_K_sum_terms))
+    scip.addCons(n_minimizers_vars[l] == quicksum(n_minimizers_terms))
+    scip.addCons(F_M_vars[l] == quicksum(F_M_sum_terms))
+    scip.addCons(F_K_vars[l] == quicksum(F_K_sum_terms))
     scip.addCons(f_avg_vars[l] == quicksum(f_avg_sum_terms))
     
     scip.addCons(t_level_vars[l] == t_rank_R + 2*t_select_S + (f_avg_vars[l]+1)/2*(t_access_O+t_compare_T))
 
-    scip.addCons(n_DIM_vars[l] == p_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l] * 2/(K-m_vars[l]+2))
+    #scip.addCons(n_DIM_vars[l] == F_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l] * 2/(K-m_vars[l]+2))
+    scip.addCons(n_DIM_vars[l] == F_M_vars[l]*n_minimizers_vars[l]/f_avg_vars[l])
 
     scip.addCons(bpk_R_vars[l] == 
-                n_DIM_vars[l]/n_kmers_vars[l] * ((2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0))) + 3))
+                n_DIM_vars[l]/n_kmers_vars[0] * ((2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0))) + 3))
     
     #TODO: use real calculation for R
     #scip.addCons(bpk_R_vars[l] == 
-    #            p_K_vars[l]/f_avg_vars[l] * 
-    #            (math.ceil(2*m_vars[l] - math.log(p_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l], 2)) + 3)
+    #            F_K_vars[l]/f_avg_vars[l] * 
+    #            (math.ceil(2*m_vars[l] - math.log(F_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l], 2)) + 3)
     #            )
     
     scip.addCons(bpk_S_vars[l] == 
-                quickprod(1-p_K_vars[i] for i in range(l))
-                    * p_K_vars[l] * 2/(K-m_vars[l]+2)
-                )
+            F_M_vars[l]*n_minimizers_vars[l]/n_kmers_vars[0]
+            )
+    #scip.addCons(bpk_S_vars[l] == 
+    #            quickprod(1-F_K_vars[i] for i in range(l))
+    #                * F_K_vars[l] * 2/(K-m_vars[l]+2)
+    #            )
     
     #bits per k-mer in O
     scip.addCons(bpk_O_vars[l] == bpk_S_vars[l] * log_sequence_length)
@@ -211,13 +230,13 @@ for l in range(LEVELS):
 #recursivly build the t_lookup constraint level by level
 remaining_time = t_access_H
 for l in reversed(range(LEVELS)):
-    remaining_time = t_access_R + p_K_vars[l] * t_level_vars[l] + (1 - p_K_vars[l]) * remaining_time
+    remaining_time = t_access_R + F_K_vars[l] * t_level_vars[l] + (1 - F_K_vars[l]) * remaining_time
 
 scip.addCons(t_lookup == remaining_time, name="t_lookup")
 scip.addCons(t_lookup <= MAX_LOOKUP_TIME)
 
 #bits per k-mer in H
-scip.addCons(bpk_H == quickprod(1-p_K_vars[l] for l in range(LEVELS)) * (64 + 8)/LOAD_FACTOR)
+scip.addCons(bpk_H == quickprod(1-F_K_vars[l] for l in range(LEVELS)) * (64 + 8)/LOAD_FACTOR)
 scip.addCons(bpk_total == bpk_T + quicksum(bpk_R_vars[l] + bpk_S_vars[l] + bpk_O_vars[l] for l in range(LEVELS)) + bpk_H)
 scip.addCons(bpk_total <= MAX_BPK_TOTAL)
 
@@ -237,7 +256,7 @@ sol = scip.getBestSol()
 #============================#
 #CREATE INFO
 #============================#
-print(f"\n\npredicted number of distinct minimizers on level 1: {format(sol[p_K_vars[0]]*sol[n_kmers_vars[0]]/sol[f_avg_vars[0]])}\n\n")
+print(f"\n\npredicted number of distinct minimizers on level 1: {format(sol[F_K_vars[0]]*sol[n_kmers_vars[0]]/sol[f_avg_vars[0]])}\n\n")
 info = []
 info.append(f"{datetime.now()}---------------------------------------------\n")
 info.append(f"solved MINLP for sequence: {SEQUENCE_NAME}\n")
@@ -271,19 +290,25 @@ for l in range(LEVELS):
     info.append(f"n_kmers_{l+1}: {format(sol[n_kmers_vars[l]])}\n")
 info.append("\n") 
 for l in range(LEVELS):  
+    info.append(f"n_minimizers_{l+1}: {format(sol[n_minimizers_vars[l]])}\n")
+info.append("\n")
+for l in range(LEVELS):  
     info.append(f"n_DIM_{l+1}: {format(sol[n_DIM_vars[l]])}\n")
 info.append("\n") 
 for l in range(LEVELS):  
-    info.append(f"p_K_{l+1}: {format(sol[p_K_vars[l]])}\n")
+    info.append(f"F_M_{l+1}: {format(sol[F_M_vars[l]])}\n")
+info.append("\n") 
+for l in range(LEVELS):  
+    info.append(f"F_K_{l+1}: {format(sol[F_K_vars[l]])}\n")
 info.append("\n") 
 for l in range(LEVELS):  
     info.append(f"f_avg_{l+1}: {format(sol[f_avg_vars[l]])}\n")
 info.append("\n\n")
 
 info.append("LOOKUP TIME:\n")
-info.append(f"t_lookup: {format(sol[t_lookup])}\n\n")
+info.append(f"t_lookup: {format(sol[t_lookup])} (ns for querying an appearing k-mer)\n\n")
 
-info.append("SPACE CONSUPTION:\n")
+info.append("SPACE CONSUMPTION:\n")
 info.append(f"bpk_T: {bpk_T}\n")
 info.append("\n")
 for l in range(LEVELS):

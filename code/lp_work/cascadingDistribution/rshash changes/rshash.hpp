@@ -321,14 +321,14 @@ public:
         std::cout << "text length: " << N << "\n";
         std::cout << "textkmers: " << no_text_kmers <<  '\n';
     
-        std::cout << "no minimiser1: " << no_minimizers1 << "\n";
-        std::cout << "no distinct minimiser1: " << no_skmers1 << "\n";
+        std::cout << "no distinct minimiser1: " << no_minimizers1 << "\n";
+        std::cout << "no minimiser1: " << no_skmers1 << "\n";
         std::cout << "avg superkmers1: " << (double) no_skmers1/no_minimizers1 <<  '\n';
-        std::cout << "no minimiser2: " << no_minimizers2 << "\n";
-        std::cout << "no distinct minimiser2: " << no_skmers2 << "\n";
+        std::cout << "no distinct minimiser2: " << no_minimizers2 << "\n";
+        std::cout << "no minimiser2: " << no_skmers2 << "\n";
         std::cout << "avg superkmers2: " << (double) no_skmers2/no_minimizers2 <<  '\n';
-        std::cout << "no minimiser3: " << no_minimizers3 << "\n";
-        std::cout << "no distinct minimiser3: " << no_skmers3 << "\n";
+        std::cout << "no distinct minimiser3: " << no_minimizers3 << "\n";
+        std::cout << "no minimiser3: " << no_skmers3 << "\n";
         std::cout << "avg superkmers3: " << (double) no_skmers3/no_minimizers3 <<  '\n';
         std::cout << "no freq kmers: " << freq_kmers << " " << (double) freq_kmers/no_text_kmers*100 << "%\n";
 
