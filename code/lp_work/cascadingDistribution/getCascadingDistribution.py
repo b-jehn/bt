@@ -10,10 +10,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 N_THREADS = 1  # Set the number of concurrent workers.
 
-GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
+GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
 MAX_LEVEL = 3
-POSSIBLE_MINIMIZER_LENGTHS = [[m for m in range(15,16)] for _ in range(MAX_LEVEL)]
-POSSIBLE_THRESHOLDS = [[2**t for t in range(6,8)] for _ in range(MAX_LEVEL)]
+POSSIBLE_MINIMIZER_LENGTHS = [[m for m in range(16,24)] for _ in range(MAX_LEVEL)]
+POSSIBLE_THRESHOLDS = [[2**t for t in range(5,8)] for _ in range(MAX_LEVEL)]
 
 genome_directory = Path(f"./{GENOME}")
 if(not genome_directory.is_dir()):

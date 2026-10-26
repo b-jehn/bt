@@ -1,6 +1,6 @@
 import subprocess
 
-GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
+GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
 MINIMIZER_LENGTHS = [15, 15,15]
 THRESHOLDS = [64,64,64]
 
