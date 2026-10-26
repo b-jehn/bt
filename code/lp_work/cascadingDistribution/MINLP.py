@@ -15,13 +15,17 @@ K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
 SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
-OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
+OPTIMIZATION_GOAL = "bpk_total"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
 
 LEVELS = 3
-MINIMIZER_LENGTHS = [15] #[m for m in range(15,21)]
-THRESHOLDS = [64] #[2**i for i in range(5,8)]
+MINIMIZER_LENGTHS = [m for m in range(16,20)]
+THRESHOLDS = [2**i for i in range(5,8)]
+
+#TODO: tmp, for testing
+forcedMinimizerLength = []
+forcedThresholds = []
 
 logfile_path = f'MINLP_logs/{SEQUENCE_NAME}.txt'
 sequence_path = f'../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
@@ -160,6 +164,13 @@ else:
 #============================#
 #CONSTRAINTS
 #============================#
+#temporary constraints, to force certain level parameters:
+if(len(forcedMinimizerLength)):
+    for l in range(LEVELS):
+        scip.addCons(m_vars[l] == forcedMinimizerLength[l])
+        scip.addCons(t_vars[l] == forcedThresholds[l])
+
+
 #constraints regarding the structure operation times
 scip.addCons(t_access_R == t_access_R_empirical)
 scip.addCons(t_access_O == t_access_O_empirical)

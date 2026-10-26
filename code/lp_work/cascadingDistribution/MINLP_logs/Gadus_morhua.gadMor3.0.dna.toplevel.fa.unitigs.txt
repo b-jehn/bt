@@ -1,12 +1,12 @@
-2026-10-23 11:59:14.917795---------------------------------------------
+2026-10-26 19:28:10.317021---------------------------------------------
 solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
-with optimization goal: t_lookup,
+with optimization goal: bpk_total,
 MAX_LOOKUP_TIME = inf and
 MAX_BPK_TOTAL = inf
 
 for 3 levels and k = 31
-considered minimizer lengths: [15]
-considered thresholds: [64]
+considered minimizer lengths: [16, 17, 18, 19]
+considered thresholds: [32, 64, 128]
 
 using:
 t_access_R_empirical = 30
@@ -16,63 +16,63 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
-total time to solve MINLP: 0.005201 seconds
+total time to solve MINLP: 150.365024 seconds
 found solution:
 LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
+m_1: 16.0
+m_2: 19.0
+m_3: 19.0
 
-t_1: 64.0
+t_1: 128.0
 t_2: 64.0
-t_3: 64.0
+t_3: 128.0
 
 
 LEVEL STATS:
 n_kmers_1: 502465200.0
-n_kmers_2: 28353483.0
-n_kmers_3: 14088688.0
+n_kmers_2: 21525732.0
+n_kmers_3: 4769480.0
 
-n_minimizers_1: 61950130.0
-n_minimizers_2: 7021579.0
-n_minimizers_3: 4318629.0
+n_minimizers_1: 65179500.0
+n_minimizers_2: 6376079.0
+n_minimizers_3: 2065430.0
 
-n_DIM_1: 31923007.000000007
-n_DIM_2: 1547224.9999999986
-n_DIM_3: 658788.0000000001
+n_DIM_1: 44351853.99999984
+n_DIM_2: 1927350.9999999863
+n_DIM_3: 318717.9999999875
 
-F_M_1: 0.9167105864023212
-F_M_2: 0.5012413874429098
-F_M_3: 0.3960201258316008
+F_M_1: 0.9492530780383405
+F_M_2: 0.625622424063441
+F_M_3: 0.4826670475397376
 
-F_K_1: 0.943571250307484
-F_K_2: 0.5031055620221332
-F_K_3: 0.3983415631036757
+F_K_1: 0.9686132074420271
+F_K_2: 0.6767595173999195
+F_K_3: 0.5073670504960707
 
-f_avg_1: 1.7789784026298028
-f_avg_2: 2.274721517555624
-f_avg_3: 2.596076431264685
+f_avg_1: 1.3950226522661273
+f_avg_2: 2.0696894338395047
+f_avg_3: 3.1278904862605836
 
 
 LOOKUP TIME:
-t_lookup: 163.65306153710773 (ns for querying an appearing k-mer)
+t_lookup: 159.88416881428566 (ns for querying an appearing k-mer)
 
 SPACE CONSUMPTION:
 bpk_T: 2
 
-bpk_R_1: 0.5128306133929219
-bpk_R_2: 0.03830223968434012
-bpk_R_3: 0.01792361175205747
+bpk_R_1: 0.8471578021469276
+bpk_R_2: 0.0771830460489091
+bpk_R_3: 0.014410273012040594
 
-bpk_S_1: 0.11302342816071789
-bpk_S_2: 0.0070044761119758625
-bpk_S_3: 0.0034037451612719287
+bpk_S_1: 0.12313656845794456
+bpk_S_2: 0.007938893076644499
+bpk_S_3: 0.001984046850477983
 
-bpk_O_1: 3.4210827377632684
-bpk_O_2: 0.21201703667739458
-bpk_O_3: 0.10302725730823104
+bpk_O_1: 3.727195286802415
+bpk_O_2: 0.24030071024598718
+bpk_O_3: 0.06005470318447554
 
-bpk_H: 1.6195181039403224
+bpk_H: 0.47980787604927855
 
-=> bpk_total: 8.048133249952501
+=> bpk_total: 7.579169205875101
 

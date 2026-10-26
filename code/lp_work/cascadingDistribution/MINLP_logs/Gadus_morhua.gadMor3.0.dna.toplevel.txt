@@ -1,11 +1,11 @@
-2026-10-23 11:05:40.338240---------------------------------------------
+2026-10-26 18:44:53.092395---------------------------------------------
 solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel
 with optimization goal: t_lookup,
 MAX_LOOKUP_TIME = inf and
 MAX_BPK_TOTAL = inf
 
 for 3 levels and k = 31
-considered minimizer lengths: [15]
+considered minimizer lengths: [16]
 considered thresholds: [64]
 
 using:
@@ -16,12 +16,12 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
-total time to solve MINLP: 0.008035 seconds
+total time to solve MINLP: 0.004411 seconds
 found solution:
 LEVEL PARAMETERS:
-m_1: 15.0
-m_2: 15.0
-m_3: 15.0
+m_1: 16.0
+m_2: 16.0
+m_3: 16.0
 
 t_1: 64.0
 t_2: 64.0
@@ -30,49 +30,49 @@ t_3: 64.0
 
 LEVEL STATS:
 n_kmers_1: 669942933.0
-n_kmers_2: 132414529.0
-n_kmers_3: 111875145.0
+n_kmers_2: 123038086.0
+n_kmers_3: 106683081.0
 
-n_minimizers_1: 72973356.0
-n_minimizers_2: 15431565.0
-n_minimizers_3: 13153804.0
+n_minimizers_1: 77119944.0
+n_minimizers_2: 14584628.0
+n_minimizers_3: 12852862.0
 
-n_DIM_1: 31898811.00000001
-n_DIM_2: 1716793.9999999995
-n_DIM_3: 806681.0
+n_DIM_1: 44314204.999999985
+n_DIM_2: 1423615.9999999998
+n_DIM_3: 684952.0000000002
 
-F_M_1: 0.8267870673235859
-F_M_2: 0.288075318349111
-F_M_3: 0.18263811746016598
+F_M_1: 0.8414139927280031
+F_M_2: 0.25442527570809476
+F_M_3: 0.1602633716910677
 
-F_K_1: 0.8023495398226704
-F_K_2: 0.1551142775276572
-F_K_3: 0.08241140603661343
+F_K_1: 0.8163393791632101
+F_K_2: 0.1329240280932198
+F_K_3: 0.0691156462585034
 
-f_avg_1: 1.891400497654912
-f_avg_2: 2.589392204306398
-f_avg_3: 2.97811154595187
+f_avg_1: 1.4643115001160472
+f_avg_2: 2.606530131720912
+f_avg_3: 3.007280802158397
 
 
 LOOKUP TIME:
-t_lookup: 157.76178398319396 (ns for querying an appearing k-mer)
+t_lookup: 154.1254135636238 (ns for querying an appearing k-mer)
 
 SPACE CONSUMPTION:
 bpk_T: 2
 
-bpk_R_1: 0.38438964037094175
-bpk_R_2: 0.03149102747046442
-bpk_R_3: 0.016108938984921696
+bpk_R_1: 0.634920154966873
+bpk_R_2: 0.03093732497950096
+bpk_R_3: 0.01596417288552941
 
-bpk_S_1: 0.09005756055484461
-bpk_S_2: 0.006635568636701531
-bpk_S_3: 0.003585955159074653
+bpk_S_1: 0.09685869654928181
+bpk_S_2: 0.005538825969589362
+bpk_S_3: 0.0030746534006330017
 
-bpk_O_1: 2.64259237914348
-bpk_O_2: 0.1947099499764061
-bpk_O_3: 0.10522401136493091
+bpk_O_1: 2.8421606334653693
+bpk_O_2: 0.1625278233882992
+bpk_O_3: 0.09022069435327683
 
-bpk_H: 14.71008019723375
+bpk_H: 14.231155471725359
 
-=> bpk_total: 20.184875228895518
+=> bpk_total: 20.113358451683713
 
