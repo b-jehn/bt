@@ -3,7 +3,7 @@ from pathlib import Path
 import gzip
 import random
 
-GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel"
+GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_QUERIES = 100000 
 K = 31

@@ -15,7 +15,7 @@ K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
 SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
-OPTIMIZATION_GOAL = "bpk_total"   #"t_lookup" or "bpk_total"
+OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
 

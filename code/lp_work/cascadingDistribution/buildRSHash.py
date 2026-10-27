@@ -1,8 +1,8 @@
 import subprocess
 
 GENOME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
-MINIMIZER_LENGTHS = [16,18,19]
-THRESHOLDS = [32,64,128]
+MINIMIZER_LENGTHS = [18,16,16]
+THRESHOLDS = [64,64,128]
 
 args = [
     "../../rshash/build/source/rshash",
