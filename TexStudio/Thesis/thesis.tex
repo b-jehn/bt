@@ -79,6 +79,8 @@
 
 %=========== \cref is a powerfull command that automatically states the current environment (e.g. Theorem, Lemma, etc.)
 \usepackage[sort&compress,nameinlink,noabbrev,capitalize]{cleveref}
+\crefname{algorithm}{algorithm}{algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
 
 
 %\usepgfplotslibrary{external}
@@ -264,9 +266,9 @@ authority.\\
 \newcommand{\frequent}{\textit{frequent} }
 
 \newcommand{\sequences}[1]{S_{\levelParameters{#1}}}
-Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.
+Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.
 \\
-Let $\kmer$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ depends both on the minimizer length $\minimizerLength^\level$ on that level as well as directly on the level $\level$ which determines the hashfunctions seed. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which is equivalent to the number of occurrences of the minimizer in a given set of input sequences. We call a minimizer \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the given threshold. Minimizers with frequencies larger than the threshold are effered to as being \frequent.
+Let $\kmer$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ depends both on the minimizer length $\minimizerLength^\level$ on that level as well as directly on the level $\level$ which determines the hash functions seed. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which is equivalent to the number of occurrences of the minimizer in a given set of input sequences. We call a minimizer \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the given threshold. Minimizers with frequencies larger than the threshold are referred to as being \frequent.
 \\
 We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the sequences on level $\level$ in dependence of the level parameters on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels.
 
@@ -328,9 +330,9 @@ The approach of using consequent levels with respective thresholds as introduced
 The distribution of k-mers on the first level is ..\todo{well known?}.., the distribution for higher levels however doesn't compare to .q.-r.-
 \todo[inline]{hier will ich eigentlich etwas schreiben im Sinne von: Für das erste Level gelten die Beobachtung vorheriger Arbeiten, für weitere Level allerding gelten diese nicht mehr? oder doch?, da.... - deswegen wollen wir das verhalten der minimizer untersuchen}
 
-We decribe the minimizer distribution on a level $\level$ in dependence of the level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on all levels up to and including the level $\level$. We use the parameter $\levelParameters{0}$ when an instance is not dependent on any parameter e.g. $\sequences{0}$ denotes the set of input sequences passed to RSHash.
+We describe the minimizer distribution on a level $\level$ in dependence of the level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on all levels up to and including the level $\level$. We use the parameter $\levelParameters{0}$ when an instance is not dependent on any parameter e.g. $\sequences{0}$ denotes the set of input sequences passed to RSHash.
 \\
-For each level $\level$ we will define the set of input sequences $\sequences{\level-1}$ on level $\level$, the set of distinct k-mers $\distinctKmers{\level}$ in these sequences and the set of distinct minimizers $\distinctMinimizers{\level}$ of these k-mers. All parameters that influence these sets are used as indeces. 
+For each level $\level$ we will define the set of input sequences $\sequences{\level-1}$ on level $\level$, the set of distinct k-mers $\distinctKmers{\level}$ in these sequences and the set of distinct minimizers $\distinctMinimizers{\level}$ of these k-mers. All parameters that influence these sets are used as indices. 
 \\
 With $\sequences{\level-1}$\todo{properly define $\sequences{\level-1}$?} being the input sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ of the previous levels. Let $\distinctKmers{\level}$ be the set of distinct k-mers in $\sequences{\level-1}$.%\footnote{Both $\sequences{\level-1}$ and $\distinctKmers{\level}$ are technically only dependent of the level parameters $\levelParameters{\level-1}$ on all previous levels but not of the minimizer length $\minimizerLength^\level$ and threshold $\threshold^\level$ on level $\level$ (\cref{sec:rshashExplanation}).}
 :
@@ -391,7 +393,7 @@ More relevant for the optimization of level parameters however is the average fr
 	\sum\limits_{f=1}^{\threshold^\level} \probabilityDistribution{\ZVM{\level}}(f) \cdot f 
 \end{equation}
 
-\section{Times for Operations on Datastructure}
+\section{Times for Operations on Data Structures}
 We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a rank query on the bit vector $R$ is $\timeForOperationOnStructure{\rank}{R}$.
 \todo[inline]{incomplete. measure or model?}
 \textbf{Vector Access}
@@ -408,7 +410,7 @@ Accessing an element of a Hash Table can be done in constant time, we use the fo
 \end{align*}
 
 \textbf{Bit Vector Rank Query}
-A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time (Okanohara and Sadakane, 2007).
+A bit vector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
 \todo[inline]{does that help here? Doesn't the model require actual time instead of O notation - maybe measurements would be more suited}
 
 \textbf{Bit Vector Select Query}
@@ -464,7 +466,7 @@ There values can be modeled through a sum over the indicator variables multiplie
 	\optimalT \label{constraint:optimalT}
 \end{align}
 
-We introduce the variable $\varCDF{M} \in [0,1]$ to take the value of $\CDF{\manualZV{M}{\levelParameters{0}}{\varMinimizerLength}}(\varThreshold)$ i.e. the percentage of minimizers of length $\varMinimizerLength$ in the input sequence, whose frequencies do not exeed $\varThreshold$ (\cref{sec:minimizerDistribution_severalLevels}).\\
+We introduce the variable $\varCDF{M} \in [0,1]$ to take the value of $\CDF{\manualZV{M}{\levelParameters{0}}{\varMinimizerLength}}(\varThreshold)$ i.e. the percentage of minimizers of length $\varMinimizerLength$ in the input sequence, whose frequencies do not exceed $\varThreshold$ (\cref{sec:minimizerDistribution_severalLevels}).\\
 It is not possible to directly evaluate this value as both $\varMinimizerLength$ and $\varThreshold$ are variables of the model. Instead we use the indicator variables to model a constraint forcing $\varCDF{M}$ to take the value of $\CDF{\manualZV{M}{\levelParameters{0}}{\minimizerLength}}(\threshold)$ for which $\indicatorm_\minimizerLength = 1$ and $\indicatort_\threshold = 1$:
 \newcommand{\cdfMExpression}{
 	\varCDF{M} &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \indicatorm_\minimizerLength \indicatort_\threshold \cdot \CDF{\manualZV{M}{\levelParameters{0}}{\minimizerLength}}(\threshold)
@@ -537,7 +539,7 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 \todo[inline]{larger for unitigs!}
 
 \newcommand{\numberOfDistinctMinimizers}{n_{DIM}} 
-\textbf{Bit vector $R$} is a bit vector of length $4^\varMinimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \infrequent minimizer in the sequences. We can compute the number $\numberOfDistinctMinimizers$ of distinct \infrequent minimizers by multiplying the percentage of \infrequent minimizers with the total number of minimizers devided through the average frequency of each minimizer:
+\textbf{Bit vector $R$} is a bit vector of length $4^\varMinimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \infrequent minimizer in the sequences. We can compute the number $\numberOfDistinctMinimizers$ of distinct \infrequent minimizers by multiplying the percentage of \infrequent minimizers with the total number of minimizers divided through the average frequency of each minimizer:
 \newcommand{\nDIM}{\numberOfDistinctMinimizers &= \frac{\varCDF{K} \cdot n_{kmers}}{\varAverageFrequency} \cdot \frac{2}{k-\varMinimizerLength+2} \textbf{OR}
 	\\
 	&= \frac{\varCDF{M} \cdot n_{minimizers}}{\varAverageFrequency}}
@@ -803,22 +805,22 @@ The bits per k-mer for the hash table can thus be modeled as
 \todo[inline]{outline differences to lookup}
 \begin{itemize}
 	\item lookup time: check every offset instead of only an average of half of the offsets
-	\item hashtable instead of hash set - contains one entry (key:k-mer, value:offset) for each appearance of every k-mer (no longer distinct) - for the unitigs, this shouldn't have an effect
+	\item hash table instead of hash set - contains one entry (key:k-mer, value:offset) for each appearance of every k-mer (no longer distinct) - for the unitigs, this shouldn't have an effect
 \end{itemize}
 
 \chapter{Experiments}\label{chap:experiments}
-In this chapter we aim to analyse how suited the MINLP proposed in \cref{chap:minlp} is for finding optimal level parameters. First we analyse how accurate the modeled lookup time and space consumption are. We then use the solver SCIP \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023} which is capable of solving MINLPs in order to find optimal parameters for the model. Whether these parameters are actually optimal in practise is highly dependent on how accurate the model is in the first place.
+We evaluate how suited the MINLP proposed in \cref{chap:minlp} is for finding optimal level parameters by analyzing how accurate the modeled lookup time and space consumption are compared to the actual lookup time measured and space needed when building RSHash. We then examine how well the model can be optimized using the SCIP solver \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023}. Whether the resulting parameters are actually optimal in practice is highly dependent on how accurate the model is in the first place.
 
 \section{Computing the Model Input}
-In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for a given set of sequences $\sequences{}$, a number of levles $\numberOfLevels$ resulting in a set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. The sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered are also hyperparameters that have to be specified explicitly.
+In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for a given set of sequences $\sequences{}$, a number of levels $\numberOfLevels$ resulting in a set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. The sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered are also hyper parameters that have to be specified explicitly.
 In order to use the MINLP for finding optimal level parameters, we first need to compute the minimizer distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $\level \in \setOfLevels$.
 
 A fairly straightforward way \todo{zu umgangssprachlich?} of doing this is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
-Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in depence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recusion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
-Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. The described Algorithm can be seen in \cref{algo:computeMinDistr}
-
-\begin{algorithm} \label{algo:computeMinDistr}
-\caption{Computation of Minimizer Distribution}
+Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
+Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. The described algorithm can be seen in \Cref{algo:computeMinDistr}.
+\todo[inline]{soll ich hier erklären, wie die Berechnung in der Praxis noch ein bisschen schneller geschieht? Oder ist das an dieser Stelle egal, wenn es am grundlegenden Problem der exponentiellen Laufzeit nichts ändert?}
+\begin{algorithm} 
+\caption{Computation of Minimizer Distribution} \label{algo:computeMinDistr}
 \begin{algorithmic} 
 \Input $
 \text{level } \level,
@@ -843,12 +845,15 @@ $
 \end{algorithm}
 \todo[inline]{add $n_{minimizers}, n_{kmers}$ to model and include dependence of level parameters}
 
+This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This however also means, that one could include the building of bit vectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
+However this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
+\section{Datasets}
+\todo{kopiert von \cite{schulte-mattler_rshash_2026} - ist das okay?}
+We use the same datasets as \citet{pibiri_sparse_2022}. As noted in their paper, the datasets are: the whole genomes of the atlantic cod (\textit{Gadus morhua}), the common kestrel (\textit{Falco tinnunculus}), the whole GRCh38 human genome (\textit{Homo sapiens}), and a collection of more than 8000 bacterial genomes from Almodaresi et al \citet{} \todo{add citation to bibfile}.
 
-
-
-\section{Solving the MINLP}
-
+\section{Model Accuracy}
+We assess the accuracy of the lookup time and space consumption modeled by the MINLP \cref{chap:minlp}.
 
 \section{Limitations}
 The MINLP approach for finding optimal level parameters has the advantage of finding the optimal level parameters for the specified optimization goal.
@@ -861,7 +866,9 @@ For this reason, an approach yielding only an approximation of the optimal level
 
 We will further explore methods \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution.\todo{TODO}
 
-In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get arround the exponential cost of computing those values. \todo{TODO}
+In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values. \todo{TODO}
+
+\chapter{Outlook} \label{chap:outlook}
 
 \chapter{Subsampling}\label{chap:subsampling}
 \section{Motivation}
