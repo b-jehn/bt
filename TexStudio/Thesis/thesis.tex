@@ -811,11 +811,15 @@ The bits per k-mer for the hash table can thus be modeled as
 \chapter{Experiments}\label{chap:experiments}
 We evaluate how suited the MINLP proposed in \cref{chap:minlp} is for finding optimal level parameters by analyzing how accurate the modeled lookup time and space consumption are compared to the actual lookup time measured and space needed when building RSHash. We then examine how well the model can be optimized using the SCIP solver \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023}. Whether the resulting parameters are actually optimal in practice is highly dependent on how accurate the model is in the first place.
 
-\section{Computing the Model Input}
-In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for a given set of sequences $\sequences{}$, a number of levels $\numberOfLevels$ resulting in a set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. The sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered are also hyper parameters that have to be specified explicitly.
-In order to use the MINLP for finding optimal level parameters, we first need to compute the minimizer distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $\level \in \setOfLevels$.
+\section{Datasets}
+We use the same datasets as \citet{schulte-mattler_rshash_2026,
+	pibiri_sparse_2022}. As noted in their paper, the datasets are: the whole genomes of the atlantic cod (\textit{Gadus morhua}), the common kestrel (\textit{Falco tinnunculus}) and the whole GRCh38 human genome (\textit{Homo sapiens}).\todo{absatz kopiert von \cite{schulte-mattler_rshash_2026} - ist das okay?}
 
-A fairly straightforward way \todo{zu umgangssprachlich?} of doing this is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
+\section{Computing the Model Input}
+In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for a given dataset which we refer to as the set of sequences $\sequences{0}$. The sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered as well as the number of levels $\numberOfLevels$ resulting in a set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$ are also hyper parameters that have to be specified explicitly.\\
+The MINLP requires the minimizer distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $\level \in \setOfLevels$ as input.
+
+A fairly straightforward way\todo{zu umgangssprachlich?} of computing these is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
 Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
 Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. The described algorithm can be seen in \Cref{algo:computeMinDistr}.
 \todo[inline]{soll ich hier erklären, wie die Berechnung in der Praxis noch ein bisschen schneller geschieht? Oder ist das an dieser Stelle egal, wenn es am grundlegenden Problem der exponentiellen Laufzeit nichts ändert?}
@@ -830,7 +834,7 @@ Only once this recursion is completed for every threshold $\threshold \in \possi
 $
 \Function{recursiveMinimizerDistribution}{$\level, \numberOfLevels, \levelParameters{\level-1} \sequences{\level-1}$}
 \For{$\minimizerLength \in \possibleMinimizerLengths$}
-	\State $n_{kmers}, n_{minimizers}, \probabilityDistribution{\ZVM{\level}},\probabilityDistribution{\ZVK{\level}} \gets getStats(\level, \sequences{\level-1}, m)y$
+	\State $n_{kmers}, n_{minimizers}, \probabilityDistribution{\ZVM{\level}},\probabilityDistribution{\ZVK{\level}} \gets getStats(\level, \sequences{\level-1}, m)$
 	\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
 	\For{$\threshold \in \possibleThresholds$}
 		\State $\levelParameters{\level} \gets \levelParameters{\level-1}.extend(m,t)$	\Comment $(m^1,t^1).extend(m^2,t^2) = (m^1,m^2,t^1,t^2)$
@@ -848,17 +852,13 @@ $
 This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This however also means, that one could include the building of bit vectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
 However this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
-\section{Datasets}
-\todo{kopiert von \cite{schulte-mattler_rshash_2026} - ist das okay?}
-We use the same datasets as \citet{pibiri_sparse_2022}. As noted in their paper, the datasets are: the whole genomes of the atlantic cod (\textit{Gadus morhua}), the common kestrel (\textit{Falco tinnunculus}), the whole GRCh38 human genome (\textit{Homo sapiens}), and a collection of more than 8000 bacterial genomes from Almodaresi et al \citet{} \todo{add citation to bibfile}.
-
 \section{Model Accuracy}
 We assess the accuracy of the lookup time and space consumption modeled by the MINLP \cref{chap:minlp}.
 
 \section{Limitations}
 The MINLP approach for finding optimal level parameters has the advantage of finding the optimal level parameters for the specified optimization goal.
 
-This approaches plausibility however, is heavily dependent on the time needed to compute the model input. Especially the runtime for the computation of the distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of the level parameters $\levelParameters{\level}$ on every level $\level$ grows exponentially with the number of levels when done in a trivial way \todo{AHHHHH - Achtung das böse Wort!!!}.
+This approaches plausibility however, is heavily dependent on the time needed to compute the model input. Especially the runtime for the computation of the distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of the level parameters $\levelParameters{\level}$ on every level $\level$ grows exponentially with the number of levels when done in a trivial way\todo{AHHHHH - Achtung das böse Wort!!!}.
 
 We further outline this in \cref{chap:experiments}.
 
@@ -866,9 +866,10 @@ For this reason, an approach yielding only an approximation of the optimal level
 
 We will further explore methods \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution.\todo{TODO}
 
-In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values. \todo{TODO}
+In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values.\todo{TODO}
 
 \chapter{Outlook} \label{chap:outlook}
+
 
 \chapter{Subsampling}\label{chap:subsampling}
 \section{Motivation}
