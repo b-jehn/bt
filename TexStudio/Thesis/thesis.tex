@@ -251,32 +251,10 @@ authority.\\
 \tableofcontents
 \newpage
 
-\chapter{Notation}\label{chap:notation}
-%\newcommand{\superKmer}{sk}\todo{define super-k-mer}
-\newcommand{\numberOfLevels}{{L}}
-\newcommand{\setOfLevels}{\mathcal{L}}
-
-\newcommand{\levelParameters}[1]{p^{#1}}
-\newcommand{\varLevelParameters}[1]{\textbf{p}^{#1}}
-
-\newcommand{\frequencyOf}[1]{freq(#1)}
-\newcommand{\minimizerOf}[2]{min^{seed=#2}_{\minimizerLength^{#2}}(#1)}
-
-\newcommand{\infrequent}{\textit{infrequent} }
-\newcommand{\frequent}{\textit{frequent} }
-
-\newcommand{\sequences}[1]{S_{\levelParameters{#1}}}
-Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.
-\\
-Let $\kmer$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ depends both on the minimizer length $\minimizerLength^\level$ on that level as well as directly on the level $\level$ which determines the hash functions seed. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which is equivalent to the number of occurrences of the minimizer in a given set of input sequences. We call a minimizer \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the given threshold. Minimizers with frequencies larger than the threshold are referred to as being \frequent.
-\\
-We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the sequences on level $\level$ in dependence of the level parameters on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels.
-
-\todo[inline]{Hier würde ich gerne einmal besprechen, inwiefern die abhängigkeit von Instanzen von bestimmten parametern durch indezes gekennzeichnet werden soll oder lieber einfach einmal erklärt aber dann nicht jedes mal aufgeschrieben werden, um übersichtlichkeit zu gewaren - z.B. einfach $min(k)$ statt $\minimizerOf{k}{\level}{l}$}
-
 \chapter{Introduction}
+\todo[inline]{k-mere und deren wichtigkeit kurz erläutern, minimizer methoden einführen, dadurch relevanz von rshash und ausblick der arbeit motivieren}
 \section{RSHash Explanation}\label{sec:rshashExplanation}
-\todo[inline]{Wie detailiert soll ich RSHash beschreiben? Reicht eine grobe Beschreibung und ein Verweis auf \cite{schulte-mattler_rshash_2026}?}
+\todo[inline]{weniger formal beschreiben; erstmal nur für ein level; erklären, was es bedeutet frequente minimizer abzuschneiden, wie davon der platz in der hashtabelle abhängt und wie mehrere level dabei helfen können}
 RSHash is a minimizer based fast, compressed hash table for storing DNA k-mers that answers lookup and can be extended for supporting locate. It was recently introduced by \citet{schulte-mattler_rshash_2026}.\\
 The data structure works with one, two or three levels and a hash table. For each level $\level$ a pair of level parameters has to be specified: the minimizer length $\minimizerLength^\level$ and a threshold $\threshold^\level$.
 
@@ -308,7 +286,32 @@ Problems:
 	\item automize finding optimal level parameters
 \end{itemize}
 
+
+\chapter{Notation}\label{chap:notation}
+%\newcommand{\superKmer}{sk}\todo{define super-k-mer}
+\newcommand{\numberOfLevels}{{L}}
+\newcommand{\setOfLevels}{\mathcal{L}}
+
+\newcommand{\levelParameters}[1]{p^{#1}}
+\newcommand{\varLevelParameters}[1]{\textbf{p}^{#1}}
+
+\newcommand{\frequencyOf}[1]{freq(#1)}
+\newcommand{\minimizerOf}[2]{min^{seed=#2}_{\minimizerLength^{#2}}(#1)}
+
+\newcommand{\infrequent}{\textit{infrequent} }
+\newcommand{\frequent}{\textit{frequent} }
+
+\newcommand{\sequences}[1]{S_{\levelParameters{#1}}}
+Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.
+\\
+Let $\kmer$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ depends both on the minimizer length $\minimizerLength^\level$ on that level as well as directly on the level $\level$ which determines the hash functions seed. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which is equivalent to the number of occurrences of the minimizer in a given set of input sequences. We call a minimizer \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the given threshold. Minimizers with frequencies larger than the threshold are referred to as being \frequent.
+\\
+We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the sequences on level $\level$ in dependence of the level parameters on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels.
+
+\todo[inline]{Hier würde ich gerne einmal besprechen, inwiefern die abhängigkeit von Instanzen von bestimmten parametern durch indezes gekennzeichnet werden soll oder lieber einfach einmal erklärt aber dann nicht jedes mal aufgeschrieben werden, um übersichtlichkeit zu gewaren - z.B. einfach $min(k)$ statt $\minimizerOf{k}{\level}{l}$}
+
 \chapter{Sequence Statistics}\label{chap:sequenceStatistics}
+\todo[inline]{Motivieren}
 
 \section{Minimizer Distribution} \label{sec:minimizerDistribution_severalLevels}
 
@@ -513,7 +516,7 @@ The following constraint models the complete time $\timeForOperationOnStructure{
 \begin{align}
 	\levelTime \label{constraint:levelTime}
 \end{align}
-
+\todo[inline]{access and rank of R are computed simultaneously -\> combine $\timeForOperationOnStructure{R}{acc}$ and $\timeForOperationOnStructure{R}{rank}$ and move them out of $\timeForOperationOnStructure{level}{arg2}$}
 
 Without further constraints, solving the described MINLP for minimal $\timeForOperationOnStructure{lookup}{RSHash}$ results in a solution where the $\indicatorm_\minimizerLength$, $\indicatort_\threshold$ corresponding to the smallest $m \in \possibleMinimizerLengths$, $t \in \possibleThresholds$ will be set to one.\\
 This is expected, as this leads to the smallest possible $\varCDF{K}$ which minimizes the k-mers having to be looked up in the text and maximizes the lookups in the (faster) hash table.\\
