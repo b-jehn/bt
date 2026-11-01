@@ -251,7 +251,7 @@ public:
     void initialise_locatefn();
     uint64_t lookup(const std::vector<uint64_t>&);
     uint64_t locate(const std::vector<uint64_t>&, std::vector<uint64_t>&);
-    void build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>&, const std::filesystem::path);
+    void build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>&);
     uint64_t streaming_lookup(const seqan3::bitpacked_sequence<seqan3::dna4>&, uint64_t&);
     uint64_t streaming_locate(const seqan3::bitpacked_sequence<seqan3::dna4>&, std::vector<uint64_t>&, uint64_t&);
     int save(const std::filesystem::path&);

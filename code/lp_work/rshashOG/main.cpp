@@ -37,8 +37,6 @@ struct cmd_arguments {
     std::vector<uint32_t> shapes{std::numeric_limits<uint32_t>::max()};
     bool loc{false};
     bool ht{false};
-
-    std::filesystem::path stats_directory{};
 };
 
 void initialise_argument_parser(sharg::parser &parser, cmd_arguments &args)
@@ -59,8 +57,6 @@ void initialise_argument_parser(sharg::parser &parser, cmd_arguments &args)
     parser.add_option(args.shapes, sharg::config{.long_id = "shapes", .description = "list of shape values"});
     parser.add_flag(args.loc, sharg::config{.long_id = "loc", .description = "enable locate"});
     parser.add_flag(args.ht, sharg::config{.long_id = "ht", .description = "do not use hashtable on last level"});
-
-    parser.add_option(args.stats_directory, sharg::config{.long_id = "stats_directory", .description = "provide stats_directory"});
 }
 
 int check_arguments(sharg::parser &parser, cmd_arguments &args) {
@@ -129,8 +125,8 @@ int main(int argc, char** argv)
             index = RSHash(args.k, args.level, args.m1, args.m2, args.m3, args.t1, args.t2, args.t3, args.t, args.loc, !args.ht);
         else
             index = RSHash(args.shapes[0], args.level, args.m1, args.m2, args.m3, args.t1, args.t2, args.t3, args.t, args.loc, !args.ht);
-        index.build(text, args.stats_directory);
-        //index.save(args.d);
+        index.build(text);
+        index.save(args.d);
     }
     else if(args.cmd == "lookup")
     {
@@ -337,4 +333,3 @@ int main(int argc, char** argv)
  
     return 0;
 }
-
