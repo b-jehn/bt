@@ -151,6 +151,7 @@
 \newcommand{\kmer}{q}
 
 \newcommand{\access}{acc}
+\newcommand{\contains}{contains}
 \newcommand{\rank}{rank}
 \newcommand{\select}{sel}
 \newcommand{\compare}{comp}
@@ -252,6 +253,8 @@ authority.\\
 \newpage
 
 \chapter{Introduction}
+\newcommand{\infrequent}{\textit{infrequent} }
+\newcommand{\frequent}{\textit{frequent} }
 \todo[inline]{k-mere und deren wichtigkeit kurz erläutern, minimizer methoden einführen, dadurch relevanz von rshash und ausblick der arbeit motivieren}
 \section{RSHash Explanation}\label{sec:rshashExplanation}
 \todo[inline]{weniger formal beschreiben; erstmal nur für ein level; erklären, was es bedeutet frequente minimizer abzuschneiden, wie davon der platz in der hashtabelle abhängt und wie mehrere level dabei helfen können}
@@ -259,7 +262,7 @@ RSHash is a minimizer based fast, compressed hash table for storing DNA k-mers t
 The data structure works with one, two or three levels and a hash table. For each level $\level$ a pair of level parameters has to be specified: the minimizer length $\minimizerLength^\level$ and a threshold $\threshold^\level$.
 
 Each level $\level$ is build in the following way:\\
-For each k-mer $\kmer$ in the input sequences the minimizer $\minimizerOf{\kmer}{\level}$ of length $\minimizerLength^\level$ is computed. A temporary hash table is used to count the number of occurrences of each appearing minimizer, also referred to as the minimizers frequency $\frequencyOf{\minimizerOf{\kmer}{\level}}$. \\
+For each k-mer $\kmer$ in the input sequences the so called minimizer of length $\minimizerLength^\level$ is computed. A temporary hash table is used to count the number of occurrences of each appearing minimizer, also referred to as the minimizers frequency. \\
 A bit vector $R^\level$ of lengths $4^{\minimizerLength^\level}$ is used to mark all minimizers that appear at least once but no more than $\threshold^\level$ times. We call those minimizers \infrequent.\\ 
 The position of every occurrence of each infrequent minimizer in the text are stored in the offset vector $O^\level$ in the order induced by $R^\level$. \\
 The boundaries of offsets in $O^\level$ belonging to different minimizers are marked in the bit vector $S^\level \in \{0,1\}^{|O|+1}$.\\
@@ -297,9 +300,6 @@ Problems:
 
 \newcommand{\frequencyOf}[1]{freq(#1)}
 \newcommand{\minimizerOf}[2]{min^{seed=#2}_{\minimizerLength^{#2}}(#1)}
-
-\newcommand{\infrequent}{\textit{infrequent} }
-\newcommand{\frequent}{\textit{frequent} }
 
 \newcommand{\sequences}[1]{S_{\levelParameters{#1}}}
 Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.
@@ -397,13 +397,13 @@ More relevant for the optimization of level parameters however is the average fr
 \end{equation}
 
 \section{Times for Operations on Data Structures}
-We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a rank query on the bit vector $R$ is $\timeForOperationOnStructure{\rank}{R}$.
+We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a select query on the bit vector $S$ is $\timeForOperationOnStructure{\select}{S}$.
 \todo[inline]{incomplete. measure or model?}
 \textbf{Vector Access}
 Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
 \begin{align*}
-	\timeForOperationOnStructure{\access}{R} &= ...\\
-	\timeForOperationOnStructure{\access}{O} &= ...\\
+	\timeForOperationOnStructure{\contains}{R} &= ...\\
+	\timeForOperationOnStructure{\contains}{O} &= ...\\
 \end{align*}
 
 \textbf{Hash Table Access}
@@ -433,13 +433,12 @@ The set of levels $\setOfLevels$, the sets of minimizer lengths $\possibleMinimi
 The computed minimizer statistics $\CDF{\ZVM{\level}}(\threshold^\level)$, $\CDF{\ZVK{\level}}(\threshold^\level)$ and $\averageFrequency(\levelParameters{\level})$ for all possible combinations $\levelParameters{\level}$ of the level parameters on each level $\level \in \setOfLevels$ also have to be passed as input to the MINLP.
 \\
 Lastly, a measure of the times 
-$\timeForOperationOnStructure{\access}{R}$,
-$\timeForOperationOnStructure{\rank}{R}$,
+$\timeForOperationOnStructure{\contains}{R}$,
 $\timeForOperationOnStructure{\select}{S}$,
-$\timeForOperationOnStructure{\access}{O}$,
+$\timeForOperationOnStructure{\contains}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$,
 $\timeForOperationOnStructure{check}{H}$
-needed for the access of bit vector $R$, the rank and select queries on bit vectors $R$ and $S$, comparison with the text $T$ and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
+needed for the contains query on bit vector $R$, the select queries on bit vector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
 
 \section{Model for One Level}\label{sec:minlp_oneLevel}
 Aiming to improve readability, we omit the superscript index indicating an instances belonging to a specific level as only one level is considered in this section e.g. a tuple of level parameters is simply referred to as $\levelParameters{}$ instead of $\levelParameters{1}$.
@@ -496,23 +495,22 @@ Analogously we introduce $\varCDF{K} \in [0,1]$ to represent $\CDF{\manualZV{K}{
 \subsection{Lookup Time}
 \todo[inline]{note that this is the average lookup time for k-mers that appear in the sequence! k-mers that do not appear in the sequence will simply have a lookup time of a check in R on every level and then a check in H}
 In order to model the time needed for a lookup using RSHash, we closely follow the lookup procedure as described by \citet{schulte-mattler_rshash_2026}:\\
-A k-mer $\kmer$ is looked up by first computing its minimizer $\minimizerOf{\kmer}{}$ and checking whether the bit $R[\minimizerOf{\kmer}{}]$ is set, taking $\timeForOperationOnStructure{\access}{R}$ time (part of the model input \cref{sec:minlp_modelInput}).\\
+A k-mer $\kmer$ is looked up by first computing its minimizer $\minimizerOf{\kmer}{}$ and checking whether the bit $R[\minimizerOf{\kmer}{}]$ is set whilst simultaneously computing its rank $r = \rank_R(\minimizerOf{\kmer}{})$, taking $\timeForOperationOnStructure{\contains}{R}$ time (part of the model input \cref{sec:minlp_modelInput}).\\
 For the percentage $\varCDF{K}$ (\cref{constraint:percKmers}) of the k-mers this bit is set and the lookup is completed by searching for $\kmer$ on the level. We introduce the variable $\timeForOperationOnStructure{level}{} \in \RR^+_0$ to describe the time needed for this.\\
 If the bit $R[\minimizerOf{\kmer}{}]$ is not set, the lookup is completed through a lookup in the hash table $H$ taking $\timeForOperationOnStructure{check}{H}$ time (part of the model input \cref{sec:minlp_modelInput}). The variable $\timeForOperationOnStructure{lookup}{RSHash} \in \RR^+_0$ describing the lookup time can thus be modeled as:
 \newcommand{\lookupTimeExpression}{
-	\nonumber \timeForOperationOnStructure{lookup}{RSHash} =&~ \timeForOperationOnStructure{\access}{R} + \varCDF{K} \cdot \timeForOperationOnStructure{level}{}\\
-	&~\phantom{\timeForOperationOnStructure{\access}{R}}+ (1-\varCDF{K}) \cdot \timeForOperationOnStructure{check}{H}}
+	\nonumber \timeForOperationOnStructure{lookup}{RSHash} =&~ \timeForOperationOnStructure{\contains}{R} + \varCDF{K} \cdot \timeForOperationOnStructure{level}{}\\
+	&~\phantom{\timeForOperationOnStructure{\contains}{R}}+ (1-\varCDF{K}) \cdot \timeForOperationOnStructure{check}{H}}
 \begin{align}
 	\timeForOperationOnStructure{level}{} \in&~ \RR^+_0 \label{variable:levelTime}\\
 	\timeForOperationOnStructure{lookup}{RSHash} \in&~ \RR^+_0 \label{variable:lookupTime}\\
 	\lookupTimeExpression \label{constraint:lookupTime}
 \end{align}
 
-The search for those k-mers $\kmer$ for which the bit $R[\minimizerOf{\kmer}{}]$ is set continues on the level by first computing the minimizer’s rank $r = \rank_R(\minimizerOf{\kmer}{})$ taking $\timeForOperationOnStructure{\rank}{R}$ time.\\
-This rank is then used in the select\todo{explain select and rank} queries $first = \select_S(r)$ and $last = \select_S(r+1)-1$ which tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored. These two queries take $2\timeForOperationOnStructure{\select}{S}$ time.\\
+The search for those k-mers $\kmer$ for which the bit $R[\minimizerOf{\kmer}{}]$ is set continues on the level by using the minimizers rank  $r = \rank_R(\minimizerOf{\kmer}{})$ in the select\todo{explain select and rank} queries $first = \select_S(r)$ and $last = \select_S(r+1)-1$ which tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored. These two queries take $2\timeForOperationOnStructure{\select}{S}$ time.\\
 Finally the presence of $\kmer$ in $T$ is checked at every minimizer offset in the interval $O[first:last]$ until $\kmer$ is either found or the end of the interval is reached. The average frequency $\varAverageFrequency$ of \infrequent minimizers is exactly the average length of this interval. In the lookup case, the comparison is terminated as soon as $\kmer$ is found for the first time, which is on average the case after $(\varAverageFrequency+1)/2$ comparisons ($+1$ is necessary because the first index always has to be checked) with each comparison taking $\timeForOperationOnStructure{\compare}{T}$ time.\\
 The following constraint models the complete time $\timeForOperationOnStructure{level}{}$ needed to search for a k-mers presence on the level:
-\newcommand{\levelTime}{\timeForOperationOnStructure{level}{} &= \timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + (\varAverageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T})}
+\newcommand{\levelTime}{\timeForOperationOnStructure{level}{} &= 2\timeForOperationOnStructure{\select}{S} + (\varAverageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\contains}{O} + \timeForOperationOnStructure{\compare}{T})}
 \begin{align}
 	\levelTime \label{constraint:levelTime}
 \end{align}
@@ -623,10 +621,9 @@ One could for example search for level parameters minimizing the lookup time whi
 	&\CDF{\ZVK{}},
 	\averageFrequency(\levelParameters{}) ~ \forall \levelParameters{} \in \possibleMinimizerLengths \times \possibleThresholds,
 	\\
-	&\timeForOperationOnStructure{\access}{R},
-	\timeForOperationOnStructure{\rank}{R},
+	&\timeForOperationOnStructure{\contains}{R},
 	\timeForOperationOnStructure{\select}{S},
-	\timeForOperationOnStructure{\access}{O},
+	\timeForOperationOnStructure{\contains}{O},
 	\timeForOperationOnStructure{\compare}{T},
 	\timeForOperationOnStructure{check}{H}
 \end{align*}
@@ -685,7 +682,7 @@ One could for example search for level parameters minimizing the lookup time whi
 \todo[inline]{teils veraltet - one level finalisieren und dann dementsprechend für several levels anpassen}
 In the following, we adapt the constraints defined for using only one level in \cref{sec:minlp_oneLevel} to model the use of $\numberOfLevels \in \NN^+$ levels with $\setOfLevels = \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$ being the set of levels used\footnote{We model the space consumption and lookup time for any positive natural number of levels even though RSHash currently only supports the use of one, two or three levels \cite{schulte-mattler_rshash_2026}.}.\\
 When modeling several levels, we add a superscript $\level$ to variables in order to indicate there belonging to a level $\level \in \setOfLevels$ e.g. $\varMinimizerLength^1, \varMinimizerLength^2$ and $\varMinimizerLength^3$ denote the optimal minimizer lengths on level $1,2$ and $3$.\\
-We still assume, that the times $\timeForOperationOnStructure{\access}{R^\level},\timeForOperationOnStructure{\rank}{R^\level},\timeForOperationOnStructure{\select}{S^\level},\timeForOperationOnStructure{\access}{O^\level},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{check}{H}$ are (practically) independent of the parameters $\varMinimizerLength^\level, \varThreshold^\level$ and the level $\level$. \todo{reason in chap: experiments}
+We still assume, that the times $\timeForOperationOnStructure{\contains}{R^\level},\timeForOperationOnStructure{\select}{S^\level},\timeForOperationOnStructure{\contains}{O^\level},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{check}{H}$ are (practically) independent of the parameters $\varMinimizerLength^\level, \varThreshold^\level$ and the level $\level$. \todo{reason in chap: experiments}
 \\
 
 Unique sets of binary indicator variables $\indicatorm^\level_\minimizerLength$ and $\indicatort^\level$ are needed for the level parameters $\varMinimizerLength^\level$ and $\varThreshold^\level$ of each level $\level$.
@@ -732,7 +729,7 @@ For each level $l$ we can model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\v
 The search time on a level $l \in \setOfLevels$ can be leveled analogously to that on one level:
 \begin{align*}
 	\timeForOperationOnStructure{level}{}^\level & \in \RR^+_0 &\mid \forall l \in \setOfLevels\\
-	\timeForOperationOnStructure{level}{}^\level &= \timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^\level+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}) &\mid \forall l \in \setOfLevels
+	\timeForOperationOnStructure{level}{}^\level &= 2\timeForOperationOnStructure{\select}{S^2} + \frac{\varAverageFrequency^\level+1}{2}  \cdot (\timeForOperationOnStructure{\contains}{O^2} + \timeForOperationOnStructure{\compare}{T}) &\mid \forall l \in \setOfLevels
 \end{align*}
 
 For $\varCDF{K}^\level$ of the k-mers on a level $l \in \setOfLevels$ the lookup is completed by a search through the offsets on that level whilst the remaining $(1-\varCDF{K}^\level)$ of queries result in a lookup on the next level.\\
@@ -741,7 +738,7 @@ We can thus model the lookup time recursively:
 	\timeForOperationOnStructure{lookup}{RSHash}^{l} &= 
 	\begin{cases}
 	\begin{aligned}
-		\timeForOperationOnStructure{\access}{R^\level} &+ \varCDF{K}^\level \cdot \timeForOperationOnStructure{level}{}^\level\\
+		\timeForOperationOnStructure{\contains}{R^\level} &+ \varCDF{K}^\level \cdot \timeForOperationOnStructure{level}{}^\level\\
 		&+ (1-\varCDF{K}^\level) \cdot \timeForOperationOnStructure{lookup}{RSHash}^{l+1}
 	\end{aligned} &\mid l \in \setOfLevels\\
 	\timeForOperationOnStructure{check}{H} &\mid l \notin \setOfLevels
@@ -750,16 +747,16 @@ We can thus model the lookup time recursively:
 
 Considering the set $\setOfLevels = \{ 1,2 \}$ of two levels as an example, this results in the following total lookup time:
 \begin{align*}
-	\timeForOperationOnStructure{lookup}{RSHash}^1 = \timeForOperationOnStructure{\access}{R^1} +&~ \varCDF{K}^1 \cdot \timeForOperationOnStructure{level}{}^1\\
-		+&~ (1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\access}{R^2} + \varCDF{K}^2 \cdot \timeForOperationOnStructure{level}{}^2\\
-		&~ \phantom{(1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\access}{R^2}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Big)\\
+	\timeForOperationOnStructure{lookup}{RSHash}^1 = \timeForOperationOnStructure{\contains}{R^1} +&~ \varCDF{K}^1 \cdot \timeForOperationOnStructure{level}{}^1\\
+		+&~ (1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\contains}{R^2} + \varCDF{K}^2 \cdot \timeForOperationOnStructure{level}{}^2\\
+		&~ \phantom{(1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\contains}{R^2}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Big)\\
 \end{align*}
 Inserting $\timeForOperationOnStructure{level}{}^1$ and $\timeForOperationOnStructure{level}{}^2$ yields:
 \begin{align*}
 	\timeForOperationOnStructure{lookup}{RSHash}^1 =
-		\timeForOperationOnStructure{\access}{R} +&~ \varCDF{K}^1 \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
-			+&~ (1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\access}{R} + \varCDF{K}^2 \cdot (\timeForOperationOnStructure{\rank}{R} + 2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
-			&~\phantom{(1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\access}{R}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Bigg)
+		\timeForOperationOnStructure{\contains}{R^1} +&~ \varCDF{K}^1 \cdot (2\timeForOperationOnStructure{\select}{S^1} + \frac{\varAverageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\contains}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
+			+&~ (1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R^2} + \varCDF{K}^2 \cdot (2\timeForOperationOnStructure{\select}{S^2} + \frac{\varAverageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\contains}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
+			&~\phantom{(1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R^2}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Bigg)
 \end{align*}
 \todo[inline]{insertion weglassen?}
 
