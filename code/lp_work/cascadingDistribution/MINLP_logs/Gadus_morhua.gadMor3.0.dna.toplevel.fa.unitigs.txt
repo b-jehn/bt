@@ -1,0 +1,78 @@
+2026-10-27 10:40:45.914512---------------------------------------------
+solved MINLP for sequence: Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs
+with optimization goal: t_lookup,
+MAX_LOOKUP_TIME = inf and
+MAX_BPK_TOTAL = inf
+
+for 3 levels and k = 31
+considered minimizer lengths: [16, 17, 18, 19]
+considered thresholds: [32, 64, 128]
+
+using:
+t_access_R_empirical = 30
+t_access_O_empirical = 10
+t_access_H_empirical = 20
+t_rank_R_empirical = 35
+t_select_S_empirical = 35
+t_compare_T_empirical = 10
+
+total time to solve MINLP: 125.203431 seconds
+found solution:
+LEVEL PARAMETERS:
+m_1: 18.0
+m_2: 16.0
+m_3: 16.0
+
+t_1: 64.0
+t_2: 64.0
+t_3: 128.0
+
+
+LEVEL STATS:
+n_kmers_1: 502465200.0
+n_kmers_2: 13771104.0
+n_kmers_3: 5650221.0
+
+n_minimizers_1: 72157283.0
+n_minimizers_2: 4320517.0
+n_minimizers_3: 2188660.0
+
+n_DIM_1: 58482589.00000004
+n_DIM_2: 715018.9999991285
+n_DIM_3: 261888.0
+
+F_M_1: 0.9522914270483276
+F_M_2: 0.4037199714756358
+F_M_3: 0.37364506136174647
+
+F_K_1: 0.9725917575983372
+F_K_2: 0.40878320285722924
+F_K_3: 0.38718733302644265
+
+f_avg_1: 1.1749610127554375
+f_avg_2: 2.439486223443013
+f_avg_3: 3.122640212609973
+
+
+LOOKUP TIME:
+t_lookup: 157.2618209129643 (ns for querying an appearing k-mer)
+
+SPACE CONSUMPTION:
+bpk_T: 2
+
+bpk_R_1: 1.5361904189273483
+bpk_R_2: 0.022131374923383174
+bpk_R_3: 0.008861240837245755
+
+bpk_S_1: 0.13675526483731557
+bpk_S_2: 0.003471441400389019
+bpk_S_3: 0.0016275385788597774
+
+bpk_O_1: 4.1394167868267635
+bpk_O_2: 0.10507634074892837
+bpk_O_3: 0.04926362815029287
+
+bpk_H: 0.9532941274792961
+
+=> bpk_total: 8.956088162709824
+
