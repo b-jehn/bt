@@ -253,6 +253,16 @@ authority.\\
 \newpage
 
 \chapter{Introduction}
+Genetic strands are chains of the nucleobases adenine (A), cytosine (C), guanine (G), thymine (T), and uracil (U). Adenine, cytosine and guanine are present in both DNA and RNA whilst thymine only appears in DNA and uracil is specific to RNA. A genetic sequence can thus be represented as a string over an alphabet of length four meaning a compact representation of two bits needed to store each base. Despite of this, genetic databases are often very large as sequences often consist of several billion bases e.g. approximately $3.1$ billion bases for the human genomes sequence.
+
+The growth of available data due to better sequencing techniques has led to the need for efficient algorithms for processing genetic sequences. Many approaches are based on so called k-mers. The k-mers of a sequence are all its sub strings of length k. The sequence $CGACTA$ for example consists of the 3-mers $CGA,GAC,ACT,CTA$. Uses for k-mers including k-mer counting, frequency analysis, sequence indexing, genome assembly, sequence comparison, taxonomic classification, phylogeny reconstruction, protein sequence searching and alignment as well the construction of k-mer databases \cite{moeckel_survey_2024}.
+
+One important task is the comparison of sequences against large genomic reference datasets by checking whether each k-mer in sequence of interest is present in the reference dataset, this is referred to as a lookup of the k-mers. Designing a data structure to answer lookup queries comes with an inherent trade of between the time needed for a lookup and the space consumption of the data structure used. This can be demonstrated by considering the two extremes for data structures enabling the lookup of a query $q$ with $|q| = k$ in a sequence $S$ with $|S| \gg k$ that doesn't contain any duplicate k-mers:\\
+The most space efficient representation of all k-mers in $S$ is the sequence itself needing approximately two bits per k-mer (bpk). A lookup of a query however would require scanning the whole sequence for an appearance of the query.
+
+A common approach to this is the use of so called minimizers. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACTA$ results in $AC$.\\
+
+
 \newcommand{\infrequent}{\textit{infrequent} }
 \newcommand{\frequent}{\textit{frequent} }
 \todo[inline]{k-mere und deren wichtigkeit kurz erläutern, minimizer methoden einführen, dadurch relevanz von rshash und ausblick der arbeit motivieren}
