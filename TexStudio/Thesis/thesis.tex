@@ -253,14 +253,33 @@ authority.\\
 \newpage
 
 \chapter{Introduction}
+\textbf{Genetic Sequences}\\
 Genetic strands are chains of the nucleobases adenine (A), cytosine (C), guanine (G), thymine (T), and uracil (U). Adenine, cytosine and guanine are present in both DNA and RNA whilst thymine only appears in DNA and uracil is specific to RNA. A genetic sequence can thus be represented as a string over an alphabet of length four meaning a compact representation of two bits needed to store each base. Despite of this, genetic databases are often very large as sequences often consist of several billion bases e.g. approximately $3.1$ billion bases for the human genomes sequence.
 
-The growth of available data due to better sequencing techniques has led to the need for efficient algorithms for processing genetic sequences. Many approaches are based on so called k-mers. The k-mers of a sequence are all its sub strings of length k. The sequence $CGACTA$ for example consists of the 3-mers $CGA,GAC,ACT,CTA$. Uses for k-mers including k-mer counting, frequency analysis, sequence indexing, genome assembly, sequence comparison, taxonomic classification, phylogeny reconstruction, protein sequence searching and alignment as well the construction of k-mer databases \cite{moeckel_survey_2024}.
+\textbf{K-mers}\\
+The growth of available data due to better sequencing techniques has led to the need for efficient algorithms for processing genetic sequences. Many approaches are based on so called k-mers. The k-mers of a sequence are all its sub strings of length k. The sequence $CGACAT$ for example consists of the 3-mers $CGA,GAC,ACA,CAT$. Uses for k-mers including k-mer counting, frequency analysis, sequence indexing, genome assembly, sequence comparison, taxonomic classification, phylogeny reconstruction, protein sequence searching and alignment as well the construction of k-mer databases \cite{moeckel_survey_2024}.
 
-One important task is the comparison of sequences against large genomic reference datasets by checking whether each k-mer in sequence of interest is present in the reference dataset, this is referred to as a lookup of the k-mers. Designing a data structure to answer lookup queries comes with an inherent trade of between the time needed for a lookup and the space consumption of the data structure used. This can be demonstrated by considering the two extremes for data structures enabling the lookup of a query $q$ with $|q| = k$ in a sequence $S$ with $|S| \gg k$ that doesn't contain any duplicate k-mers:\\
-The most space efficient representation of all k-mers in $S$ is the sequence itself needing approximately two bits per k-mer (bpk). A lookup of a query however would require scanning the whole sequence for an appearance of the query.
+\textbf{Lookup and Locate Queries}\\
+One important task is the comparison of sequences against large genomic reference datasets by checking whether each k-mer in sequence of interest is present in the reference dataset, this is referred to as a lookup of the queried k-mers. A so called locate query on the other hand does not only answer whether queried k-mers are present but also returns all offsets of the queried k-mers, which are there positions in the sequences.
 
-A common approach to this is the use of so called minimizers. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACTA$ results in $AC$.\\
+\textbf{Space/Time Trade-Off}\\
+Designing a data structure to answer lookup or locate queries comes with an inherent trade of between the time needed for a lookup and the space consumption of the data structure. This can be demonstrated by considering the two extremes for data structures enabling a lookup or locate of a queried k-mer $q$ in a sequence $S$ with $|S| \gg k$ that doesn't contain any duplicate k-mers:\\
+The most space efficient representation of all k-mers in $S$ is the sequence itself needing approximately two bits per k-mer (bpk). A locate query for $q$ would require scanning through the whole sequence and comparing every k-mer with $q$ and returning a list of all the offsets at which $q$ was encountered. A lookup on the other hand could return as soon as a match is either found or the end of the sequence is reached. Essentially both queries would need $O(|S|)$ time.\\
+A very fast lookup (and locate) on the other hand could be achieved by storing the appearance of every k-mer in $S$ in a hash set (locate: hash table) enabling both queries in $O(1)$ time. For this approach every k-mer would have to be stored in the hash set (table) leading to a space consumption of $2k$ bits per k-mer in the lookup case and  $2k+log_2(|S|)$ bits per k-mer to enable locate queries which require the offsets to be stored as well.\\
+Since both a lookup time in $O(|S|)$ as well as $2k$ bits per k-mer are not viable for large genomes, there has been much work on data structures enabling queries in much less than $O(|S|)$ whilst also maintaining a certain compression.
+
+\textbf{Minimizers}\\
+A common approach to achieve this is the use of so called minimizers. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACAT$ results in $AC$ because that is the lexicographically smallest $2$-mer in $CGACAT$.\\
+
+Minimizers have several properties which render them highly interesting for this domain. Firstly they are considered to be sparse because consecutive k-mers are very likely to share the same minimizer. \Citet{zheng_improved_2020} show that in a random string each minimizer of length $m$ is expected to cover an average of $(k-m+2)/2$ k-mers. We refer to consecutive k-mers sharing the same minimizer as super-k-mers. Even in a sequence which only contains unique k-mers, several super-k-mers can have the same minimizer as $m < k$. A minimizers \textit{frequency} is the number of super-k-mers which have this minimizer.\\
+A second interesting property is the skewness of the distribution of minimizers in regards to their \textit{frequencies}. In a given sequence only a few  minimizers have minimizers of high frequencies whilst most minimizers have small frequencies or do not appear at all. Some intuition for this property can be gained by considering an m-mer consisting only of $A$s versus one of $T$s. Using the lexicographical order the first will be the minimizer of every super-k-mer in which it appears whilst the second would only become the minimizer of a super-k-mer containing only $T$s.\\
+Both the sparsity and skewness of minimizers have been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}
+
+\textbf{SSHash}\\
+\Citet{pibiri_sparse_2022} for example introduced the SSHash algorithm supporting locate queries in..\\
+SSHash uses minimal perfect hashing to compute 
+
+\textbf{RSHash}\\
 
 
 \newcommand{\infrequent}{\textit{infrequent} }
@@ -337,7 +356,6 @@ We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to d
 \newcommand{\CDF}[1]{F_{#1}}
 \newcommand{\varCDF}[1]{\textbf{F}_{#1}}
 
-The skewness of minimizer distributions has been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}.\\
 The approach of using consequent levels with respective thresholds as introduced by \citet{schulte-mattler_rshash_2026} makes use of this property by handling k-mers with \infrequent minimizers on a level directly and "moving" those k-mers with \frequent minimizers to the next higher level on which a different hash function is used in hopes of further reducing the amount of k-mers with \frequent minimizers. \todo{zu vage?}
 \\
 The distribution of k-mers on the first level is ..\todo{well known?}.., the distribution for higher levels however doesn't compare to .q.-r.-
