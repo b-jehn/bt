@@ -271,30 +271,27 @@ Since both a lookup time in $O(|S|)$ as well as $2k$ bits per k-mer are not viab
 \textbf{Minimizers}\\
 A common approach to achieve this is the use of so called minimizers. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACAT$ results in $AC$ because that is the lexicographically smallest $2$-mer in $CGACAT$.\\
 
-Minimizers have several properties which render them highly interesting for this domain. Firstly they are considered to be sparse because consecutive k-mers are very likely to share the same minimizer. \Citet{zheng_improved_2020} show that in a random string each minimizer of length $m$ is expected to cover an average of $(k-m+2)/2$ k-mers. We refer to consecutive k-mers sharing the same minimizer as super-k-mers. Even in a sequence which only contains unique k-mers, several super-k-mers can have the same minimizer as $m < k$. A minimizers \textit{frequency} is the number of super-k-mers which have this minimizer.\\
-A second interesting property is the skewness of the distribution of minimizers in regards to their \textit{frequencies}. In a given sequence only a few  minimizers have minimizers of high frequencies whilst most minimizers have small frequencies or do not appear at all. Some intuition for this property can be gained by considering an m-mer consisting only of $A$s versus one of $T$s. Using the lexicographical order the first will be the minimizer of every super-k-mer in which it appears whilst the second would only become the minimizer of a super-k-mer containing only $T$s.\\
-Both the sparsity and skewness of minimizers have been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}
+Minimizers have several properties which render them highly interesting for this domain. Firstly they are considered to be sparse because consecutive k-mers are very likely to share the same minimizer. \Citet{zheng_improved_2020} show that in a random string each minimizer of length $m$ is expected to cover an average of $(k-m+2)/2$ k-mers. These consecutive k-mers sharing the same minimizer are also referred to as super-k-mers. Even in a sequence only containing unique k-mers, several super-k-mers can have the same minimizer as $m < k$.\\
+A second interesting property is the skewness of the distribution of minimizers in regards to their \textit{frequencies} which is the number of super-k-mers which have a specific minimizer. In a given sequence only a few  minimizers have high frequencies whilst most have small frequencies or do not appear at all. Some intuition for this property can be gained by considering an m-mer consisting only of $A$s versus one of $T$s. Using the lexicographical order the first will be the minimizer of every super-k-mer in which it appears whilst the second would only become the minimizer of a super-k-mer containing only $T$s.\\
+Both the sparsity and skewness of minimizers have been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}.
 
 \textbf{SSHash}\\
-\Citet{pibiri_sparse_2022} for example introduced the SSHash algorithm supporting locate queries in..\\
-SSHash uses minimal perfect hashing to compute 
-
-\textbf{RSHash}\\
+For example \Citet{pibiri_sparse_2022} describe the SSHash (Sparse and Skew hashing of K-mers) algorithm which exploits these two properties by computing all minimizers appearing in a sequence and then use a minimal perfect hash function to store every super-k-mers offsets in an array \textit{Offsets} in the order induced by their minimizers hashes. They use a second array \textit{Sizes} in which the $n$th element stores the starting index in \textit{Offsets} for the offsets belonging to the $n$th minimizer. The sparsity of minimizers mainly effects the data structures space consumption: By indexing super-k-mers, they can compress the data structures size by a factor of $(k-m+2)/2$ compared to indexing individual k-mers. The skewness of minimizers on the other hand is of importance to the locate time: Querying a k-mer $q$ requires computing its minimizer and then searching for it in every super-k-mer with the same minimizer. For a sufficiently large minimizer length, minimizers of high frequency become increasingly unlikely.\\
+The space/time trade-off of RSHash is highly dependent of the minimizer length $m$: A smaller $m$ means a higher compression $(k-m+2)/2$. The lookup/locate time on the other hand is largest for small $m$ because those result in minimizers of higher \textit{frequencies}.
 
 
-\newcommand{\infrequent}{\textit{infrequent} }
-\newcommand{\frequent}{\textit{frequent} }
-\todo[inline]{k-mere und deren wichtigkeit kurz erläutern, minimizer methoden einführen, dadurch relevanz von rshash und ausblick der arbeit motivieren}
 \section{RSHash Explanation}\label{sec:rshashExplanation}
 \todo[inline]{weniger formal beschreiben; erstmal nur für ein level; erklären, was es bedeutet frequente minimizer abzuschneiden, wie davon der platz in der hashtabelle abhängt und wie mehrere level dabei helfen können}
-RSHash is a minimizer based fast, compressed hash table for storing DNA k-mers that answers lookup and can be extended for supporting locate. It was recently introduced by \citet{schulte-mattler_rshash_2026}.\\
-The data structure works with one, two or three levels and a hash table. For each level $\level$ a pair of level parameters has to be specified: the minimizer length $\minimizerLength^\level$ and a threshold $\threshold^\level$.
+\newcommand{\infrequent}{\textit{infrequent} }
+\newcommand{\frequent}{\textit{frequent} }
+RSHash is a minimizer based fast, compressed hash table for storing DNA k-mers that answers lookup and can be extended for supporting locate. It was recently introduced by \citet{schulte-mattler_rshash_2026}. It follows a minimizer based approach like SSHash however instead of using minimal perfect hash functions, RSHash relies on bitvectors supporting rank and select queries. Its main difference to previous methods is the introduction of a layered multi-minimizer scheme aiming to reduce the cost of high \textit{frequencies} whilst at the same time maintaining large compression.\\
+The data structure works with one, two or three so called levels and a hash table. In order to build RSHash to answer lookup (or locate) queries one has to specify the number of levels as well as a pair of level parameters for each level $\level$: the minimizer length $\minimizerLength^\level$ and a threshold $\threshold^\level$.
 
-Each level $\level$ is build in the following way:\\
-For each k-mer $\kmer$ in the input sequences the so called minimizer of length $\minimizerLength^\level$ is computed. A temporary hash table is used to count the number of occurrences of each appearing minimizer, also referred to as the minimizers frequency. \\
-A bit vector $R^\level$ of lengths $4^{\minimizerLength^\level}$ is used to mark all minimizers that appear at least once but no more than $\threshold^\level$ times. We call those minimizers \infrequent.\\ 
-The position of every occurrence of each infrequent minimizer in the text are stored in the offset vector $O^\level$ in the order induced by $R^\level$. \\
-The boundaries of offsets in $O^\level$ belonging to different minimizers are marked in the bit vector $S^\level \in \{0,1\}^{|O|+1}$.\\
+The first level is build by first computing each k-mers minimizer and counting each minimizers \textit{frequency}.
+We call all minimizers that appear at least once but no more than $\threshold^\level$ to be \infrequent on the level.\\ 
+A bitvector $R^1$ of lengths $4^{\minimizerLength^\level}$ is used to mark the appearance of each distinct \infrequent minimizers. 
+The position of every occurrence of each \infrequent minimizer in the sequences are stored in the offset vector $O^1$ in the order induced by $R^1$.\\
+The boundaries of offsets in $O^1$ belonging to different minimizers are marked in the bitvector $S^1 \in \{0,1\}^{|O|+1}$.\\
 All k-mers with frequent minimizers on level $l$ make up the input sequences for the next higher level $l+1$ which works exactly like the previous apart from having its own level parameters. Those k-mers with frequent minimizers on all specified levels end up being stored in a hash table $H$.
 
 \section{Problem Definition}\label{sec:problemDefinition}
@@ -425,7 +422,7 @@ More relevant for the optimization of level parameters however is the average fr
 \end{equation}
 
 \section{Times for Operations on Data Structures}
-We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a select query on the bit vector $S$ is $\timeForOperationOnStructure{\select}{S}$.
+We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a select query on the bitvector $S$ is $\timeForOperationOnStructure{\select}{S}$.
 \todo[inline]{incomplete. measure or model?}
 \textbf{Vector Access}
 Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
@@ -441,7 +438,7 @@ Accessing an element of a Hash Table can be done in constant time, we use the fo
 \end{align*}
 
 \textbf{Bit Vector Rank Query}
-A bit vector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
+A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
 \todo[inline]{does that help here? Doesn't the model require actual time instead of O notation - maybe measurements would be more suited}
 
 \textbf{Bit Vector Select Query}
@@ -466,7 +463,7 @@ $\timeForOperationOnStructure{\select}{S}$,
 $\timeForOperationOnStructure{\contains}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$,
 $\timeForOperationOnStructure{check}{H}$
-needed for the contains query on bit vector $R$, the select queries on bit vector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
+needed for the contains query on bitvector $R$, the select queries on bitvector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
 
 \section{Model for One Level}\label{sec:minlp_oneLevel}
 Aiming to improve readability, we omit the superscript index indicating an instances belonging to a specific level as only one level is considered in this section e.g. a tuple of level parameters is simply referred to as $\levelParameters{}$ instead of $\levelParameters{1}$.
@@ -568,7 +565,7 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 \todo[inline]{larger for unitigs!}
 
 \newcommand{\numberOfDistinctMinimizers}{n_{DIM}} 
-\textbf{Bit vector $R$} is a bit vector of length $4^\varMinimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \infrequent minimizer in the sequences. We can compute the number $\numberOfDistinctMinimizers$ of distinct \infrequent minimizers by multiplying the percentage of \infrequent minimizers with the total number of minimizers divided through the average frequency of each minimizer:
+\textbf{Bitvector $R$} is a bitvector of length $4^\varMinimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \infrequent minimizer in the sequences. We can compute the number $\numberOfDistinctMinimizers$ of distinct \infrequent minimizers by multiplying the percentage of \infrequent minimizers with the total number of minimizers divided through the average frequency of each minimizer:
 \newcommand{\nDIM}{\numberOfDistinctMinimizers &= \frac{\varCDF{K} \cdot n_{kmers}}{\varAverageFrequency} \cdot \frac{2}{k-\varMinimizerLength+2} \textbf{OR}
 	\\
 	&= \frac{\varCDF{M} \cdot n_{minimizers}}{\varAverageFrequency}}
@@ -579,7 +576,7 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 \todo[inline]{decide what to use}
 \todo[inline]{add $n_{kmers}$ (only total?) and $n_{minimizers}$ (for every level in depence of level parameters) to the Model}
 \todo[inline]{figure out how to model the ratio between k-mers and minimizers for fractured input sequences OR use $n_{minimizers}$?}
-Using Elias-Fano-Encoding, a bit vector of size $U$ with $n$ bits set to one can be compressed to
+Using Elias-Fano-Encoding, a bitvector of size $U$ with $n$ bits set to one can be compressed to
 $n \lceil log_2(U/n) \rceil + 3n$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. Compressing $R$ and dividing this by the total number $n_{kmers}$ of k-mers yields the constraint describing the bits per k-mer of $R$:\todo{make $n_{kmers}$ part of model - either through sum of products or simply product of pKs times number of k-mers in the genome}
 \newcommand{\bpkR}{bpk_{R} &= \frac{\numberOfDistinctMinimizers}{n_{kmers}} \cdot \left(\lceil 2\varMinimizerLength - log_2\numberOfDistinctMinimizers \rceil + 3 \right)}
 \begin{align}
@@ -589,7 +586,7 @@ $n \lceil log_2(U/n) \rceil + 3n$ \cite{okanohara2007practical} \todo{woher komm
 \end{align}
 \todo[inline]{argue in experiments section, that $n_{kmers}$ has only a small effect on the size of $R$ and can thus be disregarded as it is not needed for anything else}
 
-\textbf{Bit vector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can however be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
+\textbf{Bitvector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can however be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
 Since $\varCDF{K}$ describes the percentage of k-mers with \infrequent minimizers and every minimizer covers an average of $(k-\varMinimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $S$ through:
 \newcommand{\bpkS}{bpk_{S} &= \varCDF{K}\cdot\frac{2}{k-\varMinimizerLength+2} \textbf{OR}
 	\\
@@ -791,7 +788,7 @@ Inserting $\timeForOperationOnStructure{level}{}^1$ and $\timeForOperationOnStru
 \subsection{Space Consumption}
 \textbf{The text $T$} is only being stored once, so the constant approximation $bpk_T \approx 2$ still holds.
 
-\textbf{Bit vector $R^\level$} $\numberOfDistinctMinimizers^\level$ on each level $\level$ and are modeled analogously to using only one level:
+\textbf{Bitvector $R^\level$} $\numberOfDistinctMinimizers^\level$ on each level $\level$ and are modeled analogously to using only one level:
 \begin{align*}
 	\numberOfDistinctMinimizers &\in \RR^+_0 &\mid \forall l \in \setOfLevels
 	\\
@@ -804,7 +801,7 @@ Inserting $\timeForOperationOnStructure{level}{}^1$ and $\timeForOperationOnStru
 	bpk_{R}^\level &= \frac{\numberOfDistinctMinimizers^\level}{n_{kmers}} \cdot \left(\lceil 2\varMinimizerLength^\level - log_2\numberOfDistinctMinimizers^\level \rceil + 3 \right) &\mid \forall l \in \setOfLevels
 \end{align*}
 
-\textbf{Bit vector $S^\level$} on each level $l$ has length $|O^\level|+1 \approx |O^\level|$. Only k-mers that have frequent minimizers on all previous levels but an \infrequent minimizer on level $l$ lead to an offset in $O^\level$ and thus to a bit in $S^\level$:
+\textbf{Bitvector $S^\level$} on each level $l$ has length $|O^\level|+1 \approx |O^\level|$. Only k-mers that have frequent minimizers on all previous levels but an \infrequent minimizer on level $l$ lead to an offset in $O^\level$ and thus to a bit in $S^\level$:
 \begin{align*}
 	bpk_{S^\level} & \in \RR^+_0 &\mid \forall l \in \setOfLevels
 	\\
@@ -878,7 +875,7 @@ $
 \end{algorithm}
 \todo[inline]{add $n_{minimizers}, n_{kmers}$ to model and include dependence of level parameters}
 
-This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This however also means, that one could include the building of bit vectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
+This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This however also means, that one could include the building of bitvectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
 However this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
 \section{Model Accuracy}
