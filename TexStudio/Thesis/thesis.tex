@@ -257,7 +257,7 @@ authority.\\
 Genetic strands are chains of the nucleobases adenine (A), cytosine (C), guanine (G), thymine (T), and uracil (U). Adenine, cytosine and guanine are present in both DNA and RNA whilst thymine only appears in DNA and uracil is specific to RNA. A genetic sequence can thus be represented as a string over an alphabet of length four meaning a compact representation of two bits needed to store each base. Despite of this, genetic databases are often very large as sequences often consist of several billion bases e.g. approximately $3.1 \cdot 10^9$ bases for the human genomes sequences.
 
 \textbf{K-mers}\\
-The growth of available data due to better sequencing techniques has led to the need for efficient algorithms for processing genetic sequences. Many approaches are based on so called k-mers. The k-mers of a sequence are all its sub strings of length $k$, meaning that a sequence $S$ with $|S| \geq k$ contains exactly $|S|-k+1$ k-mers. The sequence $CGACAT$ for example consists of the 3-mers $CGA,GAC,ACA,CAT$. Uses for k-mers include k-mer counting, frequency analysis, sequence indexing, genome assembly, sequence comparison, taxonomic classification, phylogeny reconstruction, protein sequence searching and alignment as well the construction of k-mer databases \cite{moeckel_survey_2024}. 
+The growth of available data due to better sequencing techniques has led to the need for efficient algorithms for processing genetic sequences. Many approaches are based on so called k-mers. The k-mers of a sequence are all its substrings of length $k$, meaning that a sequence $S$ with $|S| \geq k$ contains exactly $|S|-k+1$ k-mers. The sequence $CGACAT$ for example consists of the 3-mers $CGA,GAC,ACA,CAT$. Uses for k-mers include k-mer counting, frequency analysis, sequence indexing, genome assembly, sequence comparison, taxonomic classification, phylogeny reconstruction, protein sequence searching and alignment as well the construction of k-mer databases \cite{moeckel_survey_2024}. 
 
 \textbf{Lookup and Locate Queries}\\
 One important task is the comparison of sequences against large genomic reference datasets by checking whether each k-mer in sequence of interest is present in the reference dataset, this is referred to as a lookup of the queried k-mers. A so called locate query on the other hand not only answers whether queried k-mers are present but also returns all positions of the queried k-mers in the sequences, also referred to as their offsets.
@@ -328,11 +328,12 @@ We will attempt to expand the understanding of how exactly the level parameters 
 \newcommand{\minimizerOf}[2]{min^{\hashfunction{#2}}_{\minimizerLength^{#2}}(#1)}
 
 \newcommand{\sequences}[1]{S_{\levelParameters{#1}}}
-Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.
-\\
-Let $\kmer$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ depends both on the specified minimizer length $\minimizerLength^\level$ on that level as well as the hash function on level $\level$, which is not dependent of the level parameters but different for every level. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which represents the number of occurrences of the minimizer in a given set of input sequences.\\
+\newcommand{\substring}[3]{#1[#2:#3)}
+A sequence is a string over the DNA alphabet $\Sigma = \{A,C,G,T\}$. A k-mer is a string of length $k$ over $\Sigma$. Let $i,j \in \NN$ with $i < j$ be zero based indices of a string $S$ of length $|S| > j$. We use $\substring{S}{i}{j}$ to denote the substring from the $i$th to the $(j-1)$th character of $S$.\\
+Let $\kmer \in \Sigma^{k}$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ on level $l$ depends both on the specified minimizer length $\minimizerLength^\level$ as well as the hash function on that level, which is not dependent of the level parameters but different for every level. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which represents the number of occurrences of the minimizer in a given set of input sequences.\\
 We call a minimizer \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the given threshold. Minimizers with frequencies larger than the threshold are referred to as being \frequent.\\
-We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels. The full set of input sequences when building RSHash are denoted with $\sequences{0}$ and do not depend on any parameters.
+Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.\\
+We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the set of sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels. The full set of input sequences when building RSHash are denoted with $\sequences{0}$ and do not depend on any parameters.
 
 \chapter{Sequence Statistics}\label{chap:sequenceStatistics}
 As outlined in the \cref{chap:introduction}, the space consumption and query time of RSHash are highly dependent on the choice of level parameters as those influence the distributions of minimizers on all levels. We define aspects of the minimizer distribution which will be needed for modeling the space consumption and query time in \cref{chap:minlp}. Specifically relevant for this is the behavior of minimizer distributions across several levels, which is unique to the approach proposed by \citet{schulte-mattler_rshash_2026} and therefor not considered in previous works.
@@ -354,17 +355,12 @@ As outlined in the \cref{chap:introduction}, the space consumption and query tim
 Recall that we use $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to describe the level parameters on all levels up to and including the level $\level$, that $\sequences{\level-1}$ is the the set of input sequences on level $\level$ which depends on the level parameters $\levelParameters{\level-1}$ on all previous and that $\sequences{0}$ is the full set of input sequences on the first level, which is independent of any parameters.
 \\
 
-For each level $\level$ we will define the set of distinct k-mers $\distinctKmers{\level}$ in the input sequences on that level as well as the set of distinct minimizers $\distinctMinimizers{\level}$ of these k-mers. A dependence of level parameters is indicated through indices. 
-\\
-
-With $\sequences{\level-1}$ being the input sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ of the previous levels. Let $\distinctKmers{\level}$ be the set of distinct k-mers in $\sequences{\level-1}$.%\footnote{Both $\sequences{\level-1}$ and $\distinctKmers{\level}$ are technically only dependent of the level parameters $\levelParameters{\level-1}$ on all previous levels but not of the minimizer length $\minimizerLength^\level$ and threshold $\threshold^\level$ on level $\level$ (\cref{sec:rshashExplanation}).}
-:
+Let $\distinctKmers{\level}$ be the set of distinct k-mers in a set of sequences $\sequences{\level-1}$. In other words, the set of distinct k-mers on a level $\level$ contains every distinct substring of length $k$ in the input sequences which are affected by the level parameters on previous levels:
 \begin{equation}
 	\distinctKmers{\level} := \{x \in \{0, 1, ..., 4^k\} \mid \exists S' \in \sequences{\level-1} ~ \exists (1 \leq i \leq |S'|-k) ~ S'[i:i+k] = x \}
 \end{equation}
-\todo[inline]{define k-mers, indices, sequences, minimizers}
-Let $\distinctMinimizers{\level}$ %\footnote{$\distinctMinimizers{\level}$ is technically only dependent of the level parameters $\levelParameters{\level-1}$ on all previous levels as well as the minimizer length $\minimizerLength^\level$ on level $\level$ but not of the threshold $\threshold^\level$ on level $\level$.}
-be the set of distinct minimizers of lengths $\minimizerLength^\level$ on level $\level$ of the k-mers in $\distinctKmers{\level}$:
+
+Let $\distinctMinimizers{\level}$ be the set of distinct minimizers of lengths $\minimizerLength^\level$ on level $\level$ of the k-mers in $\distinctKmers{\level}$. The set of distinct minimizers is not only affected by the choice of level parameters on previous levels but also depends on the minimizer length on the current level:
 \begin{equation}
 	\distinctMinimizers{\level} := \{\minimizer \in \{0, 1, ..., 4^{\minimizerLength^\level}\} \mid \exists \kmer \in \distinctKmers{\level} ~ \minimizerOf{\kmer}{\level}=\minimizer\}
 \end{equation}
@@ -374,6 +370,7 @@ Let $\ZVM{\level}$ be a discrete random variable that describes the frequency of
 	\\
 	\ZVM{\level}(\minimizer) &= \frequencyOf{\minimizer}
 \end{align}
+\todo[inline]{wahrscheinlichkeits und verteilungsfunktion für K einmal etwas ausführlicher beschreiben aber für M mehr oder weniger so lassen}
 We define its probability distribution $\probabilityDistribution{\ZVM{\level}}$ and its cumulative distribution function $\CDF{\ZVM{\level}}$\footnote{This notation differs slightly from that used by \citet{schulte-mattler_rshash_2026} who do not introduce the probability distributions but instead use $p_M$ and $p_K$ to denote the cumulative distribution functions which we denote with $F_M$ and $F_K$}: 
 \begin{align}
 	\probabilityDistribution{\ZVM{\level}} &: \NN \rightarrow [0,1]
@@ -400,7 +397,7 @@ Its probability distribution $\probabilityDistribution{\ZVK{\level}}$ and its cu
 	\CDF{\ZVK{\level}} &: \NN \rightarrow [0,1]\\
 	\CDF{\ZVK{\level}}(f) &= \mathbb{P}(\ZVK{\level} \leq f) := \sum_{i=1}^f \probabilityDistribution{\ZVK{\level}}(i)
 \end{align}
-\todo[inline]{Explain how and why distribution on the first level affects the distributions on higher levels.}
+\todo[inline]{Explain how and why distribution on the first level affects the distributions on higher levels. Aber nur kurz mit verweis -> Experiments}
 
 \section{Average Frequencies} \label{sec:averagefrequencies}
 The average frequency of minimizers on a level $\level \in \setOfLevels$ given the level parameters $\levelParameters{\level}$ and the sequences $\sequences{\level-1}$ is given by the expected value of the probability distribution of the random variable $\ZVM{\level}$:
@@ -417,6 +414,7 @@ More relevant to the optimization of level parameters is the average frequency o
 \end{equation}
 
 \section{Times for Operations on Data Structures}
+\todo[inline]{-> Experimente??}
 We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a select query on the bitvector $S$ is $\timeForOperationOnStructure{\select}{S}$.
 \todo[inline]{incomplete. measure or model?}
 \textbf{Vector Access}
@@ -580,6 +578,13 @@ $n \lceil log_2(U/n) \rceil + 3n$ \cite{okanohara2007practical} \todo{woher komm
 	\Rightarrow \bpkR \label{constraint:bpkR}
 \end{align}
 \todo[inline]{argue in experiments section, that $n_{kmers}$ has only a small effect on the size of $R$ and can thus be disregarded as it is not needed for anything else}
+\todo[inline]{ start experimental}
+\textbf{Bit Vector Rank Query}
+A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
+\begin{equation*}
+	\timeForOperationOnStructure{\contains}{R} = log_2 \frac{4^\varMinimizerLength}{\numberOfDistinctMinimizers}
+\end{equation*}
+\todo[inline]{end experimental}
 
 \textbf{Bitvector $S$} has length $|O|+1 \approx |O|$ where every bit corresponds to the offset of one minimizer encountered in the sequences and one extra bit marks the end of all offsets - this last bit can be disregarded when modeling $bpk_S$ as its effect is insignificantly small.\\
 Since $\varCDF{K}$ describes the percentage of k-mers with \infrequent minimizers and every minimizer covers an average of $(k-\varMinimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $S$ through:
