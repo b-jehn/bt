@@ -29,6 +29,7 @@ def MINLP(
     #Set up SCIP Model
     #============================#
     scip = Model("Level")  # scip name is optional
+    scip.hideOutput(True)
 
     #============================#
     #VARIABLES OR MEASUREMENTS??

@@ -110,3 +110,34 @@ def getCascadingDistribution_Stats(cascading_stats: Distribution_Stats, minimize
     for m, t in zip(minimizer_lengths, thresholds):
         stats = stats.next_level[(m,t)]
     return stats.n_kmers, stats.n_minimizers, stats.F_M, stats.F_K, stats.f_avg
+
+def column_values(rows: list[dict[str, str]], column: str) -> list[float]:
+    return [float(row[column]) for row in rows]
+
+def getMeasuredStats(genome_stats_path: Path,
+                    minimizer_lengths: list[int],
+                    thresholds: list[int]) -> tuple[spaceConsumption_Stats, operationTimes_Stats]:
+    stats_path =  genome_stats_path / getParameterDirectory(minimizer_lengths, thresholds) / "space_consumption.csv"
+    with stats_path.open() as f:
+        space_rows = list(csv.DictReader(f, skipinitialspace=True))
+        space = spaceConsumption_Stats(
+            bpk_T=float(space_rows[0]["bpk_text"]),
+            bpk_R=column_values(space_rows, "bpk_R"),
+            bpk_S=column_values(space_rows, "bpk_S"),
+            bpk_O=column_values(space_rows, "bpk_O"),
+            bpk_H=float(space_rows[0]["bpk_H"]),
+            bpk_total=float(space_rows[0]["bpk_total"])
+        )
+    
+    stats_path =  stats_path.parent / "times_per_operation.csv"
+    with stats_path.open() as f:
+        time_rows = list(csv.DictReader(f, skipinitialspace=True))
+        times = operationTimes_Stats(
+            R_contains=column_values(time_rows, "R_contains"),
+            S_select=column_values(time_rows, "S_select"),
+            O_access=column_values(time_rows, "O_access"),
+            T_compare=column_values(time_rows, "T_compare"),
+            H_access=float(time_rows[0]["H_access"])
+        )
+    
+    return space, times

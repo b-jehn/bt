@@ -1,11 +1,14 @@
 import math
+import json
 
 import sys
 import os
+import matplotlib.pyplot as plt
 from itertools import product
 from datetime import datetime
 
 from pathlib import Path
+from dataclasses import fields
 
 from cascadingStats import *
 from MINLP import MINLP
@@ -47,48 +50,113 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
+data_path = Path(f"data/{SEQUENCE_NAME}")
+data_path.mkdir(exist_ok=True, parents=True)
+error_file_path = data_path / "squarred_errors.json"
 
+errors = {}
+if(error_file_path.exists()):
+    print("loading squared errors from previous computations json file")
+    with error_file_path.open() as json_file:
+        pairs = json.load(f)
+        errors = {tuple(k): v for k, v in pairs}
+else:
+    genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
+    genome_stats_directory = Path(f"../allStats/{SEQUENCE_NAME}")
+    fill_cascading_stats(root_stats=genome_stats, 
+                        genome_stats_path=genome_stats_directory, 
+                        level=1, 
+                        maxLevel=NO_LEVELS,
+                        currentMinimizerLengths=[MINIMIZER_LENGTHS_CONSIDERED[-1]] * NO_LEVELS,
+                        currentThresholds=[THRESHOLDS_CONSIDERED[-1]] * NO_LEVELS,
+                        minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED,
+                        thresholdsConsidered=THRESHOLDS_CONSIDERED,
+                        nonDecreasingParameters=True)
 
-genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
-genome_stats_directory = Path(f"../allStats/{SEQUENCE_NAME}")
-fill_cascading_stats(root_stats=genome_stats, 
-                    genome_stats_path=genome_stats_directory, 
-                    level=1, 
-                    maxLevel=NO_LEVELS,
-                    currentMinimizerLengths=[MINIMIZER_LENGTHS_CONSIDERED[-1]] * NO_LEVELS,
-                    currentThresholds=[THRESHOLDS_CONSIDERED[-1]] * NO_LEVELS,
-                    minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED,
-                    thresholdsConsidered=THRESHOLDS_CONSIDERED,
-                    nonDecreasingParameters=True)
+    setOfMinimizerLengths = []
+    for m1 in range(15,26,2):
+        for m2 in range(m1,26,2):
+            for m3 in range(m2,26,2):
+                setOfMinimizerLengths.append([m1,m2,m3])
+                
+    setOfThresholds = []
+    for t1 in range(5,8):
+        for t2 in range(t1,8):
+            for t3 in range(t2,8):
+                setOfThresholds.append([2**t1,2**t2,2**t3])
+                
+    #setOfMinimizerLengths = [[17,17,17]]
+    #setOfThresholds = [[128,128,128]]
 
-#setOfMinimizerLengths = []
-#for m1 in range(15,26,2):
-#    for m2 in range(m1,26,2):
-#        for m3 in range(m2,26,2):
-#            setOfMinimizerLengths.append([m1,m2,m3])
-#            
-#setOfThresholds = []
-#for t1 in range(5,8):
-#    for t2 in range(t1,8):
-#        for t3 in range(t2,8):
-#            setOfThresholds.append([2**t1,2**t2,2**t3])
-#
-#
-#for minimizerLenths, thresholds in product(setOfMinimizerLengths, setOfThresholds):
-space, times, info, solution, elapsed_seconds = MINLP(
-    optimization_goal="t_lookup",
-    max_lookup_time=math.inf,
-    max_bpk_total=math.inf,
-    log_sequence_length=log_sequence_length,
-    no_levels=NO_LEVELS, 
-    minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED, 
-    thresholdsConsidered=THRESHOLDS_CONSIDERED, 
-    distribution_stats=genome_stats,
-    load_factor=LOAD_FACTOR,
-    nonDecreasingParameters=NON_DECREASING_PARAMETERS,
-    forceParameters=[[15,17,19],[32,64,128]])
+    modeled_AND_measured_stats = []
+    for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
+        print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
+        modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
+            optimization_goal="t_lookup",
+            max_lookup_time=math.inf,
+            max_bpk_total=math.inf,
+            log_sequence_length=log_sequence_length,
+            no_levels=NO_LEVELS, 
+            minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED, 
+            thresholdsConsidered=THRESHOLDS_CONSIDERED, 
+            distribution_stats=genome_stats,
+            load_factor=LOAD_FACTOR,
+            nonDecreasingParameters=NON_DECREASING_PARAMETERS,
+            forceParameters=[forcedMinimizerLengths,forcedThresholds])
 
-print(space)
+        measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
+                                                        forcedMinimizerLengths,
+                                                        forcedThresholds)
+        
+        modeled_AND_measured_stats.append((modeledSpace, measuredSpace))
+        modeled_AND_measured_stats.append((modeledTimes, measuredTimes))
+
+    ##############
+    # squared error calculation and plotting for every stats item and level
+    ##############
+    ##############
+    # Collect squared errors by stats class, field, and level.
+    ##############
+    print("computing squared error for all modeled values in regard to the measured stats")
+    for modeled, measured in modeled_AND_measured_stats:
+        stats_name = type(modeled).__name__
+
+        for stat_field in fields(modeled):
+            name = stat_field.name
+            modeled_value = getattr(modeled, name)
+            measured_value = getattr(measured, name)
+
+            if isinstance(modeled_value, list):
+                for level, (m, obs) in enumerate(zip(modeled_value, measured_value)):
+                    key = (stats_name, name, level)
+                    errors.setdefault(key, []).append((m - obs) ** 2)
+            else:
+                key = (stats_name, name, None)
+                errors.setdefault(key, []).append((modeled_value - measured_value) ** 2)
+
+    with open(str( data_path / 'squarred_errors.json'), 'w') as f:
+        json.dump([[list(k), v] for k, v in errors.items()], f)
+
+##############
+# Make one box plot per field/level pair. 
+##############
+genome_plots = Path(f"plots/{SEQUENCE_NAME}")
+genome_plots.mkdir(exist_ok=True, parents=True)
+
+for (stats_name, name, level), squared_errors in errors.items():
+    label = f"{name}[{level}]" if level is not None else name
+    title = f"{stats_name}: {label}"
+    
+    fig, ax = plt.subplots()
+    ax.boxplot(squared_errors)
+    ax.set_xticks([1], [label])
+    ax.set_ylabel("Squared error")
+    ax.set_title(title)
+    fig.tight_layout()
+
+    plt.savefig(str(genome_plots / title), dpi=300)
+    plt.close()
+
 
 #============================#
 #OUTPUT INFO
