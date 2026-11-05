@@ -343,9 +343,10 @@ As outlined in the \cref{chap:introduction}, the space consumption and query tim
 \newcommand{\distinctMinimizers}[1]{\mathcal{M}_{\levelParameters{#1-1}, \minimizerLength^{#1}}}
 \newcommand{\distinctKmers}[1]{\mathcal{K}_{\levelParameters{#1-1}}}
 
+\newcommand{\parameterAccess}[3]{\levelParameters{#1}[#2^{#3}]}
 \newcommand{\manualZV}[3]{#1[#2, #3]}
-\newcommand{\ZVM}[1]{\manualZV{M}{\levelParameters{#1-1}}{\minimizerLength^{#1}}}
-\newcommand{\ZVK}[1]{\manualZV{K}{\levelParameters{#1-1}}{\minimizerLength^{#1}}}
+\newcommand{\ZVM}[1]{\manualZV{M}{\levelParameters{#1-1}}{\parameterAccess{#1}{\minimizerLength}{#1}}}
+\newcommand{\ZVK}[1]{\manualZV{K}{\levelParameters{#1-1}}{\parameterAccess{#1}{\minimizerLength}{#1}}}
 
 \newcommand{\probabilityDistribution}[1]{p_{#1}}
 
@@ -448,7 +449,7 @@ In \cref{chap:experiments} we describe how to find the optimal level parameters 
 \section{Model Input}\label{sec:minlp_modelInput}
 The set of levels $\setOfLevels$, the sets of minimizer lengths $\possibleMinimizerLengths \subset \NN$ and thresholds $\possibleThresholds \subset \NN$ to consider have to be specified explicitly.
 \\
-The computed minimizer statistics $\CDF{\ZVM{\level}}(\threshold^\level)$, $\CDF{\ZVK{\level}}(\threshold^\level)$ and $\averageFrequency(\levelParameters{\level})$ for all possible combinations $\levelParameters{\level}$ of the level parameters on each level $\level \in \setOfLevels$ also have to be passed as input to the MINLP.
+From the computed minimizer statistics, the values $\CDF{\ZVM{\level}}(\threshold^\level)$, $\CDF{\ZVK{\level}}(\threshold^\level)$ and $\averageFrequency(\levelParameters{\level})$ for all possible combinations $\levelParameters{\level}$ of the level parameters on each level $\level \in \setOfLevels$ also have to be passed as input to the MINLP.
 \\
 Lastly, a measure of the times 
 $\timeForOperationOnStructure{\contains}{R}$,
@@ -582,7 +583,7 @@ $n \lceil log_2(U/n) \rceil + 3n$ \cite{okanohara2007practical} \todo{woher komm
 \textbf{Bit Vector Rank Query}
 A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
 \begin{equation*}
-	\timeForOperationOnStructure{\contains}{R} = log_2 \frac{4^\varMinimizerLength}{\numberOfDistinctMinimizers}
+	\timeForOperationOnStructure{\contains}{R} = log_2 \frac{4^\varMinimizerLength}{\numberOfDistinctMinimizers} =  2\varMinimizerLength - log_2\numberOfDistinctMinimizers
 \end{equation*}
 \todo[inline]{end experimental}
 
@@ -590,11 +591,18 @@ A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \
 Since $\varCDF{K}$ describes the percentage of k-mers with \infrequent minimizers and every minimizer covers an average of $(k-\varMinimizerLength+2)/2$ consecutive k-mers, we can model the bits per k-mer in $S$ through:
 \newcommand{\bpkS}{bpk_{S} &= \varCDF{K}\cdot\frac{2}{k-\varMinimizerLength+2} \textbf{OR}
 	\\
-	&= \frac{\varCDF{M} * n_{minimizers}}{n_{kmers}}}
+	&= \frac{\varCDF{M} \cdot n_{minimizers}}{n_{kmers}}}
 \begin{align}
 	\bpkS \label{constraint:bpkS} 
 \end{align}
 \todo[inline]{figure out how to model the ratio between k-mers and minimizers for fractured input sequences OR use $n_{minimizers}$?}
+\todo[inline]{ start experimental}
+\textbf{Bit Vector Rank Query}
+A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
+\begin{equation*}
+	\timeForOperationOnStructure{\select}{S} = log_2 \frac{\varCDF{M} \cdot n_{minimizers}}{\numberOfDistinctMinimizers} = \varAverageFrequency
+\end{equation*}
+\todo[inline]{end experimental}
 
 \textbf{The offset vector $O$} contains one entry of size $log_2 |T|$ for the offset of each \infrequent minimizer.\\
 Since $bpk_S$ already describes the number of offsets per k-mer, we can model the bits per k-mer in $O$ with:
@@ -643,8 +651,8 @@ One could for example search for level parameters minimizing the lookup time whi
 	\\
 	&\setOfLevels = \{1\}, \possibleMinimizerLengths, \possibleThresholds,
 	\\
-	&\CDF{\ZVK{}},
-	\averageFrequency(\levelParameters{}) ~ \forall \levelParameters{} \in \possibleMinimizerLengths \times \possibleThresholds,
+	&\CDF{\manualZV{M}{\levelParameters{0}}{\minimizerLength}}(\threshold), \CDF{\manualZV{K}{\levelParameters{0}}{\minimizerLength}}(\threshold),
+	\averageFrequency((\minimizerLength, \threshold)) ~ \forall (\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds,
 	\\
 	&\timeForOperationOnStructure{\contains}{R},
 	\timeForOperationOnStructure{\select}{S},
@@ -731,21 +739,21 @@ For each level $l$ we can model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\v
 	\varAverageFrequency^\level &\in \RR^+_0 &\mid \forall l \in \setOfLevels
 	\\
 	\varCDF{M}^\level &= \sum\limits_{\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level}
-	\CDF{\ZVM{\level}}(\threshold^\level) 
+	\CDF{\ZVM{\level}}(\parameterAccess{\level}{\threshold}{\level}) 
 	\cdot
-	\prod_{1\leq i \leq \level} \indicatorm^i_{\levelParameters{\level}[\minimizerLength^i]} \indicatort^i_{\levelParameters{\level}[\threshold^i]}
+	\prod_{1\leq i \leq \level} \indicatorm^i_{\parameterAccess{\level}{\minimizerLength}{i}} \indicatort^i_{\parameterAccess{\level}{\threshold}{i}}
 	& \mid \forall l \in \setOfLevels
 	\\
 	\varCDF{K}^\level &= \sum\limits_{\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level}
 	\CDF{\ZVK{\level}}(\threshold^\level) 
 	\cdot
-	\prod_{1\leq i \leq \level} \indicatorm^i_{\levelParameters{\level}[\minimizerLength^i]} \indicatort^i_{\levelParameters{\level}[\threshold^i]} 
+	\prod_{1\leq i \leq \level} \indicatorm^i_{\parameterAccess{\level}{\minimizerLength}{i}} \indicatort^i_{\parameterAccess{\level}{\threshold}{i}}
 	& \mid \forall l \in \setOfLevels
 	\\
 	\varAverageFrequency^\level &= \sum\limits_{\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level}
 	\averageFrequency(\levelParameters{\level})
 	\cdot
-	\prod_{1\leq i \leq \level} \indicatorm^i_{\levelParameters{\level}[\minimizerLength^i]} \indicatort^i_{\levelParameters{\level}[\threshold^i]}
+	\prod_{1\leq i \leq \level} \indicatorm^i_{\parameterAccess{\level}{\minimizerLength}{i}} \indicatort^i_{\parameterAccess{\level}{\threshold}{i}}
 	& \mid \forall l \in \setOfLevels
 \end{align*}
 \todo[inline]{$\prod_{1\leq i \leq \level} \indicatorm^i_{\levelParameters{\level}[\minimizerLength^i]} \indicatort^i_{\levelParameters{\level}[\threshold^i]}$ besser formulieren oder notation $\levelParameters{\level}[\threshold^i]$ vorher einführen und dann den Ausdruck hier nochmal explizit erklären}
@@ -842,7 +850,7 @@ We use the same datasets as \citet{pibiri_sparse_2022}. Those are the whole geno
 
 \section{Computing the Model Input} \label{sec:computationOfModelInput}
 In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for a given dataset which we refer to as the set of sequences $\sequences{0}$. The sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered as well as the number of levels $\numberOfLevels$ resulting in a set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$ are also hyper parameters that have to be specified explicitly.\\
-The MINLP requires the minimizer distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $\level \in \setOfLevels$ as input.
+The MINLP requires the cumulative distributions of minimizer frequencies $\CDF{\ZVM{\level}}$ and $\CDF{\ZVK{\level}}$ and the average frequencies $\averageFrequency(\levelParameters{\level})$ for every combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $\level \in \setOfLevels$ as input.
 
 A fairly straightforward way\todo{zu umgangssprachlich?} of computing these is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
 Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
@@ -886,6 +894,10 @@ However, this approach is sufficient for computing the input needed for analyzin
 
 \section{Model Accuracy}
 We assess the accuracy of the lookup time and space consumption modeled by the MINLP \cref{chap:minlp}.
+
+\subsection{Lookup Time}
+
+\subsection{Space Consumption}
 
 \section{Limitations}
 The MINLP approach for finding optimal level parameters has the advantage of finding the optimal level parameters for the specified optimization goal.

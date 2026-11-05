@@ -112,7 +112,7 @@ def main(n_threads: int) -> None:
         genome_path = stats_directory / f"{genome}"  #directory for the stats of a specific genome
         if(not genome_path.is_dir()):               
                 genome_path.mkdir()
-       
+
         #create query file with N_SAMPLES many random kmers that appear in the genome
         #needed for computing the average lookup time
         query_path = (DATA_DIRECTORY / f"{genome}_query.fastq.gz")
@@ -143,6 +143,7 @@ def main(n_threads: int) -> None:
         
         query_path.unlink() #delete query file, as it is no longer needed
 
+    return
     #zip stats_directory
     shutil.make_archive("allStats", 'zip', root_dir=str(stats_directory)) 
     #remove unziped stats

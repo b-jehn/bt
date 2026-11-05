@@ -160,11 +160,17 @@ def MINLP(
         scip.addCons(bpk_O_vars[l] == bpk_S_vars[l] * log_sequence_length)
 
         #constraints regarding the structure operation times
-        scip.addCons(t_contains_R_vars[l] == t_contains_R_vars_empirical)
-        scip.addCons(t_select_S_vars[l] == t_select_S_vars_empirical)
+        #fixed, really inaccurate values
+        #scip.addCons(t_contains_R_vars[l] == t_contains_R_vars_empirical)
+        #scip.addCons(t_select_S_vars[l] == t_select_S_vars_empirical)
         scip.addCons(t_access_O_vars[l] == t_access_O_vars_empirical)
         scip.addCons(t_compare_T_vars[l] == t_compare_T_vars_empirical)
         scip.addCons(t_access_H == t_access_H_empirical)
+        
+        #modeled values
+        scip.addCons(t_contains_R_vars[l] == 2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0)))
+        scip.addCons(t_select_S_vars[l] == log(f_avg_vars[l])/log(2.0))
+        
 
     #recursivly build the t_lookup constraint level by level
     remaining_time = t_access_H

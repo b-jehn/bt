@@ -2,9 +2,9 @@ from pathlib import Path
 import csv
 from itertools import product
 import matplotlib.pyplot as plt
-import gzip
-import random
-import shutil
+
+import numpy as np
+from scipy.stats import gaussian_kde
 
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_SAMPLES = 100000 
@@ -40,7 +40,7 @@ def getParameterDirectory(minimizer_lengths: list[int], thresholds: list[int]) -
     return Path(f"{m_part}_{t_part}")
 
 
-def plotOperationTimes(genome_stats: Path, genome_plots: Path):
+def boxPlotOperationTimes(genome_stats: Path, genome_plots: Path):
     print(f"plotting operation times for: {genome_stats}")
     operation_names = [
         "R_contains",
@@ -82,6 +82,70 @@ def plotOperationTimes(genome_stats: Path, genome_plots: Path):
         plt.savefig(str(genome_plots / f"{name} time distribution by level"), dpi=300)
         plt.close()
         
+def plotDistributionsOfOperationTimes(genome_stats: Path, genome_plots: Path):
+    print(f"plotting operation time distributions for: {genome_stats}")
+    genome_plots.mkdir(parents=True, exist_ok=True)
+
+    operation_names = [
+        "R_contains",
+        "S_select",
+        "O_access",
+        "T_compare",
+        "H_access",
+    ]
+    values_by_operation = {name: {} for name in operation_names}
+
+    for minimizer_lengths, thresholds in product(MINIMIZER_LENGTHS, THRESHOLDS):
+        parameters_path = (
+            genome_stats / getParameterDirectory(minimizer_lengths, thresholds)
+        )
+        if not parameters_path.is_dir():
+            continue
+
+        stats_path = parameters_path / "times_per_operation.csv"
+        if not stats_path.is_file():
+            continue
+
+        with open(stats_path, newline="") as f:
+            rows = csv.DictReader(f, skipinitialspace=True)
+
+            for row in rows:
+                level = int(row["level"])
+
+                for name in operation_names:
+                    values_by_operation[name].setdefault(level, []).append(
+                        float(row[name])
+                    )
+
+    for name in operation_names:
+        fig, ax = plt.subplots()
+        plotted_any = False
+
+        for level in sorted(values_by_operation[name]):
+            values = np.asarray(values_by_operation[name][level], dtype=float)
+
+            # KDE needs at least two non-identical values.
+            if len(values) < 2 or np.ptp(values) == 0:
+                continue
+
+            kde = gaussian_kde(values)
+            x = np.linspace(values.min(), values.max(), 300)
+            ax.plot(x, kde(x), label=f"Level {level}")
+            plotted_any = True
+
+        ax.set_title(f"{name} time distribution by level")
+        ax.set_xlabel("Time (ns)")
+        ax.set_ylabel("Density")
+        if plotted_any:
+            ax.legend(title="Level")
+
+        fig.tight_layout()
+        fig.savefig(
+            genome_plots / f"{name}_time_distribution_by_level.png",
+            dpi=300,
+        )
+        plt.close(fig)
+        
 
 def main() -> None:
     stats_directory = Path(f"allStats")  #directory for stats of all genomes
@@ -96,12 +160,13 @@ def main() -> None:
         if(not genome_stats.is_dir()):               
             continue
         
-        genome_plots = plot_path / f"{genome}"
-        if(genome_plots.is_dir()):
-            continue
+        box_plots = plot_path / "box_plots" / f"{genome}"
+        box_plots.mkdir(parents=True ,exist_ok=True)
+        boxPlotOperationTimes(genome_stats, box_plots)
         
-        genome_plots.mkdir(exist_ok=True)
-        plotOperationTimes(genome_stats, genome_plots)
+        distribution_plots = plot_path / "distribution_plots" / f"{genome}"
+        distribution_plots.mkdir(parents=True, exist_ok=True)
+        plotDistributionsOfOperationTimes(genome_stats, distribution_plots)
 
 
 if __name__ == '__main__':
