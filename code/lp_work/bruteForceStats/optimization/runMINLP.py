@@ -50,7 +50,7 @@ t_rank_R_empirical = 35
 t_select_S_empirical = 35
 t_compare_T_empirical = 10
 
-data_path = Path(f"data/{SEQUENCE_NAME}")
+data_path = Path(f"{SEQUENCE_NAME}/data")
 data_path.mkdir(exist_ok=True, parents=True)
 error_file_path = data_path / "squarred_errors.json"
 
@@ -140,7 +140,7 @@ else:
 ##############
 # Make one box plot per field/level pair. 
 ##############
-genome_plots = Path(f"plots/{SEQUENCE_NAME}")
+genome_plots = Path(f"{SEQUENCE_NAME}/plots")
 genome_plots.mkdir(exist_ok=True, parents=True)
 
 for (stats_name, name, level), squared_errors in errors.items():

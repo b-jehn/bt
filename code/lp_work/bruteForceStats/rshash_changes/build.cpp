@@ -944,7 +944,6 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
 
     bpk_text = (double) 2*N/no_text_kmers;
     bpk_H = (double) (hashset.capacity()*(sizeof(uint64_t) + 1)*8)/no_text_kmers;
-    bpk_total = bpk_text + bpk_H;
 
     bpk_R[0] = (double) r1.bitCount()/no_text_kmers;
     bpk_S[0] = (double) no_skmers1/no_text_kmers;
@@ -959,6 +958,11 @@ void RSHash::build(const std::vector<seqan3::bitpacked_sequence<seqan3::dna4>>& 
         bpk_R[2] = (double) r3.bitCount()/no_text_kmers;
         bpk_S[2] = (double) no_skmers3/no_text_kmers;
         bpk_O[2] = (double) no_skmers3*offset_width/no_text_kmers;
+    }
+
+    bpk_total = bpk_text + bpk_H;
+    for(int l=0; l < level; l++){
+        bpk_total += bpk_R[l] + bpk_S[l] + bpk_O[l];
     }
     
 

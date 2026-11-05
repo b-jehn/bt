@@ -195,6 +195,7 @@ def MINLP(
     
     space.bpk_T = bpk_T
     space.bpk_H = sol[bpk_H]
+    space.bpk_total = sol[bpk_total]
     times.H_access = sol[t_access_H]
     for l in range(no_levels):
         space.bpk_R.append(sol[bpk_R_vars[l]])
