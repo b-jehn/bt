@@ -7,10 +7,16 @@ from cascadingStats import *
 
 
 #TODO: model or measure!
-t_contains_R_vars_empirical = 200
-t_select_S_vars_empirical = 15
-t_access_O_vars_empirical = 5
-t_compare_T_vars_empirical = 2
+#t_contains_R_vars_empirical = 200
+#t_select_S_vars_empirical = 15
+#t_access_O_vars_empirical = 5
+#t_compare_T_vars_empirical = 2
+#t_access_H_empirical = 20
+
+t_contains_R_vars_empirical = 30
+t_select_S_vars_empirical = 35
+t_access_O_vars_empirical = 10
+t_compare_T_vars_empirical = 10
 t_access_H_empirical = 20
 
 def MINLP(

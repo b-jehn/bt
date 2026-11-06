@@ -66,8 +66,8 @@ fill_cascading_stats(root_stats=genome_stats,
                     thresholdsConsidered=THRESHOLDS_CONSIDERED,
                     nonDecreasingParameters=True)
         
-setOfMinimizerLengths = [[15, 19, 19]]
-setOfThresholds = [[32, 32, 128]]
+setOfMinimizerLengths = [[19, 19, 19]]
+setOfThresholds = [[64, 64, 128]]
 
 for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
     print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
@@ -93,7 +93,7 @@ for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, s
         print(line, end='')
     
     print(f"minimizer_lengths: {forcedMinimizerLengths}, thresholds. {forcedThresholds}")
-    print("stats:\nmeasured space\mmodeled space\n")
+    print("stats:\nmeasured space\nmodeled space\n")
     for f in fields(modeledSpace):
         name = f.name
         #print(f"{name}:\n{getattr(measuredSpace, name)}\n{getattr(modeledSpace, name)}\n")

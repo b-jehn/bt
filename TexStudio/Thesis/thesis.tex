@@ -344,6 +344,7 @@ As outlined in the \cref{chap:introduction}, the space consumption and query tim
 \newcommand{\distinctKmers}[1]{\mathcal{K}_{\levelParameters{#1-1}}}
 
 \newcommand{\parameterAccess}[3]{\levelParameters{#1}[#2^{#3}]}
+\newcommand{\compactZV}[2]{#1[#2]}
 \newcommand{\manualZV}[3]{#1[#2, #3]}
 \newcommand{\ZVM}[1]{\manualZV{M}{\levelParameters{#1-1}}{\parameterAccess{#1}{\minimizerLength}{#1}}}
 \newcommand{\ZVK}[1]{\manualZV{K}{\levelParameters{#1-1}}{\parameterAccess{#1}{\minimizerLength}{#1}}}
@@ -365,53 +366,64 @@ Let $\distinctMinimizers{\level}$ be the set of distinct minimizers of lengths $
 \begin{equation}
 	\distinctMinimizers{\level} := \{\minimizer \in \{0, 1, ..., 4^{\minimizerLength^\level}\} \mid \exists \kmer \in \distinctKmers{\level} ~ \minimizerOf{\kmer}{\level}=\minimizer\}
 \end{equation}
-Let $\ZVM{\level}$ be a discrete random variable that describes the frequency of these minimizers:
+Let $\manualZV{M}{\levelParameters{\level-1}}{m}$ be a discrete random variable that describes the frequency of these minimizers:
 \begin{align}
-	\ZVM{\level} &: \distinctMinimizers{\level} \rightarrow \NN
+	\manualZV{M}{\levelParameters{\level-1}}{m} &: \distinctMinimizers{\level} \rightarrow \NN
 	\\
-	\ZVM{\level}(\minimizer) &= \frequencyOf{\minimizer}
+	\manualZV{M}{\levelParameters{\level-1}}{m}(\minimizer) &= \frequencyOf{\minimizer}
 \end{align}
 \todo[inline]{wahrscheinlichkeits und verteilungsfunktion für K einmal etwas ausführlicher beschreiben aber für M mehr oder weniger so lassen}
-We define its probability distribution $\probabilityDistribution{\ZVM{\level}}$ and its cumulative distribution function $\CDF{\ZVM{\level}}$\footnote{This notation differs slightly from that used by \citet{schulte-mattler_rshash_2026} who do not introduce the probability distributions but instead use $p_M$ and $p_K$ to denote the cumulative distribution functions which we denote with $F_M$ and $F_K$}: 
+We define its probability distribution $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$, which tells the probability of a minimizer having an exact frequency $f \in \NN$. The distribution of minimizers depends both on the level parameters $\levelParameters{\level-1}$ on previous levels, which affect the remaining k-mers on level $\l$ and the minimizer length $\minimizerLength^\level$ on the current level, which directly affects the computation of minimizers. For these reasons, we index the distributions with those parameters:
 \begin{align}
-	\probabilityDistribution{\ZVM{\level}} &: \NN \rightarrow [0,1]
+	\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}} &: \NN \rightarrow [0,1]
 	\\
-	\probabilityDistribution{\ZVM{\level}}(f) &= \mathbb{P}(\ZVM{\level} = f) := \frac{|\{\minimizer \in \distinctMinimizers{\level} \mid 
-	\ZVM{\level}(\minimizer)=f \}|}{|\distinctMinimizers{\level}|}
-	\\
-	\CDF{\ZVM{\level}} &: \NN \rightarrow [0,1]\\
-	\CDF{\ZVM{\level}}(f) &= \mathbb{P}(\ZVM{\level} \leq f) := \sum_{i=1}^f \probabilityDistribution{\ZVM{\level}}(i)
+	\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level} = f) = \frac{|\{\minimizer \in \distinctMinimizers{\level} \mid 
+		\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}(\minimizer)=f \}|}{|\distinctMinimizers{\level}|}
 \end{align}
-The discrete random variable $\ZVM{\level}$ and its distribution can be used to model certain values related to a random (appearing) minimizer.\\
-However, RSHash is used to lookup k-mers, not minimizers. Therefore we introduce the discrete random variable $\ZVK{\level}$ to describe the frequency of random (appearing) k-mers minimizer of length $\minimizerLength^\level$:
+Using the random variables probability function we can derive its cumulative distribution function $\CDF{\manualZV{M}{\levelParameters{\level-1}}{m}}$\footnote{This notation differs slightly from that used by \citet{schulte-mattler_rshash_2026} who do not introduce the probability distributions but instead use $p_M$ and $p_K$ to denote the cumulative distribution functions which we denote with $F_M$ and $F_K$}, which returns the probability of a minimizer having a frequency that does not exceed an upper bound $f$: 
 \begin{align}
-	\ZVK{\level} &: \distinctKmers{\level} \rightarrow \NN
-	\\
-	\ZVK{\level}(\kmer) &= \frequencyOf{\minimizerOf{\kmer}{\level}}
+	\CDF{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}} &: \NN \rightarrow [0,1]\\
+	\CDF{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level} \leq f) = \sum_{i=1}^f \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(i)
 \end{align}
-Its probability distribution $\probabilityDistribution{\ZVK{\level}}$ and its cumulative distribution function $\CDF{\ZVK{\level}}$ are: 
+
+Whilst $\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}$ and its distribution are useful for modeling values depending of a random (appearing) minimizer, RSHash is used to lookup k-mers, not minimizers. Therefore, we introduce the discrete random variable $\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}$ which is defined for every distinct (appearing) k-mer on the level and describes the frequency each k-mers minimizer dependent of the level parameters $\levelParameters{\level-1}$ on all previous levels and the minimizer length $\minimizerLength^\level$ on the current one:
 \begin{align}
-	\probabilityDistribution{\ZVK{\level}} &: \NN \rightarrow [0,1]
+	\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level} &: \distinctKmers{\level} \rightarrow \NN
 	\\
-	\probabilityDistribution{\ZVK{\level}}(f) &= \mathbb{P}(\ZVK{\level} = f) := \frac{|\{\kmer \in \distinctKmers{\level} \mid \ZVK{\level}(\kmer)=f \}|}{|\distinctKmers{\level}|}
+	\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}(\kmer) &= \frequencyOf{\minimizerOf{\kmer}{\level}}
+\end{align}
+Its probability distribution $\probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ and its cumulative distribution function $\CDF{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ are: 
+\begin{align}
+	\probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}} &: \NN \rightarrow [0,1]
 	\\
-	\CDF{\ZVK{\level}} &: \NN \rightarrow [0,1]\\
-	\CDF{\ZVK{\level}}(f) &= \mathbb{P}(\ZVK{\level} \leq f) := \sum_{i=1}^f \probabilityDistribution{\ZVK{\level}}(i)
+	\probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level} = f) = \frac{|\{\kmer \in \distinctKmers{\level} \mid \manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}(\kmer)=f \}|}{|\distinctKmers{\level}|}
+	\\
+	\CDF{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}} &: \NN \rightarrow [0,1]\\
+	\CDF{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level} \leq f) = \sum_{i=1}^f \probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}(i)
+\end{align}
+
+Let $\levelParameters{\level}$ be a combination of level parameters on a level $\level$. Recall that we use $\parameterAccess{\level}{\minimizerLength}{\level}$ to denote retrieving the minimizer length specified for level $\level$ from the level parameters and analogously for $\parameterAccess{\level}{\threshold}{\level}$. For better readability we introduce a more compact notation to denote the probability $\CDF{\compactZV{M}{\levelParameters{\level}}}$ of a minimizer being \infrequent on level $\level$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ of a k-mer having an \infrequent minimizer on that level, both in dependence of all level parameters:
+\begin{align}
+	\CDF{\compactZV{M}{\levelParameters{\level}}} &= \CDF{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})\\
+	\CDF{\compactZV{K}{\levelParameters{\level}}} &= \CDF{\manualZV{K}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})
 \end{align}
 \todo[inline]{Explain how and why distribution on the first level affects the distributions on higher levels. Aber nur kurz mit verweis -> Experiments}
 
 \section{Average Frequencies} \label{sec:averagefrequencies}
-The average frequency of minimizers on a level $\level \in \setOfLevels$ given the level parameters $\levelParameters{\level}$ and the sequences $\sequences{\level-1}$ is given by the expected value of the probability distribution of the random variable $\ZVM{\level}$:
+Let $\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ be the sample space of the random variable $\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}$ i.e. the set which contains all frequencies $f$ for which there is at least one minimizer $\minimizer$ on level $\level$ which occurs exactly $f$ times:
 \begin{equation}
-	\mathbb{E}[\ZVM{\level}] = \sum_{f \in \ZVM{\level}(\distinctMinimizers{\level})} \probabilityDistribution{\ZVM{\level}}(f) * f
+	\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}} = \{f \mid \exists \minimizer \in \distinctMinimizers{\level} \frequencyOf{\minimizer} = f \}
 \end{equation}
-\todo[inline]{wertebereich $\ZVM{\level}(\distinctMinimizers{\level})$ definieren}
-This value always exists, as the set $\distinctMinimizers{\level}$ of distinct minimizers of length $\minimizerLength$ in a given set of (finite) sequences is always finite.
-
-More relevant to the optimization of level parameters is the average frequency of \infrequent minimizers i.e. the average frequency of minimizers whose frequency do not exceed the threshold $\threshold^\level$. We denote this value with $\averageFrequency(\levelParameters{\level})$ and can derive it from $\probabilityDistribution{\ZVM{\level}}$ by computing a weighted sum over all frequencies up until the threshold $\threshold^\level$ and then norming the result by dividing through the percentage of \infrequent minimizers:
+The average frequency of minimizers on a level $\level \in \setOfLevels$ is given by the expected value of the probability distribution of the random variable $\manualZV{M}{\levelParameters{\level-1}}{m}$:
 \begin{equation}
-	\averageFrequency(\levelParameters{\level}) = \frac{1}{\CDF{\ZVM{\level}}(\threshold^\level)} \cdot
-	\sum\limits_{f=1}^{\threshold^\level} \probabilityDistribution{\ZVM{\level}}(f) \cdot f 
+	\mathbb{E}[\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}] = \sum_{f \in \Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}} \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) * f
+\end{equation}
+For a given set of finite sequences the set of distinct minimizers on each level and for each combination of level parameters is finite by definition. It follows that for a given sequence and set of level parameters, the average frequency $\mathbb{E}[\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}]$ can always be computed, because the sample space $\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ is then finite by definition.
+
+More relevant to the optimization of level parameters is the average frequency of \infrequent minimizers i.e. the average frequency of minimizers whose frequency do not exceed the threshold $\threshold^\level$. We denote this value with $\averageFrequency(\levelParameters{\level})$ and can derive it from $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{m}}$ by computing a weighted sum over all frequencies up until the threshold $\threshold^\level$ and then norming the result by dividing through the percentage of \infrequent minimizers:
+\begin{equation}
+	\averageFrequency(\levelParameters{\level}) = \frac{1}{\CDF{\compactZV{M}{\levelParameters{\level}}}} \cdot
+	\sum\limits_{f=1}^{\threshold^\level} \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(f) \cdot f 
 \end{equation}
 
 \section{Times for Operations on Data Structures}
@@ -487,22 +499,25 @@ There values can be modeled through a sum over the indicator variables multiplie
 	\optimalT \label{constraint:optimalT}
 \end{align}
 
-We introduce the variable $\varCDF{M} \in [0,1]$ to take the value of $\CDF{\manualZV{M}{\levelParameters{0}}{\varMinimizerLength}}(\varThreshold)$ i.e. the percentage of minimizers of length $\varMinimizerLength$ in the input sequence, whose frequencies do not exceed $\varThreshold$ (\cref{sec:minimizerDistribution_severalLevels}).\\
-It is not possible to directly evaluate this value as both $\varMinimizerLength$ and $\varThreshold$ are variables of the model. Instead we use the indicator variables to model a constraint forcing $\varCDF{M}$ to take the value of $\CDF{\manualZV{M}{\levelParameters{0}}{\minimizerLength}}(\threshold)$ for which $\indicatorm_\minimizerLength = 1$ and $\indicatort_\threshold = 1$:
+We introduce the variable $\varCDF{M} \in [0,1]$ to take the value of $\CDF{\compactZV{M}{(\varMinimizerLength, \varThreshold)}}$ i.e. the percentage of minimizers of length $\varMinimizerLength$ in the input sequence, whose frequencies do not exceed $\varThreshold$ (\cref{sec:minimizerDistribution_severalLevels}).\\
+It is not possible to directly evaluate this value as both $\varMinimizerLength$ and $\varThreshold$ are variables of the model. Instead we use the indicator variables to model a constraint forcing $\varCDF{M}$ to take the value of $\CDF{\compactZV{M}{(\minimizerLength, \threshold)}}$ for which $\indicatorm_\minimizerLength = 1$ and $\indicatort_\threshold = 1$:
 \newcommand{\cdfMExpression}{
-	\varCDF{M} &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \indicatorm_\minimizerLength \indicatort_\threshold \cdot \CDF{\manualZV{M}{\levelParameters{0}}{\minimizerLength}}(\threshold)
+	\varCDF{M} &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \CDF{\compactZV{M}{(\minimizerLength, \threshold)}} \cdot
+	\indicatorm_\minimizerLength \indicatort_\threshold
 }
 \begin{align}
 	\varCDF{M} &\in [0,1] \label{variable:percMinimizers}\\
 	\cdfMExpression \label{constraint:percMinimizers}
 \end{align}
 
-Analogously we introduce $\varCDF{K} \in [0,1]$ to represent $\CDF{\manualZV{K}{\levelParameters{0}}{\varMinimizerLength}}(\varThreshold)$ and $\varAverageFrequency \in \RR^+_0$ to represent $\averageFrequency((\varMinimizerLength, \varThreshold))$ (\cref{sec:averagefrequencies}):
+Analogously we introduce $\varCDF{K} \in [0,1]$ to represent $\CDF{\compactZV{K}{(\varMinimizerLength, \varThreshold)}}$ and $\varAverageFrequency \in \RR^+_0$ to represent $\averageFrequency((\varMinimizerLength, \varThreshold))$ (\cref{sec:averagefrequencies}):
 \newcommand{\cdfKExpression}{
-	\varCDF{K} &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \indicatorm_\minimizerLength \indicatort_\threshold \cdot \CDF{\manualZV{K}{\levelParameters{0}}{\minimizerLength}}(\threshold)
+	\varCDF{K} &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \CDF{\compactZV{K}{(\minimizerLength, \threshold)}} \cdot
+	\indicatorm_\minimizerLength \indicatort_\threshold
 }
 \newcommand{\varAverageFrequencyExpression}{
-	\varAverageFrequency &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \indicatorm_\minimizerLength \indicatort_\threshold \cdot \averageFrequency((\minimizerLength,\threshold))
+	\varAverageFrequency &= \sum\limits_{(\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds} \averageFrequency((\minimizerLength,\threshold)) \cdot
+	\indicatorm_\minimizerLength \indicatort_\threshold
 }
 \begin{align}
 	\varCDF{K} &\in [0,1] \label{variable:percKmers}\\
@@ -651,7 +666,7 @@ One could for example search for level parameters minimizing the lookup time whi
 	\\
 	&\setOfLevels = \{1\}, \possibleMinimizerLengths, \possibleThresholds,
 	\\
-	&\CDF{\manualZV{M}{\levelParameters{0}}{\minimizerLength}}(\threshold), \CDF{\manualZV{K}{\levelParameters{0}}{\minimizerLength}}(\threshold),
+	&\CDF{\compactZV{M}{(\minimizerLength, \threshold)}}, \CDF{\compactZV{K}{(\minimizerLength, \threshold)}},
 	\averageFrequency((\minimizerLength, \threshold)) ~ \forall (\minimizerLength, \threshold) \in \possibleMinimizerLengths \times \possibleThresholds,
 	\\
 	&\timeForOperationOnStructure{\contains}{R},
@@ -660,6 +675,7 @@ One could for example search for level parameters minimizing the lookup time whi
 	\timeForOperationOnStructure{\compare}{T},
 	\timeForOperationOnStructure{check}{H}
 \end{align*}
+\todo[inline]{include $n_{minimizers}$ and $n_{kmers}$!!! and make them dependent of the level}
 
 \begin{align*}
 	\text{MINIMIZE}\\
@@ -730,7 +746,7 @@ The constraints regarding these variables are analog to those when using only on
 	\varMinimizerLength^\level &= \sum\limits_{m \in \possibleMinimizerLengths} \indicatorm_\minimizerLength^\level \cdot \minimizerLength^\level & \mid \forall l \in \setOfLevels \\
 	\varThreshold^\level &= \sum\limits_{t \in \possibleThresholds} \indicatort_\threshold^\level \cdot \threshold^\level & \mid \forall l \in \setOfLevels
 \end{array} \]
-For each level $l$ we can model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\varAverageFrequency^\level$ analogously to using a single level, only summing over every possible combination of level parameters $\levelParameters{\level}$ for each level up to and including $\level$ instead of just those for one level:
+For each level $l$ we model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\varAverageFrequency^\level$ analogously to using a single level; however, it is necessary to sum over every possible combination of level parameters $\levelParameters{\level}$. The number of additions grows exponentially for an increasing number of levels. We will outline the resulting consequences for solving the MINLP in \cref{chap:experiments}.\todo{don't forget to do this} 
 \begin{align*}
 	\varCDF{M}^\level &\in [0,1] &\mid \forall l \in \setOfLevels
 	\\
@@ -739,13 +755,13 @@ For each level $l$ we can model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\v
 	\varAverageFrequency^\level &\in \RR^+_0 &\mid \forall l \in \setOfLevels
 	\\
 	\varCDF{M}^\level &= \sum\limits_{\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level}
-	\CDF{\ZVM{\level}}(\parameterAccess{\level}{\threshold}{\level}) 
+	\CDF{\compactZV{M}{\levelParameters{\level}}} 
 	\cdot
 	\prod_{1\leq i \leq \level} \indicatorm^i_{\parameterAccess{\level}{\minimizerLength}{i}} \indicatort^i_{\parameterAccess{\level}{\threshold}{i}}
 	& \mid \forall l \in \setOfLevels
 	\\
 	\varCDF{K}^\level &= \sum\limits_{\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level}
-	\CDF{\ZVK{\level}}(\threshold^\level) 
+	\CDF{\compactZV{K}{\levelParameters{\level}}}
 	\cdot
 	\prod_{1\leq i \leq \level} \indicatorm^i_{\parameterAccess{\level}{\minimizerLength}{i}} \indicatort^i_{\parameterAccess{\level}{\threshold}{i}}
 	& \mid \forall l \in \setOfLevels
@@ -756,7 +772,7 @@ For each level $l$ we can model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\v
 	\prod_{1\leq i \leq \level} \indicatorm^i_{\parameterAccess{\level}{\minimizerLength}{i}} \indicatort^i_{\parameterAccess{\level}{\threshold}{i}}
 	& \mid \forall l \in \setOfLevels
 \end{align*}
-\todo[inline]{$\prod_{1\leq i \leq \level} \indicatorm^i_{\levelParameters{\level}[\minimizerLength^i]} \indicatort^i_{\levelParameters{\level}[\threshold^i]}$ besser formulieren oder notation $\levelParameters{\level}[\threshold^i]$ vorher einführen und dann den Ausdruck hier nochmal explizit erklären}
+\todo[inline]{$\parameterAccess{\level}{\threshold}{\level}$ in Notation einführen}
 
 \subsection{Lookup Time}
 The search time on a level $l \in \setOfLevels$ can be leveled analogously to that on one level:
@@ -866,12 +882,16 @@ Only once this recursion is completed for every threshold $\threshold \in \possi
 \text{sequences } \sequences{\level-1}
 $
 \Function{recursiveMinimizerDistribution}{$\level, \numberOfLevels, \levelParameters{\level-1} \sequences{\level-1}$}
+\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
 \For{$\minimizerLength \in \possibleMinimizerLengths$}
-	\State $n_{kmers}, n_{minimizers}, \probabilityDistribution{\ZVM{\level}},\probabilityDistribution{\ZVK{\level}} \gets getStats(\level, \sequences{\level-1}, m)$
-	\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
 	\For{$\threshold \in \possibleThresholds$}
-		\State $\levelParameters{\level} \gets \levelParameters{\level-1}.extend(m,t)$	\Comment $(m^1,t^1).extend(m^2,t^2) = (m^1,m^2,t^1,t^2)$
-		\State $\sequences{\level} \gets getFreqKmers(\level, \sequences{\level-1}, \minimizerLength, \threshold)$
+		\State $\levelParameters{\level} \gets extend(\levelParameters{\level-1}, m,t)$	\Comment $extend((m^1,t^1), m^2,t^2) = (m^1,m^2,t^1,t^2)$
+		\State $\sequences{\level} \gets getFrequentKmers(\level, \sequences{\level-1}, \minimizerLength, \threshold)$
+		\State 
+		\State $n_{kmers}, n_{minimizers} \gets getCounts(\hashfunction{\level}, \sequences{\level-1}, m)$
+		\State $\CDF{\compactZV{M}{\levelParameters{\level}}},
+		\CDF{\compactZV{K}{\levelParameters{\level}}},
+		\averageFrequency(\levelParameters{\level}) \gets distributionStats(\hashfunction{\level}, \sequences{\level-1}, m)$
 		\State 
 		\Call{recursiveMinimizerDistribution}{$\level+1, \numberOfLevels, \levelParameters{\level}, \sequences{\level}$}
 		
@@ -893,7 +913,7 @@ However, this approach is sufficient for computing the input needed for analyzin
 \end{itemize}
 
 \section{Model Accuracy}
-We assess the accuracy of the lookup time and space consumption modeled by the MINLP \cref{chap:minlp}.
+We assess the accuracy of the lookup time and space consumption modeled by the MINLP \cref{chap:minlp} by analyzing the differences between the values modeled by the MINLP and the values measured when building RSHash for a selection of possible level Parameters and the ge
 
 \subsection{Lookup Time}
 

@@ -1,4 +1,4 @@
-import math
+import numpy as np
 import json
 
 import sys
@@ -19,8 +19,8 @@ LOAD_FACTOR = 0.75  #of the hash table
 
 SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
-MAX_LOOKUP_TIME = math.inf
-MAX_BPK_TOTAL = math.inf
+MAX_LOOKUP_TIME = np.inf
+MAX_BPK_TOTAL = np.inf
 
 MINIMIZER_LENGTHS_CONSIDERED = [m for m in range(15,26,2)]
 THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]  
@@ -39,7 +39,7 @@ if os.path.isfile(sequence_path):
     sequence_length = os.path.getsize(sequence_path)
 else:
     sys.exit(f"{sequence_path} is not a file")
-log_sequence_length = math.log(sequence_length, 2)
+log_sequence_length = np.log2(sequence_length)
 
 
 #TODO: model or measure!
@@ -58,7 +58,7 @@ errors = {}
 if(error_file_path.exists()):
     print("loading squared errors from previous computations json file")
     with error_file_path.open() as json_file:
-        pairs = json.load(f)
+        pairs = json.load(json_file)
         errors = {tuple(k): v for k, v in pairs}
 else:
     genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
@@ -93,8 +93,8 @@ else:
         print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
         modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
             optimization_goal="t_lookup",
-            max_lookup_time=math.inf,
-            max_bpk_total=math.inf,
+            max_lookup_time=MAX_LOOKUP_TIME,
+            max_bpk_total=MAX_BPK_TOTAL,
             log_sequence_length=log_sequence_length,
             no_levels=NO_LEVELS, 
             minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED, 
@@ -127,9 +127,9 @@ else:
             measured_value = getattr(measured, name)
 
             if isinstance(modeled_value, list):
-                for level, (m, obs) in enumerate(zip(modeled_value, measured_value)):
+                for level, (measured, observed) in enumerate(zip(modeled_value, measured_value)):
                     key = (stats_name, name, level)
-                    errors.setdefault(key, []).append((m - obs) ** 2)
+                    errors.setdefault(key, []).append((measured - observed) ** 2)
             else:
                 key = (stats_name, name, None)
                 errors.setdefault(key, []).append((modeled_value - measured_value) ** 2)
@@ -146,14 +146,23 @@ genome_plots.mkdir(exist_ok=True, parents=True)
 for (stats_name, name, level), squared_errors in errors.items():
     label = f"{name}[{level}]" if level is not None else name
     title = f"{stats_name}: {label}"
+    median = np.median(squared_errors)
     
     fig, ax = plt.subplots()
     ax.boxplot(squared_errors)
     ax.set_xticks([1], [label])
     ax.set_ylabel("Squared error")
     ax.set_title(title)
+    
+    # Write the median's full numeric representation next to the median line.
+    ax.annotate(
+        str(median),
+        xy=(1.1, median),
+        va="center",
+        ha="left",
+    )
+    
     fig.tight_layout()
-
     plt.savefig(str(genome_plots / title), dpi=300)
     plt.close()
 
