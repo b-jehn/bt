@@ -41,7 +41,7 @@ def getParameterDirectory(minimizer_lengths: list[int], thresholds: list[int]) -
 
 
 def boxPlotOperationTimes(genome_stats: Path, genome_plots: Path):
-    print(f"plotting operation times for: {genome_stats}")
+    print(f"plotting operation times box plots for: {genome_stats}")
     operation_names = [
         "R_contains",
         "S_select",

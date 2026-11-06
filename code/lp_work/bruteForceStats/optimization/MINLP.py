@@ -7,10 +7,10 @@ from cascadingStats import *
 
 
 #TODO: model or measure!
-t_contains_R_vars_empirical = 30
-t_select_S_vars_empirical = 35
-t_access_O_vars_empirical = 10
-t_compare_T_vars_empirical = 10
+t_contains_R_vars_empirical = 200
+t_select_S_vars_empirical = 15
+t_access_O_vars_empirical = 5
+t_compare_T_vars_empirical = 2
 t_access_H_empirical = 20
 
 def MINLP(
@@ -24,12 +24,13 @@ def MINLP(
     distribution_stats: Distribution_Stats,
     load_factor=0.75,
     nonDecreasingParameters=False,
-    forceParameters=[]):
+    forceParameters=[],
+    hideOutput=True):
     #============================#
     #Set up SCIP Model
     #============================#
     scip = Model("Level")  # scip name is optional
-    scip.hideOutput(True)
+    scip.hideOutput(hideOutput)
 
     #============================#
     #VARIABLES OR MEASUREMENTS??
@@ -161,15 +162,15 @@ def MINLP(
 
         #constraints regarding the structure operation times
         #fixed, really inaccurate values
-        #scip.addCons(t_contains_R_vars[l] == t_contains_R_vars_empirical)
-        #scip.addCons(t_select_S_vars[l] == t_select_S_vars_empirical)
+        scip.addCons(t_contains_R_vars[l] == t_contains_R_vars_empirical)
+        scip.addCons(t_select_S_vars[l] == t_select_S_vars_empirical)
         scip.addCons(t_access_O_vars[l] == t_access_O_vars_empirical)
         scip.addCons(t_compare_T_vars[l] == t_compare_T_vars_empirical)
         scip.addCons(t_access_H == t_access_H_empirical)
         
         #modeled values
-        scip.addCons(t_contains_R_vars[l] == 2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0)))
-        scip.addCons(t_select_S_vars[l] == log(f_avg_vars[l])/log(2.0))
+        #scip.addCons(t_contains_R_vars[l] == 2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0)))
+        #scip.addCons(t_select_S_vars[l] == log(f_avg_vars[l])/log(2.0))
         
 
     #recursivly build the t_lookup constraint level by level
@@ -203,6 +204,7 @@ def MINLP(
     space.bpk_H = sol[bpk_H]
     space.bpk_total = sol[bpk_total]
     times.H_access = sol[t_access_H]
+    times.Lookup_time = sol[t_lookup]
     for l in range(no_levels):
         space.bpk_R.append(sol[bpk_R_vars[l]])
         space.bpk_S.append(sol[bpk_S_vars[l]])

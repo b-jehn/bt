@@ -2,6 +2,7 @@ import csv
 from dataclasses import dataclass, field
 from pathlib import Path
 from itertools import product
+import re
 
 @dataclass
 class spaceConsumption_Stats:
@@ -19,6 +20,7 @@ class operationTimes_Stats:
     O_access: list[float] = field(default_factory=list[float])
     T_compare: list[float] = field(default_factory=list[float])
     H_access: float = field(default_factory=float)
+    Lookup_time: float = field(default_factory=float)
 
 @dataclass
 class Distribution_Stats:
@@ -137,7 +139,10 @@ def getMeasuredStats(genome_stats_path: Path,
             S_select=column_values(time_rows, "S_select"),
             O_access=column_values(time_rows, "O_access"),
             T_compare=column_values(time_rows, "T_compare"),
-            H_access=float(time_rows[0]["H_access"])
+            H_access=float(time_rows[0]["H_access"]),
         )
     
+    lookup_log =  stats_path.parent / "lookup.log"
+    match=re.search(r"^time_per_kmer = ((?:\d+(?:\.\d*)?|\.\d+))", lookup_log.read_text(), re.MULTILINE)  #regular expression matches with the text after "time_per_kmer = "
+    times.Lookup_time = float(match.group(1))   #match group retrieves the text matching with the regular expression
     return space, times
