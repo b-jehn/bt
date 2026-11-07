@@ -881,45 +881,39 @@ With these sets of considered parameters, using $3$ levels results in $6^3 \cdot
 For a non-decreasing sequence of length $k'$, chosen from $n$ values, the number of possibilities is $\binom{n+k'-1}{k'}$. That means that when choosing three minimizer lengths out of six possible values and three thresholds out of three possible values, the total number of possible parameter combinations is $\binom{6+3-1}{3} \cdot \binom{3+3-1}{3} = 560$.
 
 \section{Computing the Model Input} \label{sec:computationOfModelInput}
-In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
-The MINLP requires the cumulative distributions of minimizer frequencies $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ and the average frequencies $\averageFrequency(\levelParameters{\level})$ for every non-decreasing combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $1 \leq \level \leq 3$ as input.
+In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $\numberOfLevels = 3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
+The MINLP requires the numbers of k-mers $n_{kmers}$ and minimizers $n_{minimizers}$\todo{make dependent of parameters and include in model}, the cumulative distributions of minimizer frequencies $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ and the average frequencies $\averageFrequency(\levelParameters{\level})$ for every non-decreasing combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $1 \leq \level \leq 3$ as input.\\
 
-A fairly straightforward way\todo{zu umgangssprachlich?} of computing these is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
-Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
-Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. The described algorithm can be seen in \Cref{algo:computeMinDistr}.
-\todo[inline]{soll ich hier erklären, wie die Berechnung in der Praxis noch ein bisschen schneller geschieht? Oder ist das an dieser Stelle egal, wenn es am grundlegenden Problem der exponentiellen Laufzeit nichts ändert?}
+These stats can be brute-forced for every dataset considered by iterating over each non-decreasing combination of the specified level parameters and actually building RSHash with those parameters. Whilst there are more efficient approaches to only compute the model input, we chose this approach as it not only computes an accurate model input but also allows to measure space consumption of the data structures components and the operation times on each of these components which we will later use to assess the accuracy of the values modeled by the MINLP.\\
+Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each level as well as the bits per k-mer to store the text and hash table which are only stored once and not per level. We measure the operation times
+$\timeForOperationOnStructure{\contains}{R^l}$,
+$\timeForOperationOnStructure{\select}{S^l}$,
+$\timeForOperationOnStructure{\contains}{O^l}$,
+$\timeForOperationOnStructure{\compare}{T}$ and
+$\timeForOperationOnStructure{check}{H}$
+needed for the contains query on bitvector $R$, the select queries on bitvector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. We also measure the average lookup time $\timeForOperationOnStructure{lookup}{}$. These times are average times of performing each operation $100000$ subsequent times.
+
 \begin{algorithm} 
-\caption{Computation of Minimizer Distribution} \label{algo:computeMinDistr}
-\begin{algorithmic} 
-\Input $
-\text{level } \level,
-\text{max Level } \numberOfLevels,
-\text{level parameters } \levelParameters{\level-1},
-\text{sequences } \sequences{\level-1}
-$
-\Function{recursiveMinimizerDistribution}{$\level, \numberOfLevels, \levelParameters{\level-1} \sequences{\level-1}$}
-\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
-\For{$\minimizerLength \in \possibleMinimizerLengths$}
-	\For{$\threshold \in \possibleThresholds$}
-		\State $\levelParameters{\level} \gets extend(\levelParameters{\level-1}, m,t)$	\Comment $extend((m^1,t^1), m^2,t^2) = (m^1,m^2,t^1,t^2)$
-		\State $\sequences{\level} \gets getFrequentKmers(\level, \sequences{\level-1}, \minimizerLength, \threshold)$
-		\State 
-		\State $n_{kmers}, n_{minimizers} \gets getCounts(\hashfunction{\level}, \sequences{\level-1}, m)$
-		\State $\CDF{\compactZV{M}{\levelParameters{\level}}},
+	\caption{Computation of Minimizer Distribution} \label{algo:computeMinDistr}
+	\begin{algorithmic} 
+		\Input $
+		\text{sequences } \sequences{0},
+		\text{max Level } \numberOfLevels,
+		\text{considered minimizer lengths and thresholds } \possibleMinimizerLengths, \possibleThresholds
+		$
+		\Function{statsComputation}{$\sequences{0}, \numberOfLevels, \possibleMinimizerLengths, \possibleThresholds$}
+		\For{$\levelParameters{L} \in \possibleMinimizerLengths^L \times \possibleThresholds^L$}
+		\If{$\levelParameters{L}.isDecreasing$} \State \textbf{continue} \EndIf
+		\State $RSHash \gets buildWithStats(\sequences{0}, \levelParameters{L})$
+		\State $n_{kmers}, n_{minimizers}, \CDF{\compactZV{M}{\levelParameters{\level}}},
 		\CDF{\compactZV{K}{\levelParameters{\level}}},
-		\averageFrequency(\levelParameters{\level}) \gets distributionStats(\hashfunction{\level}, \sequences{\level-1}, m)$
-		\State 
-		\Call{recursiveMinimizerDistribution}{$\level+1, \numberOfLevels, \levelParameters{\level}, \sequences{\level}$}
-		
-	\EndFor
-\EndFor
-\EndFunction
-\end{algorithmic}
+		\averageFrequency(\levelParameters{\level}) \gets RSHash.distributionStats$
+		\State $spaceConsumptions_{\levelParameters{L}} \gets RSHash.spaceConsumptions$
+		\State $operationTimes_{\levelParameters{L}} \gets RSHash.measureTimes(noSamples=100000)$
+		\EndFor
+		\EndFunction
+	\end{algorithmic}
 \end{algorithm}
-\todo[inline]{add $n_{minimizers}, n_{kmers}$ to model and include dependence of level parameters}
-
-This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This also means, that one could include the building of bitvectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
-However, this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
 \todo[inline]{Explain results of minimizer distribution across several levels}
 \begin{itemize}
@@ -983,6 +977,44 @@ Choosing a constant $\numberOfSamples$ would result in a processing time that wo
 If instead $\numberOfSamples$ is chosen relative to $|\genomeText|$, $\frac{|\sampledText|}{|\genomeText|}$ will have a constant value independent of the genomes size. Even though this means, that the time needed, in order to find the minimizer distributions would still be proportional to the genomes size, this should be the preferred option as it results in a bounded error of the approximation.
 \\
 For a large enough $\numberOfSamples$, the probability of choosing a bad representation becomes highly unlikely.\todo{zu vage, begründen}\\
+
+\chapter{stuff}
+A fairly straightforward way\todo{zu umgangssprachlich?} of computing these is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
+Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
+Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. The described algorithm:
+\todo[inline]{soll ich hier erklären, wie die Berechnung in der Praxis noch ein bisschen schneller geschieht? Oder ist das an dieser Stelle egal, wenn es am grundlegenden Problem der exponentiellen Laufzeit nichts ändert?}
+\begin{algorithm} 
+	\caption{Computation of Minimizer Distribution}
+	\begin{algorithmic} 
+		\Input $
+		\text{level } \level,
+		\text{max Level } \numberOfLevels,
+		\text{level parameters } \levelParameters{\level-1},
+		\text{sequences } \sequences{\level-1}
+		$
+		\Function{recursiveMinimizerDistribution}{$\level, \numberOfLevels, \levelParameters{\level-1} \sequences{\level-1}$}
+		\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
+		\For{$\minimizerLength \in \possibleMinimizerLengths$}
+		\For{$\threshold \in \possibleThresholds$}
+		\State $\levelParameters{\level} \gets extend(\levelParameters{\level-1}, m,t)$	\Comment $extend((m^1,t^1), m^2,t^2) = (m^1,m^2,t^1,t^2)$
+		\State $\sequences{\level} \gets getFrequentKmers(\level, \sequences{\level-1}, \minimizerLength, \threshold)$
+		\State 
+		\State $n_{kmers}, n_{minimizers} \gets getCounts(\hashfunction{\level}, \sequences{\level-1}, m)$
+		\State $\CDF{\compactZV{M}{\levelParameters{\level}}},
+		\CDF{\compactZV{K}{\levelParameters{\level}}},
+		\averageFrequency(\levelParameters{\level}) \gets distributionStats(\hashfunction{\level}, \sequences{\level-1}, m)$
+		\State 
+		\Call{recursiveMinimizerDistribution}{$\level+1, \numberOfLevels, \levelParameters{\level}, \sequences{\level}$}
+		
+		\EndFor
+		\EndFor
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+\todo[inline]{add $n_{minimizers}, n_{kmers}$ to model and include dependence of level parameters}
+
+This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This also means, that one could include the building of bitvectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
+However, this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
 \printbibliography[heading=bibintoc,title={Bibliography}]
 

@@ -17,7 +17,7 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
+SEQUENCE_NAME = "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs"
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = np.inf
 MAX_BPK_TOTAL = np.inf
@@ -139,9 +139,45 @@ else:
 ##############
 # Make one box plot per field/level pair. 
 ##############
-genome_plots = Path(f"{SEQUENCE_NAME}/plots")
+genome_plots = Path(f"{SEQUENCE_NAME}/groupedPlots")
 genome_plots.mkdir(exist_ok=True, parents=True)
 
+from collections import defaultdict
+
+grouped_errors = defaultdict(dict)
+
+for (stats_name, name, level), squared_errors in errors.items():
+    grouped_errors[(stats_name, name)][level] = squared_errors
+
+for (stats_name, name), errors_by_level in grouped_errors.items():
+    # Sort levels consistently; None appears first if present.
+    levels = sorted(errors_by_level, key=lambda level: (level is not None, level))
+    labels = [str(level) if level is not None else "None" for level in levels]
+    data = [errors_by_level[level] for level in levels]
+
+    title = f"{stats_name}: {name}"
+
+    fig, ax = plt.subplots()
+    ax.boxplot(data, tick_labels=labels)
+    ax.set_xlabel("Level")
+    ax.set_ylabel("Squared error")
+    ax.set_title(title)
+
+    # Label each box's median.
+    for x, values in enumerate(data, start=1):
+        median = np.median(values)
+        ax.annotate(
+            str(round(median, 2)),
+            xy=(x + 0.2, median),
+            va="center",
+            ha="left",
+        )
+
+    fig.tight_layout()
+    plt.savefig(str(genome_plots / title), dpi=300)
+    plt.close()
+
+"""
 for (stats_name, name, level), squared_errors in errors.items():
     label = f"{name}[{level}]" if level is not None else name
     title = f"{stats_name}: {label}"
@@ -164,7 +200,7 @@ for (stats_name, name, level), squared_errors in errors.items():
     fig.tight_layout()
     plt.savefig(str(genome_plots / title), dpi=300)
     plt.close()
-
+    """
 
 #============================#
 #OUTPUT INFO
