@@ -66,11 +66,22 @@ fill_cascading_stats(root_stats=genome_stats,
                     thresholdsConsidered=THRESHOLDS_CONSIDERED,
                     nonDecreasingParameters=True)
         
-setOfMinimizerLengths = [[19, 19, 19]]
-setOfThresholds = [[64, 64, 128]]
+setOfMinimizerLengths = [[15, 19, 19]]
+setOfThresholds = [[32, 64, 128]]
 
 for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
     print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
+    #TODO
+    measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
+                                                    forcedMinimizerLengths,
+                                                    forcedThresholds)
+    
+    
+    print("stats:\nmeasured times:")
+    for f in fields(measuredTimes):
+        name = f.name
+        print(f"{name}:\n{getattr(measuredTimes, name)}\n")
+    
     modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
         optimization_goal="t_lookup",
         max_lookup_time=math.inf,
@@ -83,11 +94,9 @@ for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, s
         load_factor=LOAD_FACTOR,
         nonDecreasingParameters=NON_DECREASING_PARAMETERS,
         forceParameters=[forcedMinimizerLengths,forcedThresholds],
-        hideOutput=False)
-
-    measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
-                                                    forcedMinimizerLengths,
-                                                    forcedThresholds)
+        hideOutput=False,
+        operationTimes=measuredTimes,
+        inverseTimes=False)
     
     for line in info:
         print(line, end='')

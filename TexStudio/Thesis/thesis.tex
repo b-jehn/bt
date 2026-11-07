@@ -864,9 +864,25 @@ We evaluate how suited the MINLP proposed in \cref{chap:minlp} is for finding op
 \section{Datasets}
 We use the same datasets as \citet{pibiri_sparse_2022}. Those are the whole genomes of the atlantic cod (\textit{Gadus morhua}), the common kestrel (\textit{Falco tinnunculus}) and the whole GRCh38 human genome (\textit{Homo sapiens}).\todo{absatz kopiert von \cite{schulte-mattler_rshash_2026} - ist das okay?} This choice allows a direct comparison with \citet{schulte-mattler_rshash_2026} who use the same datasets for benchmarking RSHash.
 
+\section{Considered Parameters} \label{sec:consideredParameters}
+For the following experiments we use k-mers of length $k = 31$.\\
+RSHash currently works with thresholds up to $255$.\todo{überprüfen, und warum dann nicht auch 255 berücksichtigen??}
+Technically, using the proposed MINLP to find optimal level parameters for a specified optimization goal, one would have to consider every minimizer lengths $1 \leq \minimizerLength \leq k$ and all thresholds $1 \leq \threshold \leq 255$. However, using the proposed model requires computing the distributions of minimizers for each possible combination of parameters. In practice using $3$ levels would require computing the distributions for $31^3 \cdot 255^3 \approx 493 \cdot 10^9$ combinations of level parameters which is not viable.\\
+
+Using the maximum threshold $\threshold=255$ for each of the datasets above, the percentage of \infrequent minimizers of length $15$ is below $percentage$\todo{percentage einfügen!!}. When searching for level parameters which lead to relatively low query times whilst also keeping the data structure fairly compact, minimizers lengths $\minimizerLength < 15$ are not viable as this would lead to a huge hash table. On the other hand, the percentage of \infrequent minimizers of length $25$ is above $percentage$.\todo{percentage einfügen!!} Whilst this would lead to a small hash table, the compression would be small, as each minimizer covers only approximately $(31-25+2)/2 = 4$ k-mers\todo{begründung überarbeiten; approximation gilt nur für erstes level und eventuell gar nicht für unitigs}. Because of this, considering minimizer lengths between fifteen and twenty five should be sufficient for analyzing the model. To further reduce the number of parameter combinations we only consider uneven minimizer lengths.\\
+Recall that cumulative distribution functions $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ have logarithmic growth\todo{zeigen/beschreiben!!}. It follows that using exponentially increasing thresholds should be sufficient for analyzing the MINLP. Using a threshold $t < 32$ leads to only very few \infrequent minimizers for each of the datasets above, making it an implausible parameter choice. We thus consider the thresholds $32,64$ and $128$.\todo{why not 255??}
+
+\begin{align}
+	k &= 31\\
+	\possibleMinimizerLengths &= \{\minimizerLength \in \NN \mid 15 \leq \minimizerLength \leq 25 \wedge \minimizerLength \% 2 = 1\}\\
+	\possibleThresholds &= \{32,64,128\}
+\end{align}
+With these sets of considered parameters, using $3$ levels results in $6^3 \cdot 3^3 = 5,832$ combinations of level parameters. We reduce this even further by considering only non-decreasing parameter values on subsequent levels for both the minimizer lengths and thresholds. That means each combination of level parameters $\levelParameters{3} = (\minimizerLength^1, \minimizerLength^2, \minimizerLength^3, \threshold^1, \threshold^2, \threshold^3)$ fulfills $\minimizerLength^i \leq \minimizerLength^i+1$ and $\threshold^i \leq \threshold^i+1$ for all $i \in \{1,2\}$ which can be done because\todo{reason}. \todo[inline]{explain the constraint enforcing this in the MINLP and how the sum over possible minimizer combinations changes}
+For a non-decreasing sequence of length $k'$, chosen from $n$ values, the number of possibilities is $\binom{n+k'-1}{k'}$. That means that when choosing three minimizer lengths out of six possible values and three thresholds out of three possible values, the total number of possible parameter combinations is $\binom{6+3-1}{3} \cdot \binom{3+3-1}{3} = 560$.
+
 \section{Computing the Model Input} \label{sec:computationOfModelInput}
-In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for a given dataset which we refer to as the set of sequences $\sequences{0}$. The sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered as well as the number of levels $\numberOfLevels$ resulting in a set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$ are also hyper parameters that have to be specified explicitly.\\
-The MINLP requires the cumulative distributions of minimizer frequencies $\CDF{\ZVM{\level}}$ and $\CDF{\ZVK{\level}}$ and the average frequencies $\averageFrequency(\levelParameters{\level})$ for every combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $\level \in \setOfLevels$ as input.
+In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
+The MINLP requires the cumulative distributions of minimizer frequencies $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ and the average frequencies $\averageFrequency(\levelParameters{\level})$ for every non-decreasing combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $1 \leq \level \leq 3$ as input.
 
 A fairly straightforward way\todo{zu umgangssprachlich?} of computing these is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
 Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
@@ -913,7 +929,11 @@ However, this approach is sufficient for computing the input needed for analyzin
 \end{itemize}
 
 \section{Model Accuracy}
-We assess the accuracy of the lookup time and space consumption modeled by the MINLP \cref{chap:minlp} by analyzing the differences between the values modeled by the MINLP and the values measured when building RSHash for a selection of possible level Parameters and the ge
+We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute the model input for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput} and \cref{sec:consideredParameters}.\\
+For each sequence and each combination of the level parameters considered, we then use run a modified version of the MINLP which forces the exact combination of level parameters. This can be achieved by adding the following constraints:\todo{define constraints}
+\begin{align}
+	constraints...
+\end{align}
 
 \subsection{Lookup Time}
 

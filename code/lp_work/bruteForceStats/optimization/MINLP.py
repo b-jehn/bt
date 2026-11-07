@@ -6,18 +6,11 @@ from itertools import product
 from cascadingStats import *
 
 
-#TODO: model or measure!
-#t_contains_R_vars_empirical = 200
-#t_select_S_vars_empirical = 15
-#t_access_O_vars_empirical = 5
-#t_compare_T_vars_empirical = 2
-#t_access_H_empirical = 20
-
-t_contains_R_vars_empirical = 30
-t_select_S_vars_empirical = 35
-t_access_O_vars_empirical = 10
-t_compare_T_vars_empirical = 10
-t_access_H_empirical = 20
+manual_t_contains_R_vars = 30
+manual_t_select_S_vars = 35
+manual_t_access_O_vars = 10
+manual_t_compare_T_vars = 10
+manual_t_access_H_empirical = 20
 
 def MINLP(
     optimization_goal: str,
@@ -31,7 +24,9 @@ def MINLP(
     load_factor=0.75,
     nonDecreasingParameters=False,
     forceParameters=[],
-    hideOutput=True):
+    hideOutput=True,
+    operationTimes=operationTimes_Stats(),
+    inverseTimes=False):
     #============================#
     #Set up SCIP Model
     #============================#
@@ -141,7 +136,7 @@ def MINLP(
         scip.addCons(F_K_vars[l] == quicksum(F_K_sum_terms))
         scip.addCons(f_avg_vars[l] == quicksum(f_avg_sum_terms))
         
-        scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + (f_avg_vars[l]+1)/2*(t_access_O_vars[l]+t_compare_T_vars[l]))
+        scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + ((f_avg_vars[l]+1)/2)*(t_access_O_vars[l]+t_compare_T_vars[l]))
 
         #scip.addCons(n_DIM_vars[l] == F_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l] * 2/(K-m_vars[l]+2))
         scip.addCons(n_DIM_vars[l] == F_M_vars[l]*n_minimizers_vars[l]/f_avg_vars[l])
@@ -168,11 +163,20 @@ def MINLP(
 
         #constraints regarding the structure operation times
         #fixed, really inaccurate values
-        scip.addCons(t_contains_R_vars[l] == t_contains_R_vars_empirical)
-        scip.addCons(t_select_S_vars[l] == t_select_S_vars_empirical)
-        scip.addCons(t_access_O_vars[l] == t_access_O_vars_empirical)
-        scip.addCons(t_compare_T_vars[l] == t_compare_T_vars_empirical)
-        scip.addCons(t_access_H == t_access_H_empirical)
+        if(inverseTimes):
+            continue
+        elif(len(operationTimes.R_contains) == no_levels):
+            scip.addCons(t_contains_R_vars[l] == operationTimes.R_contains[l])
+            scip.addCons(t_select_S_vars[l] == operationTimes.S_select[l])
+            scip.addCons(t_access_O_vars[l] == operationTimes.O_access[l])
+            scip.addCons(t_compare_T_vars[l] == operationTimes.T_compare[l])
+            scip.addCons(t_access_H == operationTimes.H_access)
+        else:
+            scip.addCons(t_contains_R_vars[l] == manual_t_contains_R_vars)
+            scip.addCons(t_select_S_vars[l] == manual_t_select_S_vars)
+            scip.addCons(t_access_O_vars[l] == manual_t_access_O_vars)
+            scip.addCons(t_compare_T_vars[l] == manual_t_compare_T_vars)
+            scip.addCons(t_access_H == manual_t_access_H_empirical)
         
         #modeled values
         #scip.addCons(t_contains_R_vars[l] == 2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0)))
@@ -186,6 +190,8 @@ def MINLP(
 
     scip.addCons(t_lookup == remaining_time, name="t_lookup")
     scip.addCons(t_lookup <= max_lookup_time)
+    if(inverseTimes):
+        scip.addCons(t_lookup == operationTimes.Lookup_time)
 
     #bits per k-mer in H
     scip.addCons(bpk_H == quickprod(1-F_K_vars[l] for l in range(no_levels)) * (64 + 8)/load_factor)
@@ -198,6 +204,13 @@ def MINLP(
     start_time = perf_counter()
     scip.optimize()
     elapsed_seconds = perf_counter() - start_time
+    
+    status = scip.getStatus()
+    if status != "optimal":
+        print("SCIP status:", status)
+        scip.writeProblem("model.cip")
+        return None
+    
     sol = scip.getBestSol()
     
     #============================#
@@ -229,11 +242,11 @@ def MINLP(
     info.append(f"considered thresholds: {thresholdsConsidered}\n\n")
 
     info.append(f"using:\n")
-    info.append(f"t_contains_R_vars_empirical = {t_contains_R_vars_empirical}\n")
-    info.append(f"t_access_O_vars_empirical = {t_access_O_vars_empirical}\n")
-    info.append(f"t_access_H_empirical = {t_access_H_empirical}\n")
-    info.append(f"t_select_S_vars_empirical = {t_select_S_vars_empirical}\n")
-    info.append(f"t_compare_T_vars_empirical = {t_compare_T_vars_empirical}\n\n")
+    info.append(f"manual_t_contains_R_vars = {manual_t_contains_R_vars}\n")
+    info.append(f"manual_t_access_O_vars = {manual_t_access_O_vars}\n")
+    info.append(f"manual_t_access_H_empirical = {manual_t_access_H_empirical}\n")
+    info.append(f"manual_t_select_S_vars = {manual_t_select_S_vars}\n")
+    info.append(f"manual_t_compare_T_vars = {manual_t_compare_T_vars}\n\n")
 
     info.append(f"total time to solve MINLP: {elapsed_seconds:.6f} seconds\n")
     info.append("found solution:\n")

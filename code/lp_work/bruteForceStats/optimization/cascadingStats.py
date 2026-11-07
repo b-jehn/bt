@@ -145,4 +145,5 @@ def getMeasuredStats(genome_stats_path: Path,
     lookup_log =  stats_path.parent / "lookup.log"
     match=re.search(r"^time_per_kmer = ((?:\d+(?:\.\d*)?|\.\d+))", lookup_log.read_text(), re.MULTILINE)  #regular expression matches with the text after "time_per_kmer = "
     times.Lookup_time = float(match.group(1))   #match group retrieves the text matching with the regular expression
+    
     return space, times

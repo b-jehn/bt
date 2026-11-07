@@ -52,8 +52,8 @@ t_compare_T_empirical = 10
 
 data_path = Path(f"{SEQUENCE_NAME}/data")
 data_path.mkdir(exist_ok=True, parents=True)
-error_file_path = data_path / "squarred_errors.json"
 
+error_file_path = data_path / "squarred_errors.json"
 errors = {}
 if(error_file_path.exists()):
     print("loading squared errors from previous computations json file")
@@ -90,6 +90,10 @@ else:
 
     modeled_AND_measured_stats = []
     for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
+        measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
+                                                        forcedMinimizerLengths,
+                                                        forcedThresholds)
+        
         print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
         modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
             optimization_goal="t_lookup",
@@ -103,10 +107,6 @@ else:
             load_factor=LOAD_FACTOR,
             nonDecreasingParameters=NON_DECREASING_PARAMETERS,
             forceParameters=[forcedMinimizerLengths,forcedThresholds])
-
-        measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
-                                                        forcedMinimizerLengths,
-                                                        forcedThresholds)
         
         modeled_AND_measured_stats.append((modeledSpace, measuredSpace))
         modeled_AND_measured_stats.append((modeledTimes, measuredTimes))
@@ -117,7 +117,6 @@ else:
     ##############
     # Collect squared errors by stats class, field, and level.
     ##############
-    print("computing squared error for all modeled values in regard to the measured stats")
     for modeled, measured in modeled_AND_measured_stats:
         stats_name = type(modeled).__name__
 
@@ -127,9 +126,9 @@ else:
             measured_value = getattr(measured, name)
 
             if isinstance(modeled_value, list):
-                for level, (measured, observed) in enumerate(zip(modeled_value, measured_value)):
+                for level, (m, obs) in enumerate(zip(modeled_value, measured_value)):
                     key = (stats_name, name, level)
-                    errors.setdefault(key, []).append((measured - observed) ** 2)
+                    errors.setdefault(key, []).append((m - obs) ** 2)
             else:
                 key = (stats_name, name, None)
                 errors.setdefault(key, []).append((modeled_value - measured_value) ** 2)
