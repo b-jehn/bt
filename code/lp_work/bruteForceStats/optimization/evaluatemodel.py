@@ -53,13 +53,16 @@ t_compare_T_empirical = 10
 data_path = Path(f"{SEQUENCE_NAME}/data")
 data_path.mkdir(exist_ok=True, parents=True)
 
-error_file_path = data_path / "squarred_errors.json"
-errors = {}
-if(error_file_path.exists()):
-    print("loading squared errors from previous computations json file")
-    with error_file_path.open() as json_file:
-        pairs = json.load(json_file)
-        errors = {tuple(k): v for k, v in pairs}
+
+modeled_AND_measured_stats_jsonfile_path = data_path / 'modeled_AND_measured_stats.json'
+modeled_AND_measured_stats = []
+if(modeled_AND_measured_stats_jsonfile_path.exists()):
+    print("loading modeled_AND_measured_stats from previous computations json file")
+    # Load modeled_AND_measured_stats from json file
+    with open(modeled_AND_measured_stats_jsonfile_path, "r", encoding="utf-8") as file:
+        modeled_AND_measured_stats = [
+            tuple(pair) for pair in modeled_AND_measured_stats_from_jsonable(json.load(file))
+    ]
 else:
     genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
     genome_stats_directory = Path(f"../allStats/{SEQUENCE_NAME}")
@@ -88,7 +91,6 @@ else:
     #setOfMinimizerLengths = [[17,17,17]]
     #setOfThresholds = [[128,128,128]]
 
-    modeled_AND_measured_stats = []
     for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
         measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
                                                         forcedMinimizerLengths,
@@ -111,7 +113,22 @@ else:
         
         modeled_AND_measured_stats.append((modeledSpace, measuredSpace))
         modeled_AND_measured_stats.append((modeledTimes, measuredTimes))
+        
+        
+    # write modeled_AND_measured_stats to json file
+    with open(str(modeled_AND_measured_stats_jsonfile_path), "w", encoding="utf-8") as file:
+        json.dump(modeled_AND_measured_stats_to_jsonable(modeled_AND_measured_stats), file, indent=2)
 
+
+squared_errors_jsonfile_path = data_path / "squared_errors.json"
+squared_errors = {}
+if(squared_errors_jsonfile_path.exists()):
+    # Load squared_errors from json file
+    print("loading squared_errors from previous computations json file")
+    with squared_errors_jsonfile_path.open() as json_file:
+        pairs = json.load(json_file)
+        squared_errors = {tuple(k): v for k, v in pairs}
+else:
     ##############
     # squared error calculation and plotting for every stats item and level
     ##############
@@ -132,34 +149,62 @@ else:
             if isinstance(modeled_value, list):
                 for level, (m, obs) in enumerate(zip(modeled_value, measured_value)):
                     key = (stats_name, name, level)
-                    errors.setdefault(key, []).append((m - obs) ** 2)
+                    squared_errors.setdefault(key, []).append((m - obs) ** 2)
             else:
                 key = (stats_name, name, None)
-                errors.setdefault(key, []).append((modeled_value - measured_value) ** 2)
+                squared_errors.setdefault(key, []).append((modeled_value - measured_value) ** 2)
 
-    with open(str( data_path / 'squarred_errors.json'), 'w') as f:
-        json.dump([[list(k), v] for k, v in errors.items()], f)
+    # write squared_errors to json file
+    with open(str( data_path / 'squared_errors.json'), 'w') as f:
+        json.dump([[list(k), v] for k, v in squared_errors.items()], f)
+
+genome_plots = Path(f"{SEQUENCE_NAME}/groupedPlots")
+genome_plots.mkdir(exist_ok=True, parents=True)
+
+##############
+# Compare modeled vs measured lookup time
+# Generative AI use Disclaimer:
+#   the following code for plotting the measured lookup times vs the the modeled ones was generated using GPT-6 Luna
+##############
+# extract (modeledTimes.Lookup_time, measuredTimes.Lookup_time) pairs from modeled_AND_measured_stats
+lookup_time_pairs = [
+    (modeled.Lookup_time, measured.Lookup_time)
+    for modeled, measured in modeled_AND_measured_stats
+    if isinstance(modeled, operationTimes_Stats)
+    and isinstance(measured, operationTimes_Stats)
+]
+
+title = "Modeled vs Measured Lookup_time"
+# x-axis: measured, y-axis: modeled
+measured_values = [measured for modeled, measured in lookup_time_pairs]
+modeled_values = [modeled for modeled, measured in lookup_time_pairs]
+
+plt.scatter(measured_values, modeled_values)
+plt.xlabel("Measured Lookup_time")
+plt.ylabel("Modeled Lookup_time")
+plt.title(title)
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(str(genome_plots / title), dpi=300)
+plt.close()
 
 ##############
 # Make one box plot per field/level pair. 
 # Generative AI use Disclaimer:
 #   the following code for creating box plots of the squarred errors was generated using GPT-6 Luna
 ##############
-genome_plots = Path(f"{SEQUENCE_NAME}/groupedPlots")
-genome_plots.mkdir(exist_ok=True, parents=True)
-
 from collections import defaultdict
 
 grouped_errors = defaultdict(dict)
 
-for (stats_name, name, level), squared_errors in errors.items():
-    grouped_errors[(stats_name, name)][level] = squared_errors
+for (stats_name, name, level), error in squared_errors.items():
+    grouped_errors[(stats_name, name)][level] = error
 
-for (stats_name, name), errors_by_level in grouped_errors.items():
+for (stats_name, name), squared_errors_by_level in grouped_errors.items():
     # Sort levels consistently; None appears first if present.
-    levels = sorted(errors_by_level, key=lambda level: (level is not None, level))
+    levels = sorted(squared_errors_by_level, key=lambda level: (level is not None, level))
     labels = [str(level) if level is not None else "None" for level in levels]
-    data = [errors_by_level[level] for level in levels]
+    data = [squared_errors_by_level[level] for level in levels]
 
     title = f"{stats_name}: {name}"
 
@@ -183,30 +228,6 @@ for (stats_name, name), errors_by_level in grouped_errors.items():
     plt.savefig(str(genome_plots / title), dpi=300)
     plt.close()
 
-"""
-for (stats_name, name, level), squared_errors in errors.items():
-    label = f"{name}[{level}]" if level is not None else name
-    title = f"{stats_name}: {label}"
-    median = np.median(squared_errors)
-    
-    fig, ax = plt.subplots()
-    ax.boxplot(squared_errors)
-    ax.set_xticks([1], [label])
-    ax.set_ylabel("Squared error")
-    ax.set_title(title)
-    
-    # Write the median's full numeric representation next to the median line.
-    ax.annotate(
-        str(median),
-        xy=(1.1, median),
-        va="center",
-        ha="left",
-    )
-    
-    fig.tight_layout()
-    plt.savefig(str(genome_plots / title), dpi=300)
-    plt.close()
-    """
 
 #============================#
 #OUTPUT INFO

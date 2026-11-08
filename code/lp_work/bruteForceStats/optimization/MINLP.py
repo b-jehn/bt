@@ -62,8 +62,9 @@ def MINLP(
     t_vars = [scip.addVar(vtype="I", name=f"t_{l}", lb=1, ub=thresholdsConsidered[-1]) for l in range(no_levels)]         #threshold on each level
     
     #TODO: remove these two? if its possible to model without them
-    n_kmers_vars = [scip.addVar(vtype="I", name=f"n_kmers_{l}", lb=1) for l in range(no_levels)] #number of kmers on level l for each level l
-    n_minimizers_vars = [scip.addVar(vtype="I", name=f"n_minimizers_{l}", lb=1) for l in range(no_levels)] #number of kmers on level l for each level l
+    # technically, these should be integers; however, the optimization runs much quickers with the variables being continues
+    n_kmers_vars = [scip.addVar(vtype="C", name=f"n_kmers_{l}", lb=1) for l in range(no_levels)] #number of kmers on level l for each level l
+    n_minimizers_vars = [scip.addVar(vtype="C", name=f"n_minimizers_{l}", lb=1) for l in range(no_levels)] #number of kmers on level l for each level l
 
     F_M_vars = [scip.addVar(vtype="C", name=f"F_M_{l}", lb=0, ub=1) for l in range(no_levels)]         #percentage of minimizers of length m with a frequency <= t for each level
     F_K_vars = [scip.addVar(vtype="C", name=f"F_K_{l}", lb=0, ub=1) for l in range(no_levels)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level

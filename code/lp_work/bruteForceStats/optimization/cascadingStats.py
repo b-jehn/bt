@@ -1,5 +1,5 @@
 import csv
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, is_dataclass, fields
 from pathlib import Path
 from itertools import product
 import re
@@ -147,3 +147,37 @@ def getMeasuredStats(genome_stats_path: Path,
     times.Lookup_time = float(match.group(1))   #match group retrieves the text matching with the regular expression
     
     return space, times
+
+##############
+# helpers to write the array modeled_AND_measured_stats to a json file / recover it from a json file
+# Generative AI use Disclaimer:
+#   the following code was generated using GPT-6 Luna
+##############
+STATS_TYPES = {
+    "spaceConsumption_Stats": spaceConsumption_Stats,
+    "operationTimes_Stats": operationTimes_Stats,
+}
+
+def modeled_AND_measured_stats_to_jsonable(value):
+    if is_dataclass(value):
+        return {
+            "__type__": type(value).__name__,
+            **{f.name: modeled_AND_measured_stats_to_jsonable(getattr(value, f.name)) for f in fields(value)}
+        }
+    if isinstance(value, (list, tuple)):
+        return [modeled_AND_measured_stats_to_jsonable(item) for item in value]
+    return value
+
+def modeled_AND_measured_stats_from_jsonable(value):
+    if isinstance(value, list):
+        return [modeled_AND_measured_stats_from_jsonable(item) for item in value]
+
+    if isinstance(value, dict):
+        decoded = {key: modeled_AND_measured_stats_from_jsonable(item) for key, item in value.items()}
+        type_name = decoded.pop("__type__", None)
+
+        if type_name is not None:
+            return STATS_TYPES[type_name](**decoded)
+        return decoded
+
+    return value
