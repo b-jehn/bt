@@ -76,12 +76,6 @@ for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, s
                                                     forcedMinimizerLengths,
                                                     forcedThresholds)
     
-    
-    print("stats:\nmeasured times:")
-    for f in fields(measuredTimes):
-        name = f.name
-        print(f"{name}:\n{getattr(measuredTimes, name)}\n")
-    
     modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
         optimization_goal="t_lookup",
         max_lookup_time=math.inf,

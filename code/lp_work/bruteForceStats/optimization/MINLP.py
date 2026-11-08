@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 from pyscipopt import Model, quicksum, quickprod, log
 from time import perf_counter
 from itertools import product
@@ -61,17 +62,17 @@ def MINLP(
     t_vars = [scip.addVar(f"t_{l}") for l in range(no_levels)]         #threshold on each level
 
     #TODO: remove these two? if its possible to model without them
-    n_kmers_vars = [scip.addVar(f"n_kmers_{l}") for l in range(no_levels)] #number of kmers on level l for each level l
-    n_minimizers_vars = [scip.addVar(f"n_minimizers_{l}") for l in range(no_levels)] #number of kmers on level l for each level l
+    n_kmers_vars = [scip.addVar(name=f"n_kmers_{l}") for l in range(no_levels)] #number of kmers on level l for each level l
+    n_minimizers_vars = [scip.addVar(name=f"n_minimizers_{l}") for l in range(no_levels)] #number of kmers on level l for each level l
 
-    F_M_vars = [scip.addVar(f"F_M_{l}") for l in range(no_levels)]         #percentage of minimizers of length m with a frequency <= t for each level
-    F_K_vars = [scip.addVar(f"F_K_{l}") for l in range(no_levels)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
-    f_avg_vars = [scip.addVar(f"f_avg_{l}") for l in range(no_levels)]     #average frequency of minimizers of length m with a frequency <= t for each level
+    F_M_vars = [scip.addVar(name=f"F_M_{l}") for l in range(no_levels)]         #percentage of minimizers of length m with a frequency <= t for each level
+    F_K_vars = [scip.addVar(name=f"F_K_{l}") for l in range(no_levels)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
+    f_avg_vars = [scip.addVar(name=f"f_avg_{l}", lb=1) for l in range(no_levels)]     #average frequency of minimizers of length m with a frequency <= t for each level
 
     t_level_vars = [scip.addVar(f"t_level_{l}") for l in range(no_levels)] #time spent for finding k-mer with an infrequent minimizer on level l
     t_lookup = scip.addVar("t_lookup")  #total lookup time
 
-    n_DIM_vars = [scip.addVar(f"n_DIM_{l}") for l in range(no_levels)] #number of distinct infrequent minimizers on each level
+    n_DIM_vars = [scip.addVar(name=f"n_DIM_{l}", lb=1) for l in range(no_levels)] #number of distinct infrequent minimizers on each level
 
     bpk_R_vars = [scip.addVar(f"bpk_R_{l}") for l in range(no_levels)] #bits per kmer in R on each level
     bpk_S_vars = [scip.addVar(f"bpk_S_{l}") for l in range(no_levels)] #bits per kmer in S on each level

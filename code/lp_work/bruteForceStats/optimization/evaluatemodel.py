@@ -17,7 +17,7 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-SEQUENCE_NAME = "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs"
+SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = np.inf
 MAX_BPK_TOTAL = np.inf
@@ -106,7 +106,8 @@ else:
             distribution_stats=genome_stats,
             load_factor=LOAD_FACTOR,
             nonDecreasingParameters=NON_DECREASING_PARAMETERS,
-            forceParameters=[forcedMinimizerLengths,forcedThresholds])
+            forceParameters=[forcedMinimizerLengths,forcedThresholds],
+            operationTimes=measuredTimes)
         
         modeled_AND_measured_stats.append((modeledSpace, measuredSpace))
         modeled_AND_measured_stats.append((modeledTimes, measuredTimes))
@@ -116,6 +117,9 @@ else:
     ##############
     ##############
     # Collect squared errors by stats class, field, and level.
+    # Generative AI use Disclaimer:
+    #   the following code for computing the squarred error for every pai of modeled and measured stats
+    #   and every value modeled was generated using GPT-6 Luna
     ##############
     for modeled, measured in modeled_AND_measured_stats:
         stats_name = type(modeled).__name__
@@ -138,6 +142,8 @@ else:
 
 ##############
 # Make one box plot per field/level pair. 
+# Generative AI use Disclaimer:
+#   the following code for creating box plots of the squarred errors was generated using GPT-6 Luna
 ##############
 genome_plots = Path(f"{SEQUENCE_NAME}/groupedPlots")
 genome_plots.mkdir(exist_ok=True, parents=True)

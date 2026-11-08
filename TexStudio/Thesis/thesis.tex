@@ -269,8 +269,7 @@ A very fast lookup (and locate) on the other hand could be achieved by storing t
 Since both a lookup time in $O(|S|)$ as well as $2k$ bits per k-mer are not viable for large genomes, there has been much work on data structures enabling queries in much less than $O(|S|)$ whilst also maintaining a certain compression.
 
 \textbf{Minimizers}\\
-A common approach to achieve this is the use of so called minimizers. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACAT$ results in $AC$ because that is the lexicographically smallest $2$-mer in $CGACAT$.\\
-
+A common approach to achieve this is the use of so called minimizers. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACAT$ results in $AC$ because regarding that order, this is the smallest $2$-mer in $CGACAT$.\\
 Minimizers have several properties which render them highly interesting for this domain. Firstly they are considered to be sparse because consecutive k-mers are very likely to share the same minimizer. \Citet{zheng_improved_2020} show that in a random string each minimizer of length $m$ is expected to cover an average of $(k-m+2)/2$ k-mers. These consecutive k-mers sharing the same minimizer are also referred to as super-k-mers. Even in a sequence only containing unique k-mers, several super-k-mers can have the same minimizer as $m < k$.\\
 A second interesting property is the skewness of the distribution of minimizers in regards to their \textit{frequencies} which is the number of super-k-mers which have a specific minimizer. In a given sequence only a few  minimizers have high frequencies whilst most have small frequencies or do not appear at all. Some intuition for this property can be gained by considering an m-mer consisting only of $A$s versus one of $T$s. Using the lexicographical order the first will be the minimizer of every super-k-mer in which it appears whilst the second would only become the minimizer of a super-k-mer containing only $T$s.\\
 Both the sparsity and skewness of minimizers have been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}.
@@ -281,7 +280,7 @@ The both space consumption and locate time of SSHash are highly dependent of the
 
 
 \section{RSHash Explanation}\label{sec:rshashExplanation}
-\todo[inline]{der Fokuss sollte hier sein, zu erklären was es bedeutet frequente minimizer abzuschneiden, wie davon der platz in der hashtabelle abhängt und wie mehrere level dabei helfen können.\\Wird das erfüllt?}
+\todo[inline]{Im Fokuss sollte hier stehen, zu erklären was es bedeutet frequente minimizer abzuschneiden, wie davon der speicherplatz und die Laufzeit abhängen und wie mehrere level dabei helfen können.\\ - Wird das erfüllt?}
 \newcommand{\infrequent}{\textit{infrequent} }
 \newcommand{\frequent}{\textit{frequent} }
 \newcommand{\hashfunction}[1]{h_{#1}}
@@ -323,17 +322,19 @@ We will attempt to expand the understanding of how exactly the level parameters 
 
 \newcommand{\levelParameters}[1]{p^{#1}}
 \newcommand{\varLevelParameters}[1]{\textbf{p}^{#1}}
+\newcommand{\parameterAccess}[3]{\levelParameters{#1}[#2^{#3}]}
 
 \newcommand{\frequencyOf}[1]{freq(#1)}
 \newcommand{\minimizerOf}[2]{min^{\hashfunction{#2}}_{\minimizerLength^{#2}}(#1)}
 
 \newcommand{\sequences}[1]{S_{\levelParameters{#1}}}
 \newcommand{\substring}[3]{#1[#2:#3)}
-A sequence is a string over the DNA alphabet $\Sigma = \{A,C,G,T\}$. A k-mer is a string of length $k$ over $\Sigma$. Let $i,j \in \NN$ with $i < j$ be zero based indices of a string $S$ of length $|S| > j$. We use $\substring{S}{i}{j}$ to denote the substring from the $i$th to the $(j-1)$th character of $S$.\\
-Let $\kmer \in \Sigma^{k}$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ on level $l$ depends both on the specified minimizer length $\minimizerLength^\level$ as well as the hash function on that level, which is not dependent of the level parameters but different for every level. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which represents the number of occurrences of the minimizer in a given set of input sequences.\\
-We call a minimizer \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the given threshold. Minimizers with frequencies larger than the threshold are referred to as being \frequent.\\
-Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of used levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subset [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$.\\
-We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the set of sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels. The full set of input sequences when building RSHash are denoted with $\sequences{0}$ and do not depend on any parameters.
+A sequence is a string over the DNA alphabet $\Sigma = \{A,C,G,T\}$. Let $i,j \in \NN$ with $i < j$ be zero based indices of a string $S$ of length $|S| \geq j$. We use $\substring{S}{i}{j}$ to denote the substring from the $i$th to the $(j-1)$th character of $S$.
+The k-mers of a string $S$ with $|S|\geq k$ are all its substrings $S[i:i+k) \in \Sigma^k$ of length $k$ for $i \in \NN \wedge i \leq |S|-k$.\\
+Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to the set of levels $\setOfLevels := \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$. We use $\possibleMinimizerLengths \subseteq [1,k] \cap \NN$ and $\possibleThresholds \subset \NN^+$ to denote the sets of minimizer lengths and thresholds considered. We denote the Cartesian $n$th power of a set $X$ with $X^n$ e.g. $X^3 = X \times X \times X$. A chosen minimizer length and threshold on a specified level $\level \in \setOfLevels$ are denoted $\minimizerLength^\level$ and $\threshold^\level$. We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$. We introduce the operator $\parameterAccess{\level}{\minimizerLength}{i} = \minimizerLength^i$ to denote retrieving the minimizer length specified for level $i$ from the level parameters and analogously $\parameterAccess{\level}{\threshold}{i}  = \threshold^i$ \\
+We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the set of sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels. The full set of input sequences when building RSHash are denoted with $\sequences{0}$ and do not depend on any parameters.\\
+Let $\kmer \in \Sigma^{k}$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ on level $l$ depends both on the specified minimizer length $\minimizerLength^\level$ as well as the hash function $\hashfunction{\level}$ on that level, which is not dependent of the level parameters but unique for every level. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which tells the combined number of the minimizer occurrences in a given set of input sequences.\\
+We call the minimizer of $\kmer$ \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the specified threshold on level $\level$. Minimizers with frequencies larger than the threshold are referred to as being \frequent.
 
 \chapter{Sequence Statistics}\label{chap:sequenceStatistics}
 As outlined in the \cref{chap:introduction}, the space consumption and query time of RSHash are highly dependent on the choice of level parameters as those influence the distributions of minimizers on all levels. We define aspects of the minimizer distribution which will be needed for modeling the space consumption and query time in \cref{chap:minlp}. Specifically relevant for this is the behavior of minimizer distributions across several levels, which is unique to the approach proposed by \citet{schulte-mattler_rshash_2026} and therefor not considered in previous works.
@@ -343,7 +344,6 @@ As outlined in the \cref{chap:introduction}, the space consumption and query tim
 \newcommand{\distinctMinimizers}[1]{\mathcal{M}_{\levelParameters{#1-1}, \minimizerLength^{#1}}}
 \newcommand{\distinctKmers}[1]{\mathcal{K}_{\levelParameters{#1-1}}}
 
-\newcommand{\parameterAccess}[3]{\levelParameters{#1}[#2^{#3}]}
 \newcommand{\compactZV}[2]{#1[#2]}
 \newcommand{\manualZV}[3]{#1[#2, #3]}
 \newcommand{\ZVM}[1]{\manualZV{M}{\levelParameters{#1-1}}{\parameterAccess{#1}{\minimizerLength}{#1}}}
@@ -357,14 +357,14 @@ As outlined in the \cref{chap:introduction}, the space consumption and query tim
 Recall that we use $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to describe the level parameters on all levels up to and including the level $\level$, that $\sequences{\level-1}$ is the the set of input sequences on level $\level$ which depends on the level parameters $\levelParameters{\level-1}$ on all previous and that $\sequences{0}$ is the full set of input sequences on the first level, which is independent of any parameters.
 \\
 
-Let $\distinctKmers{\level}$ be the set of distinct k-mers in a set of sequences $\sequences{\level-1}$. In other words, the set of distinct k-mers on a level $\level$ contains every distinct substring of length $k$ in the input sequences which are affected by the level parameters on previous levels:
+Let $\distinctKmers{\level}$ be the set of distinct k-mers in a set of sequences $\sequences{\level-1}$. In other words, the set $\distinctKmers{\level}$ contains every distinct substring of length $k$ which appears in at least one of the sequences $S^\level_i \in \sequences{\level-1}$ which depend on the level parameters on previous levels:
 \begin{equation}
-	\distinctKmers{\level} := \{x \in \{0, 1, ..., 4^k\} \mid \exists S' \in \sequences{\level-1} ~ \exists (1 \leq i \leq |S'|-k) ~ S'[i:i+k] = x \}
+	\distinctKmers{\level} := \{\kmer \in \Sigma^k \mid \exists S' \in \sequences{\level-1} ~ \exists (1 \leq i \leq |S'|-k) ~ S'[i:i+k) = \kmer \}
 \end{equation}
 
 Let $\distinctMinimizers{\level}$ be the set of distinct minimizers of lengths $\minimizerLength^\level$ on level $\level$ of the k-mers in $\distinctKmers{\level}$. The set of distinct minimizers is not only affected by the choice of level parameters on previous levels but also depends on the minimizer length on the current level:
 \begin{equation}
-	\distinctMinimizers{\level} := \{\minimizer \in \{0, 1, ..., 4^{\minimizerLength^\level}\} \mid \exists \kmer \in \distinctKmers{\level} ~ \minimizerOf{\kmer}{\level}=\minimizer\}
+	\distinctMinimizers{\level} := \{\minimizerOf{\kmer}{\level} \mid \forall \kmer \in \distinctKmers{\level}\}
 \end{equation}
 Let $\manualZV{M}{\levelParameters{\level-1}}{m}$ be a discrete random variable that describes the frequency of these minimizers:
 \begin{align}
@@ -372,15 +372,14 @@ Let $\manualZV{M}{\levelParameters{\level-1}}{m}$ be a discrete random variable 
 	\\
 	\manualZV{M}{\levelParameters{\level-1}}{m}(\minimizer) &= \frequencyOf{\minimizer}
 \end{align}
-\todo[inline]{wahrscheinlichkeits und verteilungsfunktion für K einmal etwas ausführlicher beschreiben aber für M mehr oder weniger so lassen}
-We define its probability distribution $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$, which tells the probability of a minimizer having an exact frequency $f \in \NN$. The distribution of minimizers depends both on the level parameters $\levelParameters{\level-1}$ on previous levels, which affect the remaining k-mers on level $\l$ and the minimizer length $\minimizerLength^\level$ on the current level, which directly affects the computation of minimizers. For these reasons, we index the distributions with those parameters:
+We define its probability distribution $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$\footnote{This notation differs slightly from that used by \citet{schulte-mattler_rshash_2026} who do not introduce the probability distributions but instead use $p_M$ and $p_K$ to denote the cumulative distribution functions which we denote with $F_M$ and $F_K$}, which tells the probability of a minimizer having an exact frequency $f \in \NN$. The distribution of minimizers depends both on the level parameters $\levelParameters{\level-1}$ on previous levels, which affect the remaining k-mers on level $\l$ and the minimizer length $\minimizerLength^\level$ on the current level, which directly affects the computation of minimizers. We thus index the distributions with those parameters:
 \begin{align}
 	\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}} &: \NN \rightarrow [0,1]
 	\\
 	\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level} = f) = \frac{|\{\minimizer \in \distinctMinimizers{\level} \mid 
 		\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}(\minimizer)=f \}|}{|\distinctMinimizers{\level}|}
 \end{align}
-Using the random variables probability function we can derive its cumulative distribution function $\CDF{\manualZV{M}{\levelParameters{\level-1}}{m}}$\footnote{This notation differs slightly from that used by \citet{schulte-mattler_rshash_2026} who do not introduce the probability distributions but instead use $p_M$ and $p_K$ to denote the cumulative distribution functions which we denote with $F_M$ and $F_K$}, which returns the probability of a minimizer having a frequency that does not exceed an upper bound $f$: 
+Using the random variables probability function we can derive its cumulative distribution function $\CDF{\manualZV{M}{\levelParameters{\level-1}}{m}}$, which returns the probability of a minimizer having a frequency that does not exceed an upper bound $f$: 
 \begin{align}
 	\CDF{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}} &: \NN \rightarrow [0,1]\\
 	\CDF{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level} \leq f) = \sum_{i=1}^f \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(i)
@@ -421,7 +420,7 @@ The average frequency of minimizers on a level $\level \in \setOfLevels$ is give
 For a given set of finite sequences the set of distinct minimizers on each level and for each combination of level parameters is finite by definition. It follows that for a given sequence and set of level parameters, the average frequency $\mathbb{E}[\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}]$ can always be computed, because the sample space $\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ is then finite by definition.
 
 More relevant to the optimization of level parameters is the average frequency of \infrequent minimizers i.e. the average frequency of minimizers whose frequency do not exceed the threshold $\threshold^\level$. We denote this value with $\averageFrequency(\levelParameters{\level})$ and can derive it from $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{m}}$ by computing a weighted sum over all frequencies up until the threshold $\threshold^\level$ and then norming the result by dividing through the percentage of \infrequent minimizers:
-\begin{equation}
+\begin{equation} \label{equation:averageFrequency}
 	\averageFrequency(\levelParameters{\level}) = \frac{1}{\CDF{\compactZV{M}{\levelParameters{\level}}}} \cdot
 	\sum\limits_{f=1}^{\threshold^\level} \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(f) \cdot f 
 \end{equation}
@@ -472,7 +471,7 @@ $\timeForOperationOnStructure{check}{H}$
 needed for the contains query on bitvector $R$, the select queries on bitvector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
 
 \section{Model for One Level}\label{sec:minlp_oneLevel}
-Aiming to improve readability, we omit the superscript index indicating an instances belonging to a specific level as only one level is considered in this section e.g. a tuple of level parameters is simply referred to as $\levelParameters{}$ instead of $\levelParameters{1}$.
+Aiming to improve readability, we omit the superscript index indicating an instances belonging to a specific level as only one level is considered in this section e.g. the minimizer length is simply referred to as $\minimizerLength$ instead of $\minimizerLength^1$.
 \\
 In order to determine $\varMinimizerLength$ and $\varThreshold$ we use binary indicator variables $\indicatorm_\minimizerLength$ and $\indicatort_\threshold$ for each possible $\minimizerLength \in \possibleMinimizerLengths$ and $\threshold \in \possibleThresholds$:
 \begin{align}
@@ -574,7 +573,7 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 \todo[inline]{larger for unitigs!}
 
 \newcommand{\numberOfDistinctMinimizers}{n_{DIM}} 
-\textbf{Bitvector $R$} is a bitvector of length $4^\varMinimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \infrequent minimizer in the sequences. We can compute the number $\numberOfDistinctMinimizers$ of distinct \infrequent minimizers by multiplying the percentage of \infrequent minimizers with the total number of minimizers divided through the average frequency of each minimizer:
+\textbf{Bitvector $R$} is a bitvector of length $4^\varMinimizerLength$ in which each bit set to $1$ marks the occurrence of one distinct \infrequent minimizer in the sequences. We can compute the number $\numberOfDistinctMinimizers$ of distinct \infrequent minimizers by multiplying the percentage of \infrequent minimizers with the total number of minimizers divided through the average frequency\footnote{Note that dividing by the average frequency safe as its value is at least $1$ per definition \cref{equation:averageFrequency}} of each minimizer:
 \newcommand{\nDIM}{\numberOfDistinctMinimizers &= \frac{\varCDF{K} \cdot n_{kmers}}{\varAverageFrequency} \cdot \frac{2}{k-\varMinimizerLength+2} \textbf{OR}
 	\\
 	&= \frac{\varCDF{M} \cdot n_{minimizers}}{\varAverageFrequency}}
@@ -903,12 +902,12 @@ needed for the contains query on bitvector $R$, the select queries on bitvector 
 		$
 		\Function{statsComputation}{$\sequences{0}, \numberOfLevels, \possibleMinimizerLengths, \possibleThresholds$}
 		\For{$\levelParameters{L} \in \possibleMinimizerLengths^L \times \possibleThresholds^L$}
-		\If{$\levelParameters{L}.isDecreasing$} \State \textbf{continue} \EndIf
+		\If{$\levelParameters{L}.isDecreasing()$} \State \textbf{continue} \EndIf
 		\State $RSHash \gets buildWithStats(\sequences{0}, \levelParameters{L})$
 		\State $n_{kmers}, n_{minimizers}, \CDF{\compactZV{M}{\levelParameters{\level}}},
 		\CDF{\compactZV{K}{\levelParameters{\level}}},
-		\averageFrequency(\levelParameters{\level}) \gets RSHash.distributionStats$
-		\State $spaceConsumptions_{\levelParameters{L}} \gets RSHash.spaceConsumptions$
+		\averageFrequency(\levelParameters{\level}) \gets RSHash.getDistributionStats()$
+		\State $spaceConsumptions_{\levelParameters{L}} \gets RSHash.getSpaceConsumptions()$
 		\State $operationTimes_{\levelParameters{L}} \gets RSHash.measureTimes(noSamples=100000)$
 		\EndFor
 		\EndFunction
@@ -923,7 +922,7 @@ needed for the contains query on bitvector $R$, the select queries on bitvector 
 \end{itemize}
 
 \section{Model Accuracy}
-We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute the model input for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput} and \cref{sec:consideredParameters}.\\
+We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute model input, the actual space consumption and the measured operation times for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
 For each sequence and each combination of the level parameters considered, we then use run a modified version of the MINLP which forces the exact combination of level parameters. This can be achieved by adding the following constraints:\todo{define constraints}
 \begin{align}
 	constraints...
@@ -932,6 +931,7 @@ For each sequence and each combination of the level parameters considered, we th
 \subsection{Lookup Time}
 
 \subsection{Space Consumption}
+
 
 \section{Limitations}
 The MINLP approach for finding optimal level parameters has the advantage of finding the optimal level parameters for the specified optimization goal.

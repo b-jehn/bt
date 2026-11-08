@@ -123,7 +123,9 @@ def main(n_threads: int) -> None:
             for minimizer_length in MINIMIZER_LENGTHS
             for threshold in THRESHOLDS
         ]
-
+        
+        # Generative AI use Disclaimer:
+        #   the following code for threading the computation was generated using GPT-6 Luna
         with ThreadPoolExecutor(max_workers=n_threads) as executor:
             futures = [
                 executor.submit(
@@ -143,7 +145,6 @@ def main(n_threads: int) -> None:
         
         query_path.unlink() #delete query file, as it is no longer needed
 
-    return
     #zip stats_directory
     shutil.make_archive("allStats", 'zip', root_dir=str(stats_directory)) 
     #remove unziped stats
