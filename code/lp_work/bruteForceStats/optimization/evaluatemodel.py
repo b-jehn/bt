@@ -17,11 +17,11 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
-            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+GENOMES = ["Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
             "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
 
-SEQUENCE_NAME = "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"
+SEQUENCE_NAME = GENOMES[2]
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = np.inf
 MAX_BPK_TOTAL = np.inf
@@ -68,6 +68,7 @@ if(modeled_AND_measured_stats_jsonfile_path.exists()):
             tuple(pair) for pair in modeled_AND_measured_stats_from_jsonable(json.load(file))
     ]
 else:
+    print("computing modeled_AND_measured_stats")
     genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
     genome_stats_directory = Path(f"../allStats/{SEQUENCE_NAME}")
     fill_cascading_stats(root_stats=genome_stats, 
@@ -124,24 +125,25 @@ else:
         json.dump(modeled_AND_measured_stats_to_jsonable(modeled_AND_measured_stats), file, indent=2)
 
 
-squared_errors_jsonfile_path = data_path / "squared_errors.json"
-squared_errors = {}
-if(squared_errors_jsonfile_path.exists()):
-    # Load squared_errors from json file
-    print("loading squared_errors from previous computations json file")
-    with squared_errors_jsonfile_path.open() as json_file:
+errors_jsonfile_path = data_path / "errors.json"
+errors = {}
+if(errors_jsonfile_path.exists()):
+    # Load errors from json file
+    print("loading model errors from previous computations json file")
+    with errors_jsonfile_path.open() as json_file:
         pairs = json.load(json_file)
-        squared_errors = {tuple(k): v for k, v in pairs}
+        errors = {tuple(k): v for k, v in pairs}
 else:
     ##############
     # squared error calculation and plotting for every stats item and level
     ##############
     ##############
-    # Collect squared errors by stats class, field, and level.
+    # Collect errors by stats class, field, and level.
     # Generative AI use Disclaimer:
     #   the following code for computing the squarred error for every pai of modeled and measured stats
     #   and every value modeled was generated using GPT-6 Luna
     ##############
+    print("computing model errors")
     for modeled, measured in modeled_AND_measured_stats:
         stats_name = type(modeled).__name__
 
@@ -153,16 +155,16 @@ else:
             if isinstance(modeled_value, list):
                 for level, (m, obs) in enumerate(zip(modeled_value, measured_value)):
                     key = (stats_name, name, level)
-                    squared_errors.setdefault(key, []).append((m - obs) ** 2)
+                    errors.setdefault(key, []).append(m - obs)
             else:
                 key = (stats_name, name, None)
-                squared_errors.setdefault(key, []).append((modeled_value - measured_value) ** 2)
+                errors.setdefault(key, []).append(modeled_value - measured_value)
 
-    # write squared_errors to json file
-    with open(str( data_path / 'squared_errors.json'), 'w') as f:
-        json.dump([[list(k), v] for k, v in squared_errors.items()], f)
+    # write errors to json file
+    with open(str( data_path / 'errors.json'), 'w') as f:
+        json.dump([[list(k), v] for k, v in errors.items()], f)
 
-genome_plots = Path(f"{SEQUENCE_NAME}/groupedPlots")
+genome_plots = Path(f"{SEQUENCE_NAME}/plots")
 genome_plots.mkdir(exist_ok=True, parents=True)
 
 ##############
@@ -195,42 +197,50 @@ plt.close()
 ##############
 # Make one box plot per field/level pair. 
 # Generative AI use Disclaimer:
-#   the following code for creating box plots of the squarred errors was generated using GPT-6 Luna
+#   the following code for creating box plots of the squarred_errors was generated using GPT-6 Luna
 ##############
 from collections import defaultdict
 
-grouped_errors = defaultdict(dict)
+for error_type in ("absolute_error", "squared_error"):
+    print(f"plotting {error_type}s")
+    plots_path = genome_plots / error_type
+    plots_path.mkdir(exist_ok=True, parents=True)
+    
+    grouped_errors = defaultdict(dict)
+    for (stats_name, name, level), error in errors.items():
+        if error_type == "absolute_error":
+            grouped_errors[(stats_name, name)][level] = [np.abs(e) for e in error]
+        else: 
+            grouped_errors[(stats_name, name)][level] = [e**2 for e in error]
+            
+    for (stats_name, name), errors_by_level in grouped_errors.items():
+        # Sort levels consistently; None appears first if present.
+        levels = sorted(errors_by_level, key=lambda level: (level is not None, level))
+        labels = [str(level) if level is not None else "None" for level in levels]
+        data = [errors_by_level[level] for level in levels]
 
-for (stats_name, name, level), error in squared_errors.items():
-    grouped_errors[(stats_name, name)][level] = error
+        title = f"{stats_name}: {name}"
 
-for (stats_name, name), squared_errors_by_level in grouped_errors.items():
-    # Sort levels consistently; None appears first if present.
-    levels = sorted(squared_errors_by_level, key=lambda level: (level is not None, level))
-    labels = [str(level) if level is not None else "None" for level in levels]
-    data = [squared_errors_by_level[level] for level in levels]
+        fig, ax = plt.subplots()
+        ax.boxplot(data, tick_labels=labels, showmeans=True, meanline=True)
+        #ax.ticklabel_format(axis="y", style="plain", useOffset=False)
+        ax.set_xlabel("Level")
+        ax.set_ylabel(error_type)
+        ax.set_title(title)
 
-    title = f"{stats_name}: {name}"
+        # Label each box's median.
+        for x, values in enumerate(data, start=1):
+            median = np.median(values)
+            ax.annotate(
+                str(round(median, 3)),
+                xy=(x + 0.2, median),
+                va="center",
+                ha="left",
+            )
 
-    fig, ax = plt.subplots()
-    ax.boxplot(data, tick_labels=labels)
-    ax.set_xlabel("Level")
-    ax.set_ylabel("Squared error")
-    ax.set_title(title)
-
-    # Label each box's median.
-    for x, values in enumerate(data, start=1):
-        median = np.median(values)
-        ax.annotate(
-            str(round(median, 2)),
-            xy=(x + 0.2, median),
-            va="center",
-            ha="left",
-        )
-
-    fig.tight_layout()
-    plt.savefig(str(genome_plots / title), dpi=300)
-    plt.close()
+        fig.tight_layout()
+        plt.savefig(str(plots_path / title), dpi=300)
+        plt.close()
 
 
 #============================#

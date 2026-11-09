@@ -662,6 +662,7 @@ double avgTimeRContains(std::vector<uint64_t> &randomMinimizers,
 {
     uint64_t rank_out;
     size_t tmp = 0;
+    std::cout << "number of random minimizers= " << randomMinimizers.size() << std::endl;
     std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
     for (uint64_t minimizer : randomMinimizers) {
         tmp += r.contains(minimizer, rank_out);

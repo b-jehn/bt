@@ -10,9 +10,17 @@ DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_SAMPLES = 100000 
 K = 31
 
+##ONLY FOR TESTING!!
+#GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel"]
+#MINIMIZER_LENGTHS = [[15,15,15]]
+#THRESHOLDS = [[32,32,32]]
+
 GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel",
+            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
             "Falco_tinnunculus.FalTin1.0.dna.toplevel",
-            "Homo_sapiens.GRCh38.dna.toplevel"]
+            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+            "Homo_sapiens.GRCh38.dna.toplevel",
+            "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
 
 MINIMIZER_LENGTHS = []
 for m1 in range(15,26,2):
@@ -25,7 +33,7 @@ for t1 in range(5,8):
     for t2 in range(t1,8):
         for t3 in range(t2,8):
             THRESHOLDS.append([2**t1,2**t2,2**t3])
-
+            
 
 def get_random_Kmers(source_path: Path, output_path: Path, no_samples: int) -> None:
     """write n K-base DNA reads from random positions in source to output_path"""
@@ -44,7 +52,9 @@ def get_random_Kmers(source_path: Path, output_path: Path, no_samples: int) -> N
     with gzip.open(output_path, "wt", encoding="ascii") as out:
         for i in range(no_samples):
             skmer = parts[random.randrange(0, len(parts)-1, 1)]
-            if(len(skmer) < K): print(skmer)
+            if(len(skmer) < K): 
+                i = i-1
+                continue
             start = random.randrange(0, len(skmer) - K + 1)
             out.write(f"@read_{i+1}\n{skmer[start:start + K]}\n+\n{'I' * K}\n")
 
@@ -89,7 +99,7 @@ def getStats(genome: str, genome_path: Path, query_path: Path, minimizer_lengths
     ############################
     #measure average lookup time
     ############################
-    logfile_path = stats_path / "lookup.log"
+    logfile_path = stats_path / "NON_streaming_lookup.log"
     with logfile_path.open("w") as logfile:
         subprocess.run(
             [
@@ -147,7 +157,7 @@ def main(n_threads: int) -> None:
         query_path.unlink() #delete query file, as it is no longer needed
 
     #zip stats_directory
-    shutil.make_archive("allStatsUnprocessedGenomes", 'zip', root_dir=str(stats_directory)) 
+    shutil.make_archive("allStats_NONStreamingLookup", 'zip', root_dir=str(stats_directory)) 
     #remove unziped stats
     if stats_directory.is_dir():
         for genome_path in stats_directory.iterdir():
@@ -165,5 +175,8 @@ def main(n_threads: int) -> None:
         stats_directory.rmdir()  # Removes the directory only if it is now empty
     
 if __name__ == '__main__':
-    main(int(sys.argv[1]))
+    if(len(sys.argv) < 2):
+        main(1)
+    else:
+        main(int(sys.argv[1]))
 

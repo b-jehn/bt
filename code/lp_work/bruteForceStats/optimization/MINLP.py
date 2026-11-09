@@ -75,11 +75,11 @@ def MINLP(
 
     n_DIM_vars = [scip.addVar(vtype="C", name=f"n_DIM_{l}", lb=1) for l in range(no_levels)] #number of distinct infrequent minimizers on each level
 
-    bpk_R_vars = [scip.addVar(vtype="C", name=f"bpk_R_{l}") for l in range(no_levels)] #bits per kmer in R on each level
-    bpk_S_vars = [scip.addVar(vtype="C", name=f"bpk_S_{l}") for l in range(no_levels)] #bits per kmer in S on each level
-    bpk_O_vars = [scip.addVar(vtype="C", name=f"bpk_O_{l}") for l in range(no_levels)] #bits per kmer in O on each level
-    bpk_H = scip.addVar(vtype="C", name="bpk_H")            #bits per kmer in H
-    bpk_total = scip.addVar(vtype="C", name="bpk_total")    #total bits per k-mer
+    bpk_R_vars = [scip.addVar(vtype="C", name=f"bpk_R_{l}", lb=0) for l in range(no_levels)] #bits per kmer in R on each level
+    bpk_S_vars = [scip.addVar(vtype="C", name=f"bpk_S_{l}", lb=0) for l in range(no_levels)] #bits per kmer in S on each level
+    bpk_O_vars = [scip.addVar(vtype="C", name=f"bpk_O_{l}", lb=0) for l in range(no_levels)] #bits per kmer in O on each level
+    bpk_H = scip.addVar(vtype="C", name="bpk_H", lb=0)            #bits per kmer in H
+    bpk_total = scip.addVar(vtype="C", name="bpk_total", lb=0)    #total bits per k-mer
 
     #============================#
     #OBJECTIVE
@@ -203,6 +203,8 @@ def MINLP(
     #============================#
     #SOLVE
     #============================#
+    if(not hideOutput): 
+        print("starting solving")
     start_time = perf_counter()
     scip.optimize()
     elapsed_seconds = perf_counter() - start_time

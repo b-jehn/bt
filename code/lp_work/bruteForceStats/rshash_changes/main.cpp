@@ -140,7 +140,17 @@ int main(int argc, char** argv)
         std::vector<seqan3::bitpacked_sequence<seqan3::dna4>> queries;
         load_file(args.q, queries);
 
-        uint64_t kmers = 0;
+        //convert to size-t for non streaming lookup
+        std::vector<size_t> kmers_in_queries;
+        kmers_in_queries.reserve(queries.size());
+        for (auto const & query : queries){
+            for (auto&& kmer : query | rshash::views::kmerview({.window_size = 31})) {
+                kmers_in_queries.push_back(kmer.value);
+                break; //query should only contain one kmer anyway
+            }
+        }
+
+        uint64_t kmers = kmers_in_queries.size();
         uint64_t found = 0;
         uint64_t extensions = 0;
         std::chrono::nanoseconds elapsed;
@@ -149,10 +159,11 @@ int main(int argc, char** argv)
         std::cout << "querying...\n";
 
         std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
-        for (auto query : queries) {
-            found += index.streaming_lookup(query, extensions);
-            kmers += query.size() - index.getk() + 1;
-        }
+        found = index.lookup(kmers_in_queries);
+        //for (auto query : queries) {
+        //    found += index.streaming_lookup(query, extensions);
+        //    kmers += query.size() - index.getk() + 1;
+        //}
         std::chrono::high_resolution_clock::time_point t_stop = std::chrono::high_resolution_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(t_stop - t_start);
         
