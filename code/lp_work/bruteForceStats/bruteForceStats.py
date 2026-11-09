@@ -10,9 +10,9 @@ DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_SAMPLES = 100000 
 K = 31
 
-GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
-            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
-            "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
+GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel",
+            "Falco_tinnunculus.FalTin1.0.dna.toplevel",
+            "Homo_sapiens.GRCh38.dna.toplevel"]
 
 MINIMIZER_LENGTHS = []
 for m1 in range(15,26,2):
@@ -44,7 +44,8 @@ def get_random_Kmers(source_path: Path, output_path: Path, no_samples: int) -> N
     with gzip.open(output_path, "wt", encoding="ascii") as out:
         for i in range(no_samples):
             skmer = parts[random.randrange(0, len(parts)-1, 1)]
-            start = random.randrange(len(skmer) - K + 1)
+            if(len(skmer) < K): print(skmer)
+            start = random.randrange(0, len(skmer) - K + 1)
             out.write(f"@read_{i+1}\n{skmer[start:start + K]}\n+\n{'I' * K}\n")
 
 def getStats(genome: str, genome_path: Path, query_path: Path, minimizer_lengths: list[int], thresholds: list[int]) -> None:
@@ -146,7 +147,7 @@ def main(n_threads: int) -> None:
         query_path.unlink() #delete query file, as it is no longer needed
 
     #zip stats_directory
-    shutil.make_archive("allStats", 'zip', root_dir=str(stats_directory)) 
+    shutil.make_archive("allStatsUnprocessedGenomes", 'zip', root_dir=str(stats_directory)) 
     #remove unziped stats
     if stats_directory.is_dir():
         for genome_path in stats_directory.iterdir():
