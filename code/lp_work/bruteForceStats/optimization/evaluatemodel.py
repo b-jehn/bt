@@ -17,7 +17,11 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-SEQUENCE_NAME = "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs"
+GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
+            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+            "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
+
+SEQUENCE_NAME = "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = np.inf
 MAX_BPK_TOTAL = np.inf
