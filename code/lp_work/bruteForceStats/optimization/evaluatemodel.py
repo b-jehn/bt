@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from dataclasses import fields
 from collections import defaultdict
+from typing import get_origin, get_type_hints
 
 from cascadingStats import *
 from MINLP import MINLP
@@ -36,7 +37,7 @@ THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]
 NO_LEVELS = 3
 NON_DECREASING_PARAMETERS = True
 
-OVERWRITE_PLOTS = False
+OVERWRITE_PLOTS = True
 
 #TODO: tmp, for testing
 forcedMinimizerLength = []
@@ -181,7 +182,9 @@ for sequence_name in GENOMES:
     # Prepare storage for each class and field.
     plot_data = {
         stats_class: {
-            stat_field.name: {"modeled": [], "measured": []}
+            stat_field.name: [{"modeled": [], "measured": []}] * NO_LEVELS
+            if get_origin(get_type_hints(stats_class)[stat_field.name]) is list
+            else {"modeled": [], "measured": []}
             for stat_field in fields(stats_class)
         }
         for stats_class in stats_classes
@@ -203,9 +206,9 @@ for sequence_name in GENOMES:
 
                     if isinstance(modeled_value, list) and isinstance(measured_value, list):
                         # Pair corresponding list elements.
-                        for modeled_item, measured_item in zip(modeled_value, measured_value):
-                            data["modeled"].append(modeled_item)
-                            data["measured"].append(measured_item)
+                        for level, (modeled_item, measured_item) in enumerate(zip(modeled_value, measured_value)):
+                            data[level]["modeled"].append(modeled_item)
+                            data[level]["measured"].append(measured_item)
                     else:
                         data["modeled"].append(modeled_value)
                         data["measured"].append(measured_value)
@@ -216,11 +219,17 @@ for sequence_name in GENOMES:
     correlation_coefficients = []
     for stats_class in stats_classes:
         for field_name, data in plot_data[stats_class].items():
-            modeled_values = data["modeled"]
-            measured_values = data["measured"]
-            
-            fieldnames.append(field_name)
-            correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
+            if get_origin(get_type_hints(stats_class)[field_name]) is list:
+                for level in range(NO_LEVELS):
+                    modeled_values = data[level]["modeled"]
+                    measured_values = data[level]["measured"]
+                    fieldnames.append(f"{field_name}_{level}")
+                    correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
+            else:
+                modeled_values = data["modeled"]
+                measured_values = data["measured"]
+                fieldnames.append(field_name)
+                correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
             
     with open(correlation_stats_path, 'w') as csvfile:
         writer = csv.writer(csvfile)
@@ -238,26 +247,50 @@ for sequence_name in GENOMES:
         # Create one plot for each field.
         for stats_class in stats_classes:
             for field_name, data in plot_data[stats_class].items():
-                modeled_values = data["modeled"]
-                measured_values = data["measured"]
+                if get_origin(get_type_hints(stats_class)[field_name]) is list:
+                    for level in range(NO_LEVELS):
+                        modeled_values = data[level]["modeled"]
+                        measured_values = data[level]["measured"]
+                        
+                        if not modeled_values:
+                            continue
+                        
+                        title = f"{field_name}_{level} for {sequence_name.replace('.','_')}"
 
-                if not modeled_values:
-                    continue
+                        #plot red diagonal where x=y
+                        plt.axline((0,0),slope=1,linestyle='-',color='red',label="modeled=measured")
+                        plt.legend()
+                        
+                        plt.scatter(measured_values, modeled_values)
+                        plt.xlabel(f"Measured {field_name}_{level}")
+                        plt.ylabel(f"Modeled {field_name}_{level}")
+                        plt.title(title)
+                        plt.grid(True)
+                        plt.tight_layout()
+                        plt.savefig(plots_path / f"{title}.png", dpi=300)
+                        plt.close()
 
-                title = f"{field_name} for {sequence_name.replace('.','_')}"
+                else:
+                    modeled_values = data["modeled"]
+                    measured_values = data["measured"]
+                    
+                    if not modeled_values:
+                        continue
 
-                #plot red diagonal where x=y
-                plt.axline((0,0),slope=1,linestyle='-',color='red',label="modeled=measured")
-                plt.legend()
-                
-                plt.scatter(measured_values, modeled_values)
-                plt.xlabel(f"Measured {field_name}")
-                plt.ylabel(f"Modeled {field_name}")
-                plt.title(title)
-                plt.grid(True)
-                plt.tight_layout()
-                plt.savefig(plots_path / f"{title}.png", dpi=300)
-                plt.close()
+                    title = f"{field_name} for {sequence_name.replace('.','_')}"
+
+                    #plot red diagonal where x=y
+                    plt.axline((0,0),slope=1,linestyle='-',color='red',label="modeled=measured")
+                    plt.legend()
+                    
+                    plt.scatter(measured_values, modeled_values)
+                    plt.xlabel(f"Measured {field_name}")
+                    plt.ylabel(f"Modeled {field_name}")
+                    plt.title(title)
+                    plt.grid(True)
+                    plt.tight_layout()
+                    plt.savefig(plots_path / f"{title}.png", dpi=300)
+                    plt.close()
     
     ##############
     # Make one box plot per field/level pair. 

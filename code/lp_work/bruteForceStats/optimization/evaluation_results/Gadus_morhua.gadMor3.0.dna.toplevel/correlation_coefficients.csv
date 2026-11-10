@@ -1,2 +1,2 @@
-bpk_T,bpk_R,bpk_S,bpk_O,bpk_H,bpk_total,R_contains,S_select,O_access,T_compare,H_access,Lookup_time
-nan,0.9999567699752394,0.9999999999956766,0.9999999999998654,0.6923744373671221,0.7436905257455115,nan,nan,nan,nan,nan,0.5152451097057021
+bpk_T,bpk_R_0,bpk_R_1,bpk_R_2,bpk_S_0,bpk_S_1,bpk_S_2,bpk_O_0,bpk_O_1,bpk_O_2,bpk_H,bpk_total,R_contains_0,R_contains_1,R_contains_2,S_select_0,S_select_1,S_select_2,O_access_0,O_access_1,O_access_2,T_compare_0,T_compare_1,T_compare_2,H_access,Lookup_time
+nan,0.9999567699752394,0.9999567699752394,0.9999567699752394,0.9999999999956766,0.9999999999956766,0.9999999999956766,0.9999999999998654,0.9999999999998654,0.9999999999998654,0.6923744373671221,0.7436905257455115,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,0.5152451097057021
