@@ -1,5 +1,5 @@
 # Bachelors Thesis - Bjarne Jehn
-Moin Jonas, hier einmal eine Beschreibung der Schritte, um hoffentlich möglichst aufwandsfrei die Berechnung der Stats für die Experimente durchzuführen:
+Instructios to set up the repository and run the computation of stats needed for running and evaluating the MINLP
 
 ## Clone My "bt" Repository:
 ```
@@ -78,10 +78,15 @@ Get datasets used by Pibiri (2022) with
 cd bt/code/rshash
 ./benchmarks/download_and_preprocess_datasets.sh
 ```
-**In order to run the Experiments, rshash needs to have been build in the regarding directory and the unitigs for cod, falcon and human genome have to be stored in** 
+**In order to run the experiments, rshash needs to have been build in the regarding directory and the original and preprocessed datasets for cod, falcon and human genome have to be stored in** 
 ```
+bt/code/rshash/DNA_datasets/Gadus_morhua.gadMor3.0.dna.toplevel.fa
 bt/code/rshash/DNA_datasets/Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs.fa
+
+bt/code/rshash/DNA_datasets/Falco_tinnunculus.FalTin1.0.dna.toplevel.fa
 bt/code/rshash/DNA_datasets/Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs.fa
+
+bt/code/rshash/DNA_datasets/Homo_sapiens.GRCh38.dna.toplevel.fa
 bt/code/rshash/DNA_datasets/Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs.fa
 ```
 this should be the case after following the steps for downloading and preprocessing the datasets
@@ -94,6 +99,6 @@ python3 bruteForceStats.py <number of threads>
 ```
 Once the script has run, the results should be contain in 
 ```
-bt/code/lp_work/bruteForceStats/allStats.zip
+bt/code/lp_work/bruteForceStats/allStats_NONStreamingLookup.zip
 ```
 That file is all I need :) 

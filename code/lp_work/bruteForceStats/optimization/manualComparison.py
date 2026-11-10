@@ -17,7 +17,14 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-SEQUENCE_NAME = "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"
+GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel",
+            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
+            "Falco_tinnunculus.FalTin1.0.dna.toplevel",
+            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+            "Homo_sapiens.GRCh38.dna.toplevel",
+            "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
+
+SEQUENCE_NAME = GENOMES[0]
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = math.inf
 MAX_BPK_TOTAL = math.inf
@@ -27,10 +34,6 @@ THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]
 
 NO_LEVELS = 3
 NON_DECREASING_PARAMETERS = True
-
-#TODO: tmp, for testing
-forcedMinimizerLength = []
-forcedThresholds = []
 
 logfile_path = f'MINLP_logs/{SEQUENCE_NAME}.txt'
 sequence_path = f'../../../rshash/DNA_datasets/{SEQUENCE_NAME}.fa'
@@ -66,8 +69,8 @@ fill_cascading_stats(root_stats=genome_stats,
                     thresholdsConsidered=THRESHOLDS_CONSIDERED,
                     nonDecreasingParameters=True)
         
-setOfMinimizerLengths = [[15, 19, 19]]
-setOfThresholds = [[32, 64, 128]]
+setOfMinimizerLengths = [[19, 21, 25]]
+setOfThresholds = [[32, 32, 32]]
 
 for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
     print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")

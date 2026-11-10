@@ -6,13 +6,6 @@ from itertools import product
 
 from cascadingStats import *
 
-
-manual_t_contains_R_vars = 30
-manual_t_select_S_vars = 35
-manual_t_access_O_vars = 10
-manual_t_compare_T_vars = 10
-manual_t_access_H_empirical = 20
-
 def MINLP(
     optimization_goal: str,
     max_lookup_time: float,
@@ -66,20 +59,20 @@ def MINLP(
     n_kmers_vars = [scip.addVar(vtype="C", name=f"n_kmers_{l}", lb=1) for l in range(no_levels)] #number of kmers on level l for each level l
     n_minimizers_vars = [scip.addVar(vtype="C", name=f"n_minimizers_{l}", lb=1) for l in range(no_levels)] #number of kmers on level l for each level l
 
-    F_M_vars = [scip.addVar(vtype="C", name=f"F_M_{l}", lb=0, ub=1) for l in range(no_levels)]         #percentage of minimizers of length m with a frequency <= t for each level
-    F_K_vars = [scip.addVar(vtype="C", name=f"F_K_{l}", lb=0, ub=1) for l in range(no_levels)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
+    F_M_vars = [scip.addVar(vtype="C", name=f"F_M_{l}", lb=0.0, ub=1) for l in range(no_levels)]         #percentage of minimizers of length m with a frequency <= t for each level
+    F_K_vars = [scip.addVar(vtype="C", name=f"F_K_{l}", lb=0.0, ub=1) for l in range(no_levels)]         #percentage of kmers that have minimizers of length m with a frequency <= t for each level
     f_avg_vars = [scip.addVar(vtype="C", name=f"f_avg_{l}", lb=1) for l in range(no_levels)]     #average frequency of minimizers of length m with a frequency <= t for each level
 
-    t_level_vars = [scip.addVar(vtype="C", name=f"t_level_{l}") for l in range(no_levels)] #time spent for finding k-mer with an infrequent minimizer on level l
-    t_lookup = scip.addVar(vtype="C", name="t_lookup")  #total lookup time
+    t_level_vars = [scip.addVar(vtype="C", name=f"t_level_{l}", lb=0.0) for l in range(no_levels)] #time spent for finding k-mer with an infrequent minimizer on level l
+    t_lookup = scip.addVar(vtype="C", name="t_lookup", lb=0.0)  #total lookup time
 
     n_DIM_vars = [scip.addVar(vtype="C", name=f"n_DIM_{l}", lb=1) for l in range(no_levels)] #number of distinct infrequent minimizers on each level
 
-    bpk_R_vars = [scip.addVar(vtype="C", name=f"bpk_R_{l}", lb=0) for l in range(no_levels)] #bits per kmer in R on each level
-    bpk_S_vars = [scip.addVar(vtype="C", name=f"bpk_S_{l}", lb=0) for l in range(no_levels)] #bits per kmer in S on each level
-    bpk_O_vars = [scip.addVar(vtype="C", name=f"bpk_O_{l}", lb=0) for l in range(no_levels)] #bits per kmer in O on each level
-    bpk_H = scip.addVar(vtype="C", name="bpk_H", lb=0)            #bits per kmer in H
-    bpk_total = scip.addVar(vtype="C", name="bpk_total", lb=0)    #total bits per k-mer
+    bpk_R_vars = [scip.addVar(vtype="C", name=f"bpk_R_{l}", lb=0.0) for l in range(no_levels)] #bits per kmer in R on each level
+    bpk_S_vars = [scip.addVar(vtype="C", name=f"bpk_S_{l}", lb=0.0) for l in range(no_levels)] #bits per kmer in S on each level
+    bpk_O_vars = [scip.addVar(vtype="C", name=f"bpk_O_{l}", lb=0.0) for l in range(no_levels)] #bits per kmer in O on each level
+    bpk_H = scip.addVar(vtype="C", name="bpk_H", lb=0.0)            #bits per kmer in H
+    bpk_total = scip.addVar(vtype="C", name="bpk_total", lb=0.0)    #total bits per k-mer
 
     #============================#
     #OBJECTIVE
@@ -94,77 +87,75 @@ def MINLP(
     #CONSTRAINTS
     #============================#
     for l in range(no_levels):
-        scip.addCons(quicksum(im_vars[(m,l)] for m in minimizerLengthsConsidered) == 1, name=f"im_mutually_exclusive_{l}")   #mutually exclusive indicators for m
-        scip.addCons(quicksum(it_vars[(t,l)] for t in thresholdsConsidered) == 1, name=f"it__mutually_exclusive_{l}")         #mutually exclusive indicators for t
-        scip.addCons(m_vars[l] == quicksum(im_vars[(m,l)] * m for m in minimizerLengthsConsidered), name=f"get_m_{l}")   #determine m
-        scip.addCons(t_vars[l] == quicksum(it_vars[(t,l)] * t for t in thresholdsConsidered), name=f"get_t_{l}")         #determine t
-        
-        if(nonDecreasingParameters and l!=0):
-            scip.addCons(m_vars[l] >= m_vars[l-1])
-            scip.addCons(t_vars[l] >= t_vars[l-1])
-            
         if(forceParameters):
-            scip.addCons(m_vars[l] == forceParameters[0][l])
-            scip.addCons(t_vars[l] == forceParameters[1][l])
+            forcedMinimizerLengths, forcedThresholds = forceParameters
+            scip.addCons(m_vars[l] == forcedMinimizerLengths[l])
+            scip.addCons(t_vars[l] == forcedThresholds[l])
+            
+            n_kmers, n_minizers, F_M_empiric, F_K_empiric, f_avg_empiric = getCascadingDistribution_Stats(distribution_stats, forcedMinimizerLengths[:l+1], forcedThresholds[:l+1])
+            scip.addCons(n_kmers_vars[l] == n_kmers)
+            scip.addCons(n_minimizers_vars[l] == n_minizers)
+            scip.addCons(F_M_vars[l] == F_M_empiric)
+            scip.addCons(F_K_vars[l] == F_K_empiric)
+            scip.addCons(f_avg_vars[l] == f_avg_empiric)
+            
+        else:
+            if(nonDecreasingParameters and l!=0):
+                scip.addCons(m_vars[l] >= m_vars[l-1])
+                scip.addCons(t_vars[l] >= t_vars[l-1])
+
+            scip.addCons(quicksum(im_vars[(m,l)] for m in minimizerLengthsConsidered) == 1, name=f"im_mutually_exclusive_{l}")   #mutually exclusive indicators for m
+            scip.addCons(quicksum(it_vars[(t,l)] for t in thresholdsConsidered) == 1, name=f"it__mutually_exclusive_{l}")         #mutually exclusive indicators for t
+            scip.addCons(m_vars[l] == quicksum(im_vars[(m,l)] * m for m in minimizerLengthsConsidered), name=f"get_m_{l}")   #determine m
+            scip.addCons(t_vars[l] == quicksum(it_vars[(t,l)] * t for t in thresholdsConsidered), name=f"get_t_{l}")         #determine t
+            
+            #determine F_K_l and f_avg_l
+            n_kmers_terms = []
+            n_minimizers_terms = []
+            F_M_sum_terms = []
+            F_K_sum_terms = []
+            f_avg_sum_terms = []
         
-        #determine F_K_l and f_avg_l
-        n_kmers_terms = []
-        n_minimizers_terms = []
-        F_M_sum_terms = []
-        F_K_sum_terms = []
-        f_avg_sum_terms = []
-        for minimizer_lengths in product(minimizerLengthsConsidered, repeat=(l+1)):
-            if(nonDecreasingParameters and not all(i <= j for i, j in zip(minimizer_lengths, minimizer_lengths[1:]))):
-                continue
-            m_indicator = 1
-            for m_l, m in enumerate(minimizer_lengths):
-                m_indicator *= im_vars[(m, m_l)]
-            for thresholds in product(thresholdsConsidered, repeat=(l+1)):
-                if(nonDecreasingParameters and not all(i <= j for i, j in zip(thresholds, thresholds[1:]))):
+            for minimizer_lengths in product(minimizerLengthsConsidered, repeat=(l+1)):
+                if(nonDecreasingParameters and not all(i <= j for i, j in zip(minimizer_lengths, minimizer_lengths[1:]))):
                     continue
-                t_indicator = 1
-                for t_l, t in enumerate(thresholds):
-                    t_indicator *= it_vars[(t, t_l)]
-                n_kmers, n_minizers, F_M_empiric, F_K_empiric, f_avg_empiric = getCascadingDistribution_Stats(distribution_stats, minimizer_lengths, thresholds)
-                n_kmers_terms.append(m_indicator * t_indicator * n_kmers)
-                n_minimizers_terms.append(m_indicator * t_indicator * n_minizers)
-                F_M_sum_terms.append(m_indicator * t_indicator * F_M_empiric)
-                F_K_sum_terms.append(m_indicator * t_indicator * F_K_empiric)
-                f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric)
+                m_indicator = 1
+                for m_l, m in enumerate(minimizer_lengths):
+                    m_indicator *= im_vars[(m, m_l)]
+                for thresholds in product(thresholdsConsidered, repeat=(l+1)):
+                    if(nonDecreasingParameters and not all(i <= j for i, j in zip(thresholds, thresholds[1:]))):
+                        continue
+                    t_indicator = 1
+                    for t_l, t in enumerate(thresholds):
+                        t_indicator *= it_vars[(t, t_l)]
+                    n_kmers, n_minizers, F_M_empiric, F_K_empiric, f_avg_empiric = getCascadingDistribution_Stats(distribution_stats, minimizer_lengths, thresholds)
+                    n_kmers_terms.append(m_indicator * t_indicator * n_kmers)
+                    n_minimizers_terms.append(m_indicator * t_indicator * n_minizers)
+                    F_M_sum_terms.append(m_indicator * t_indicator * F_M_empiric)
+                    F_K_sum_terms.append(m_indicator * t_indicator * F_K_empiric)
+                    f_avg_sum_terms.append(m_indicator * t_indicator * f_avg_empiric)
         
-        scip.addCons(n_kmers_vars[l] == quicksum(n_kmers_terms))
-        scip.addCons(n_minimizers_vars[l] == quicksum(n_minimizers_terms))
-        scip.addCons(F_M_vars[l] == quicksum(F_M_sum_terms))
-        scip.addCons(F_K_vars[l] == quicksum(F_K_sum_terms))
-        scip.addCons(f_avg_vars[l] == quicksum(f_avg_sum_terms))
-        
-        scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + ((f_avg_vars[l]+1)/2)*(t_access_O_vars[l]+t_compare_T_vars[l]))
+            scip.addCons(n_kmers_vars[l] == quicksum(n_kmers_terms))
+            scip.addCons(n_minimizers_vars[l] == quicksum(n_minimizers_terms))
+            scip.addCons(F_M_vars[l] == quicksum(F_M_sum_terms))
+            scip.addCons(F_K_vars[l] == quicksum(F_K_sum_terms))
+            scip.addCons(f_avg_vars[l] == quicksum(f_avg_sum_terms))
 
         #scip.addCons(n_DIM_vars[l] == F_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l] * 2/(K-m_vars[l]+2))
         scip.addCons(n_DIM_vars[l] == F_M_vars[l]*n_minimizers_vars[l]/f_avg_vars[l])
 
-        scip.addCons(bpk_R_vars[l] == 
-                    n_DIM_vars[l]/n_kmers_vars[0] * ((2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0))) + 3))
+        #bits per k-mer in R,S and O
+        scip.addCons(bpk_R_vars[l] == n_DIM_vars[l]/n_kmers_vars[0] * ((2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0))) + 3))
+        scip.addCons(bpk_S_vars[l] == F_M_vars[l]*n_minimizers_vars[l]/n_kmers_vars[0])
+        scip.addCons(bpk_O_vars[l] == bpk_S_vars[l] * log_sequence_length)
         
-        #TODO: use real calculation for R
-        #scip.addCons(bpk_R_vars[l] == 
-        #            F_K_vars[l]/f_avg_vars[l] * 
-        #            (math.ceil(2*m_vars[l] - math.log(F_K_vars[l]*n_kmers_vars[l]/f_avg_vars[l], 2)) + 3)
-        #            )
-        
-        scip.addCons(bpk_S_vars[l] == 
-                F_M_vars[l]*n_minimizers_vars[l]/n_kmers_vars[0]
-                )
+        #outdated:
         #scip.addCons(bpk_S_vars[l] == 
         #            quickprod(1-F_K_vars[i] for i in range(l))
         #                * F_K_vars[l] * 2/(K-m_vars[l]+2)
         #            )
         
-        #bits per k-mer in O
-        scip.addCons(bpk_O_vars[l] == bpk_S_vars[l] * log_sequence_length)
-
-        #constraints regarding the structure operation times
-        #fixed, really inaccurate values
+        #constraints regarding the structure operation times        
         if(inverseTimes):
             continue
         elif(len(operationTimes.R_contains) == no_levels):
@@ -173,12 +164,14 @@ def MINLP(
             scip.addCons(t_access_O_vars[l] == operationTimes.O_access[l])
             scip.addCons(t_compare_T_vars[l] == operationTimes.T_compare[l])
             scip.addCons(t_access_H == operationTimes.H_access)
-        else:
-            scip.addCons(t_contains_R_vars[l] == manual_t_contains_R_vars)
-            scip.addCons(t_select_S_vars[l] == manual_t_select_S_vars)
-            scip.addCons(t_access_O_vars[l] == manual_t_access_O_vars)
-            scip.addCons(t_compare_T_vars[l] == manual_t_compare_T_vars)
-            scip.addCons(t_access_H == manual_t_access_H_empirical)
+        else: #fixed, really inaccurate values
+            scip.addCons(t_contains_R_vars[l] == 30.0)
+            scip.addCons(t_select_S_vars[l] == 35.0)
+            scip.addCons(t_access_O_vars[l] == 10.0)
+            scip.addCons(t_compare_T_vars[l] == 10.0)
+            scip.addCons(t_access_H == 20.0)
+        scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + ((f_avg_vars[l]+1)/2)*(t_access_O_vars[l]+t_compare_T_vars[l]))
+
         
         #modeled values
         #scip.addCons(t_contains_R_vars[l] == 2*m_vars[l] - (log(n_DIM_vars[l])/log(2.0)))
@@ -244,13 +237,6 @@ def MINLP(
     info.append(f"for {no_levels} levels and k = {31}\n")
     info.append(f"considered minimizer lengths: {minimizerLengthsConsidered}\n")
     info.append(f"considered thresholds: {thresholdsConsidered}\n\n")
-
-    info.append(f"using:\n")
-    info.append(f"manual_t_contains_R_vars = {manual_t_contains_R_vars}\n")
-    info.append(f"manual_t_access_O_vars = {manual_t_access_O_vars}\n")
-    info.append(f"manual_t_access_H_empirical = {manual_t_access_H_empirical}\n")
-    info.append(f"manual_t_select_S_vars = {manual_t_select_S_vars}\n")
-    info.append(f"manual_t_compare_T_vars = {manual_t_compare_T_vars}\n\n")
 
     info.append(f"total time to solve MINLP: {elapsed_seconds:.6f} seconds\n")
     info.append("found solution:\n")
