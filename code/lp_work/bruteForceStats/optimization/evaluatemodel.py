@@ -37,7 +37,7 @@ THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]
 NO_LEVELS = 3
 NON_DECREASING_PARAMETERS = True
 
-OVERWRITE_PLOTS = True
+OVERWRITE_PLOTS = False
 
 #TODO: tmp, for testing
 forcedMinimizerLength = []
@@ -182,9 +182,9 @@ for sequence_name in GENOMES:
     # Prepare storage for each class and field.
     plot_data = {
         stats_class: {
-            stat_field.name: [{"modeled": [], "measured": []}] * NO_LEVELS
+            stat_field.name: [{"modeled": [], "measured": [], "diff": []}] * NO_LEVELS
             if get_origin(get_type_hints(stats_class)[stat_field.name]) is list
-            else {"modeled": [], "measured": []}
+            else {"modeled": [], "measured": [], "diff": []}
             for stat_field in fields(stats_class)
         }
         for stats_class in stats_classes
@@ -209,33 +209,46 @@ for sequence_name in GENOMES:
                         for level, (modeled_item, measured_item) in enumerate(zip(modeled_value, measured_value)):
                             data[level]["modeled"].append(modeled_item)
                             data[level]["measured"].append(measured_item)
+                            data[level]["diff"].append(measured_item-modeled_item)
                     else:
                         data["modeled"].append(modeled_value)
                         data["measured"].append(measured_value)
+                        data["diff"].append(measured_value-modeled_value)
 
     print("computing correlation coefficients - ATTENTION - plot_data NO LONGER DIFFERENTIATES BETWEEN LEVELS!!") 
     correlation_stats_path = sequence_path / "correlation_coefficients.csv"
     fieldnames = []
     correlation_coefficients = []
+    raw_error_medians = []
+    absolute_error_medians = []
+    squared_error_medians = []
     for stats_class in stats_classes:
         for field_name, data in plot_data[stats_class].items():
             if get_origin(get_type_hints(stats_class)[field_name]) is list:
                 for level in range(NO_LEVELS):
                     modeled_values = data[level]["modeled"]
                     measured_values = data[level]["measured"]
+                    differences = data[level]["diff"]
                     fieldnames.append(f"{field_name}_{level}")
                     correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
+                    raw_error_medians.append(np.median(differences))
+                    absolute_error_medians.append(np.median(np.absolute(differences)))
+                    squared_error_medians.append(np.median(np.power(differences, 2)))
             else:
                 modeled_values = data["modeled"]
                 measured_values = data["measured"]
+                differences = data["diff"]
                 fieldnames.append(field_name)
                 correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
+                raw_error_medians.append(np.median(differences))
+                absolute_error_medians.append(np.median(np.absolute(differences)))
+                squared_error_medians.append(np.median(np.power(differences, 2)))
             
     with open(correlation_stats_path, 'w') as csvfile:
+        headers = ["value", "corr_coeff", "raw_err_median", "abs_err_median", "sqrd_err_median"]
         writer = csv.writer(csvfile)
-        writer.writerow(fieldnames)
-        writer.writerow(correlation_coefficients)
-
+        writer.writerow(headers)
+        writer.writerows([name,coeff,raw_e_m,abs_e_m,sqrd_e_m] for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians))
     #create plots
     plots_path = genome_plots / "Modeled vs Measured"
     if(not OVERWRITE_PLOTS and plots_path.is_dir()):
