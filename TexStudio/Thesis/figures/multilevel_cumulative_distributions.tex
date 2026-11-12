@@ -1,0 +1,51 @@
+\begin{tikzpicture}
+	\begin{groupplot}[
+		group style={
+			group size=3 by 1,
+			horizontal sep=0.07\textwidth,
+		},
+		width=0.33\textwidth,
+		height=5cm,
+		ymin=0, ymax=1,
+		xlabel={$f$},
+		]
+		
+		% First panel
+		\nextgroupplot[
+			title={Kestrel},
+			ylabel={$F_M$},
+			legend to name=sharedlegend,
+			legend columns=3,
+			]
+		\addplot table[col sep=comma, x=frequency, y=F_M_1]
+		{./data/F_M_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv};
+		\addlegendentry{Level $1$}
+		\addplot table[col sep=comma, x=frequency, y=F_M_2]
+		{./data/F_M_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv};
+		\addlegendentry{Level $2$}
+		\addplot table[col sep=comma, x=frequency, y=F_M_3]
+		{./data/F_M_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv};
+		\addlegendentry{Level $3$}
+		
+		% Second panel
+		\nextgroupplot[title={Cod}]
+		\addplot table[col sep=comma, x=frequency, y=F_M_1]
+		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
+		\addplot table[col sep=comma, x=frequency, y=F_M_2]
+		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
+		\addplot table[col sep=comma, x=frequency, y=F_M_3]
+		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
+		
+		% Third panel
+		\nextgroupplot[title={Human}]
+		\addplot table[col sep=comma, x=frequency, y=F_M_1]
+		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
+		\addplot table[col sep=comma, x=frequency, y=F_M_2]
+		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
+		\addplot table[col sep=comma, x=frequency, y=F_M_3]
+		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
+		
+	\end{groupplot}
+	
+	\node at (group c2r1.south) [below=1.2cm] {\pgfplotslegendfromname{sharedlegend}};
+\end{tikzpicture}

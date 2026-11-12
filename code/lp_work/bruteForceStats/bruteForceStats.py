@@ -22,18 +22,23 @@ GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel",
             "Homo_sapiens.GRCh38.dna.toplevel",
             "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
 
-MINIMIZER_LENGTHS = []
-for m1 in range(15,26,2):
-    for m2 in range(m1,26,2):
-        for m3 in range(m2,26,2):
-            MINIMIZER_LENGTHS.append([m1,m2,m3])
+GENOMES = [GENOMES[2], GENOMES[4]]
+MINIMIZER_LENGTHS = [[16,16,16]]
+THRESHOLDS = [[32,32,32]]
 
-THRESHOLDS = []
-for t1 in range(5,8):
-    for t2 in range(t1,8):
-        for t3 in range(t2,8):
-            THRESHOLDS.append([2**t1,2**t2,2**t3])
-            
+#MINIMIZER_LENGTHS = []
+#for m1 in range(15,26,2):
+#    for m2 in range(m1,26,2):
+#        for m3 in range(m2,26,2):
+#            MINIMIZER_LENGTHS.append([m1,m2,m3])
+#
+#THRESHOLDS = []
+#for t1 in range(5,8):
+#    for t2 in range(t1,8):
+#        for t3 in range(t2,8):
+#            THRESHOLDS.append([2**t1,2**t2,2**t3])
+
+
 
 def get_random_Kmers(source_path: Path, output_path: Path, no_samples: int) -> None:
     """write n K-base DNA reads from random positions in source to output_path"""

@@ -10,9 +10,13 @@ DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_SAMPLES = 100000 
 K = 31
 
-GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs", 
+GENOMES = ["Falco_tinnunculus.FalTin1.0.dna.toplevel",
             "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+            "Gadus_morhua.gadMor3.0.dna.toplevel",
+            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
+            "Homo_sapiens.GRCh38.dna.toplevel",
             "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
+
 MINIMIZER_LENGTHS = []
 for m1 in range(15,26,2):
     for m2 in range(m1,26,2):
@@ -40,8 +44,8 @@ def getParameterDirectory(minimizer_lengths: list[int], thresholds: list[int]) -
     return Path(f"{m_part}_{t_part}")
 
 
-def boxPlotOperationTimes(genome_stats: Path, genome_plots: Path):
-    print(f"plotting operation times box plots for: {genome_stats}")
+def boxPlotOperationTimes(genome_stats_path: Path, box_plots_path: Path):
+    print(f"plotting operation times box plots for: {genome_stats_path}")
     operation_names = [
         "R_contains",
         "S_select",
@@ -52,7 +56,7 @@ def boxPlotOperationTimes(genome_stats: Path, genome_plots: Path):
     values_by_operation = {name: {} for name in operation_names}
 
     for minimizer_lengths, thresholds in product(MINIMIZER_LENGTHS, THRESHOLDS):
-        parameters_path = (genome_stats / getParameterDirectory(minimizer_lengths, thresholds))
+        parameters_path = (genome_stats_path / getParameterDirectory(minimizer_lengths, thresholds))
         if not parameters_path.is_dir():
             continue
 
@@ -79,7 +83,7 @@ def boxPlotOperationTimes(genome_stats: Path, genome_plots: Path):
         ax.set_ylabel("ns")
         fig.tight_layout()
 
-        plt.savefig(str(genome_plots / f"{name} time distribution by level"), dpi=300)
+        plt.savefig(str(box_plots_path / f"{name} time distribution by level"), dpi=300)
         plt.close()
         
 def plotDistributionsOfOperationTimes(genome_stats: Path, genome_plots: Path):
@@ -156,17 +160,17 @@ def main() -> None:
     plot_path.mkdir(exist_ok=True)
     
     for genome in GENOMES:
-        genome_stats = stats_directory / f"{genome}"  #directory for the stats of a specific genome
-        if(not genome_stats.is_dir()):               
+        genome_stats_path = stats_directory / f"{genome}"  #directory for the stats of a specific genome
+        if(not genome_stats_path.is_dir()):               
             continue
         
-        box_plots = plot_path / "box_plots" / f"{genome}"
-        box_plots.mkdir(parents=True ,exist_ok=True)
-        boxPlotOperationTimes(genome_stats, box_plots)
+        box_plots_path = plot_path / "box_plots" / f"{genome}"
+        box_plots_path.mkdir(parents=True ,exist_ok=True)
+        boxPlotOperationTimes(genome_stats_path, box_plots_path)
         
-        distribution_plots = plot_path / "distribution_plots" / f"{genome}"
-        distribution_plots.mkdir(parents=True, exist_ok=True)
-        plotDistributionsOfOperationTimes(genome_stats, distribution_plots)
+        #distribution_plots = plot_path / "distribution_plots" / f"{genome}"
+        #distribution_plots.mkdir(parents=True, exist_ok=True)
+        #plotDistributionsOfOperationTimes(genome_stats, distribution_plots)
 
 
 if __name__ == '__main__':

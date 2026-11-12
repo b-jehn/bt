@@ -34,6 +34,7 @@
 %   backrefpage = {see p\adddot},%
 %   backrefpages = {see pp\adddot}%
 % }
+\setlength\parindent{0pt}
 
 \bibliography{bibfile} % add the .bib file you use here
 
@@ -67,6 +68,9 @@
 \usepackage{pgfplots}
 \usepackage{siunitx}
 \usepackage{pgfplotstable}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+\usepackage{csvsimple}
 
 %=========== Pseudocode
 \usepackage{algorithm}
@@ -151,7 +155,7 @@
 \newcommand{\kmer}{q}
 
 \newcommand{\access}{acc}
-\newcommand{\contains}{contains}
+\newcommand{\contains}{rank}
 \newcommand{\rank}{rank}
 \newcommand{\select}{sel}
 \newcommand{\compare}{comp}
@@ -189,7 +193,7 @@ Algorithmic Bioinformatics\\
 \end{minipage}
 \hfill
 \begin{minipage}{0.16\textwidth}
-\includegraphics[width=\textwidth]{tu-logo}
+\includegraphics[width=\textwidth]{./figures/tu-logo}
 \end{minipage}
 \vspace{3.5cm}
 }
@@ -243,10 +247,10 @@ authority.\\
 
 \newpage
 \section*{Abstract}
-\todo[inline]{in English}
+\todo[inline]{Draft}
 RSHash is a static, compressed data structure for k-mers that answers lookup queries using a leveled minimizer scheme with thresholds to cut off frequent minimizers. Building it requires specifying a minimizer lengths and a threshold for every level used. Choosing optimal parameters to build RSHash for a given genetic sequence and specification of optimality remains an open problem as both its space consumption and the lookup time depend on these parameters because they affect the distribution of minimizers. To address this, we first define properties of these distributions which are specifically relevant to the problem and propose a mixed integer non linear program (MINLP) modeling the space consumption and lookup time of RSHash aiming to combine it with a solver to find optimal parameters. We evaluate the proposed MINLP for a selection of benchmark datasets and can show that the model is highly accurate regarding RSHashs space consumption but less so for the lookup time. Furthermore, time complexity to compute the distribution stats required to run the model grow exponentially with the number of considered levels which means a similar complexity to that of a brutefore approach. 
 \section*{Zusammenfassung}
-\todo[inline]{auf Deutsch}
+\todo[inline]{Passt so? => Ins Deutsche übersezten}
 
 
 \newpage
@@ -255,57 +259,56 @@ RSHash is a static, compressed data structure for k-mers that answers lookup que
 
 \chapter{Introduction} \label{chap:introduction}
 \textbf{Genetic strands} are chains of the nucleobases adenine (A), cytosine (C), guanine (G), thymine (T) and uracil (U). Adenine, cytosine and guanine are present in both DNA and RNA whilst thymine only appears in DNA and uracil is specific to RNA. A genetic sequence can thus be represented as a string over an alphabet of length four meaning a compact representation of two bits needed to store each base. Despite this, genetic databases are often very large as sequences usually consist of several billion bases e.g. approximately $3.1 \cdot 10^9$ bases for the human genomes sequences. \\
-The rapid growth of available genetic data due to better and faster sequencing techniques has led to a need for efficient algorithms for processing genetic sequences.
+The rapid growth of available genetic data due to better and faster sequencing techniques has led to a need for efficient algorithms for processing genetic sequences.\\
 
 \textbf{K-mers} have emerged as an essential component of many approaches to encounter this issue. The k-mers of a sequence are all its substrings of length $k$, thus a sequence $S$ with $|S| \geq k$ contains exactly $|S|-k+1$ k-mers; for example, the sequence $CGACAT$ consists of the 3-mers $CGA,GAC,ACA,CAT$.\\
 Uses for k-mers include k-mer counting, frequency analysis, sequence indexing, genome assembly, sequence comparison, taxonomic classification, phylogeny reconstruction, protein sequence searching and alignment as well the construction of k-mer databases \cite{moeckel_survey_2024}. 
 
 \textbf{Sequence comparison} is used to compare a sequence against large genomic reference datasets; for example, to classify to what species a collected DNA sample belongs or to analyze whether a patients DNA contains indicators linked to certain diseases.\\
-One approach to this is to check whether each k-mer in the sequence of interest is present in the reference dataset, also referred to as a lookup of the queried k-mers. On the other hand, a so called locate query answers not only whether queried k-mers are present but also returns all positions of the queried k-mers in the sequences. These positions are referred to as their offsets.
+One approach to this is to check whether each k-mer in the sequence of interest is present in the reference dataset, also referred to as a lookup of the queried k-mers. On the other hand, a so called locate query answers not only whether queried k-mers are present but also returns all positions of the queried k-mers in the sequences. These positions are referred to as their offsets.\\
 
 \textbf{A trade-off between space consumption and lookup time} is an inherent problem for data structures designed to answer lookup or locate queries. This can be demonstrated by considering the two extremes for data structures enabling a lookup or locate of a queried k-mer $q$ in a sequence $S$ with $|S| \gg k$ that doesn't contain any duplicate k-mers\footnote{For sequences containing duplicate k-mers, the lookup case does not change much. However, in the locate case it would then be required to find all offsets of $q$. For the compact example this would require to always scan through the whole sequence. For the fast example this would mean that the hash table entry for each k-mer would store a list of all its offsets.}:\\
 The most space efficient representation of all k-mers in $S$ is the sequence itself needing approximately two bits per k-mer (bpk). A lookup/locate query of a $q$ would require scanning through the whole sequence, comparing every k-mer with $q$ and returning whether $q$ appears in the sequence (and its offset for the locate case). Both queries would terminate upon either finding a match or reaching the sequences end, requiring $O(|S|)$ time.\\
 A very fast lookup/locate on the other hand could be achieved by storing the appearance of every k-mer in $S$ in a hash set (locate: hash table) enabling both queries in $O(1)$ time. For this approach every k-mer would have to be stored in the hash set/table leading to a space consumption of $2k$ bits per k-mer in the lookup case and  $2k+log_2(|S|)$ bits per k-mer to enable locate queries which require the offsets to be stored as well.\\
-Since both a lookup time in $O(|S|)$ as well as $2k$ bits per k-mer are not viable for large genomes, there has been much work on data structures enabling queries in much less than $O(|S|)$ whilst also maintaining a certain compression.
+Since both a lookup time in $O(|S|)$ as well as $2k$ bits per k-mer are not viable for large genomes, there has been much work on data structures enabling queries in much less than $O(|S|)$ whilst also maintaining a certain compression.\\
 
 \textbf{Using so called minimizers} is a common approach to achieve this. A minimizer of length $m$ is the smallest m-mer of a k-mer regarding a total order over all strings of length $m$. Using the lexicographical order for example to determine the minimizer of length $2$ in the $6$-mer $CGACAT$ results in $AC$ because regarding that order, this is the smallest $2$-mer in $CGACAT$.\\
 Minimizers have several properties which render them highly interesting for this domain. Firstly they are considered to be sparse because consecutive k-mers are very likely to share the same minimizer. \Citet{zheng_improved_2020} show that in a random string $S$ with $|S| \gg k > m$ each minimizer of length $m$ is expected to cover an average of $(k-m+2)/2$ k-mers. These consecutive k-mers sharing the same minimizer are also referred to as super-k-mers. Even in a sequence only containing unique k-mers, several super-k-mers can have the same minimizer as $m < k$.\\
-A second interesting property is the skewness of the distribution of minimizers in regards to their \textit{frequencies} which is the number of super-k-mers which have a specific minimizer. In a given sequence only a few  minimizers have high frequencies whilst most have small frequencies or do not appear at all. Some intuition for this property can be gained by considering an m-mer consisting only of $A$s versus one of $T$s. Using the lexicographical order the first will be the minimizer of every super-k-mer in which it appears whilst the second would only become the minimizer of a super-k-mer containing only $T$s.
+A second interesting property is the skewness of the distribution of minimizers in regards to their \textit{frequencies} which is the number of super-k-mers which have a specific minimizer. In a given sequence only a few  minimizers have high frequencies whilst most have small frequencies or do not appear at all. Some intuition for this property can be gained by considering an m-mer consisting only of $A$s versus one of $T$s. Using the lexicographical order the first will be the minimizer of every super-k-mer in which it appears whilst the second would only become the minimizer of a super-k-mer containing only $T$s.\\
 
 \chapter{Previous Work}
 Both the sparsity and skewness of minimizers have been observed by several previous works \cite{schulte-mattler_rshash_2026, pibiri_sparse_2022, jain_weighted_2020, chikhi_representation_2014}.\\
 \textbf{The SSHash algorithm} (Sparse and Skew hashing of K-mers) introduced by \Citet{pibiri_sparse_2022} exploits these two properties by computing all minimizers appearing in a sequence and then use a minimal perfect hash function to store every super-k-mers offsets in an array \textit{Offsets} in the order induced by their minimizers hashes. In a second array \textit{Sizes} the $n$th element stores the starting index in \textit{Offsets} for the offsets belonging to the $n$th minimizer. The sparsity of minimizers mainly effects the data structures space consumption: By indexing super-k-mers, they can compress the data structures size by a factor of $(k-m+2)/2$ compared to indexing individual k-mers. The skewness of minimizers on the other hand is of importance to the locate time: Querying a k-mer $q$ requires computing its minimizer and then searching for it in every super-k-mer with the same minimizer. For a sufficiently large minimizer length, minimizers of high frequency become increasingly unlikely.\\
-The both space consumption and locate time of SSHash are highly dependent of the minimizer length $m$: A smaller $m$ means a higher compression $(k-m+2)/2$. The lookup/locate time on the other hand is largest for small $m$ because those result in minimizers of higher \textit{frequencies}. This demonstrates the challenge that comes with choosing an optimal minimizer length.
+The both space consumption and locate time of SSHash are highly dependent of the minimizer length $m$: A smaller $m$ means a higher compression $(k-m+2)/2$. The lookup/locate time on the other hand is largest for small $m$ because those result in minimizers of higher \textit{frequencies}. This demonstrates the challenge that comes with choosing an optimal minimizer length.\\
 
 \newcommand{\infrequent}{\textit{infrequent} }
 \newcommand{\frequent}{\textit{frequent} }
 \newcommand{\hashfunction}[1]{h_{#1}}
 \textbf{The RSHash algorithm} (Rank-Select Hash) which was recently introduced by \citet{schulte-mattler_rshash_2026} is a minimizer based fast, compressed hash set for storing DNA k-mers that answers lookup and can be extended for supporting locate.\\
 It follows a minimizer based approach like SSHash; however, instead of using minimal perfect hashing, RSHash relies on bitvectors supporting rank and select queries. Its main difference to previous methods is the introduction of a layered multi-minimizer scheme aiming to reduce the cost of high \textit{frequencies} whilst at also maintaining large compression.\\
-The data structure works with one, two or three so called levels and a hash set. In order to build RSHash to answer lookup (or locate) queries one has to specify the number of levels as well as a pair of level parameters for each level $\level$: the minimizer length $\minimizerLength^\level$ and a threshold $\threshold^\level$.
+The data structure works with one, two or three so called levels and a hash set. In order to build RSHash to answer lookup (or locate) queries one has to specify the number of levels as well as a pair of level parameters for each level $\level$: the minimizer length $\minimizerLength^\level$ and a threshold $\threshold^\level$.\\
 
-\textbf{Building RSHash}: When using only one level, that level is build by first computing each k-mers minimizer of length $\minimizerLength^1$ using a hash function $\hashfunction{1}$ \todo{Frage: wie soll ich die hash funktion beschreiben?} and counting the number of times each minimizer occurs in the sequences.
+\textbf{Building RSHash}: When using only one level, that level is build by first computing each k-mers minimizer of length $\minimizerLength^1$ and counting the number of times each minimizer occurs in the sequences. The minimizer computation uses a hash function $\hashfunction{1}$ to determine a total random order of the minimizers.\\
 We call minimizers that appear at least once but no more than the threshold $\threshold^1$ to be \infrequent on the level.\\ 
 A bitvector $R^1$ of lengths $4^{\minimizerLength^1}$ is used to mark the appearance of each distinct \infrequent minimizers. For this, the minimizers are interpreted as binary numbers of $2\minimizerLength^1$ bits and serve directly as indices to the vector. If for example the minimizers length were chosen to be $\minimizerLength^1=2$ and $AA$ was an \infrequent minimizer in the sequences, then $R^1[AA] = R^1[0]$ would be set to one.\\ 
 The offsets each \infrequent minimizers occurrences in the sequences are stored in the offset vector $O^1$ in the order induced by $R^1$. Let $f$ for example be the frequency of the smallest \infrequent minimizer, that is the number of occurrences of the smallest minimizer for which the bit in $R^1$ is set. Then $O^1[0:n)$ contains the offsets of that minimizer whilst the next offsets $O^1[n:...)$ belong to the second smallest minimizer and so forth.\\
-The boundaries of each minimizers offsets in $O^1$ are marked in the bitvector $S^1$ of length $|O^1|+1$. Following up on the example above, the first bit $S^1[0]$ would be set to one, indicating the start of the offsets belonging to the smallest minimizer, this would be followed by zeros until the $n$th bit $S^1[n] = 1$ indicating the start of the offsets belonging to the second smallest minimizer and so forth. The last bit in $S$ is also set to one marking the end of the largest minimizers offsets.
+The boundaries of each minimizers offsets in $O^1$ are marked in the bitvector $S^1$ of length $|O^1|+1$. Following up on the example above, the first bit $S^1[0]$ would be set to one, indicating the start of the offsets belonging to the smallest minimizer, this would be followed by zeros until the $n$th bit $S^1[n] = 1$ indicating the start of the offsets belonging to the second smallest minimizer and so forth. The last bit in $S$ is also set to one marking the end of the largest minimizers offsets.\\
 
 If a second level is specified, only those super-k-mers with \frequent minimizers on the first level are handled on the second level which is build almost identically to the first level, creating the vectors $R^2, O^2$ and $S^2$ but using the hash function $\hashfunction{2}$ for the computation of minimizers. The use of a different hash function for the computation leads to a skewed distribution of minimizers, in which most k-mers having \frequent minimizers on the first level, have \infrequent ones on the second. This holds even when the specified minimizer length $\minimizerLength^2$ and threshold $\threshold^2$ are equal to those on the first.\\
-A third level would be build analogously, if specified.
+A third level would be build analogously, if specified.\\
 
-Only the appearance of k-mers that have \frequent minimizers on all specified levels are then directly stored in a fast hash set sacrificing some space in return for a fast lookup which is viable as those k-mers are only a small fraction of the whole input sequence for a good choice of the level parameters.
+Only the appearance of k-mers that have \frequent minimizers on all specified levels are then directly stored in a fast hash set sacrificing some space in return for a fast lookup which is viable as those k-mers are only a small fraction of the whole input sequence for a good choice of the level parameters.\\
 
-\textbf{However, the choice of "good" parameters for a given sequence remains an open problem.} We already noted that using a small $m \ll k$ leads to a better compression but at the same time results in longer query times. This inverted effect of the minimizer length on the space consumption and query time is an inherent problem of minimizer based k-mer indexing methods.\\
-Existing methods use a number of approaches to deal with this problem. For example, \citet{pibiri_sparse_2022} chooses a relatively large minimizer length, accepting a smaller compression in order to maintain reasonable locate times.
+\textbf{However, the choice of "good" parameters for a specific genome remains an open problem.} We already noted that using a small $m \ll k$ leads to a better compression but at the same time results in longer query times. This inverted effect of the minimizer length on the space consumption and query time is an inherent problem of minimizer based k-mer indexing methods.\\
+Existing methods use a number of approaches to deal with this problem. For example, \citet{pibiri_sparse_2022} chooses a relatively large minimizer length, accepting a smaller compression in order to maintain reasonable locate times.\\
 
-The leveled approach introduced in the RSHash algorithm on the other hand aims to achieve high compression by using relatively short minimizers on the lower levels whilst at the same time mitigating the burden of very \frequent minimizers by using thresholds to cut them off and guaranty fast queries on every level. The use of distinct hash function to compute minimizers on each level leads to different skewed distributions of the minimizers on each level. Because only a small percentage of the k-mers are frequent for each distribution, the number of k-mers reduces drastically with each level and only a small percentage of the sequences k-mers end up being stored in the spatially expensive hash set.
+The leveled approach introduced in the RSHash algorithm on the other hand aims to achieve high compression by using relatively short minimizers on the lower levels whilst at the same time mitigating the burden of very \frequent minimizers by using thresholds to cut them off and guaranty fast queries on every level. The use of distinct hash function to compute minimizers on each level leads to different skewed distributions of the minimizers on each level. Because only a small percentage of the k-mers are frequent for each distribution, the number of k-mers reduces drastically with each level and only a small percentage of the sequences k-mers end up being stored in the spatially expensive hash set.\\
 
 RSHash thus allow significantly faster queries opposed to SSHash whilst remaining similarly compact.
-However, this is highly dependent of both the chosen minimizer lengths which influence the sparsity and skewness of minimizer distributions on each level and of the chosen thresholds, which affect both the lookup time on each level as well as the percentage of k-mers having to be stored in the hash set. For example, choosing very short minimizers and small thresholds on every level would result in a very large hash set as almost no minimizer would be \infrequent. 
+However, this is highly dependent of both the chosen minimizer lengths which influence the sparsity and skewness of minimizer distributions on each level and of the chosen thresholds, which affect both the lookup time on each level as well as the percentage of k-mers having to be stored in the hash set. For example, choosing very short minimizers and small thresholds on every level would result in a very large hash set as almost no minimizer would be \infrequent.\\
 
 Choosing "good" level parameters to build the data structure for a given set of sequences currently requires manual testing and extensive understanding of the RSHash algorithm. 
 We attempt to model the space consumption and lookup time of RSHash depending on the level parameters aiming to expand the understanding about how those values are influenced by the parameters and to work towards automating the choice of optimal level parameters for a given genome and optimization goal.
-
 
 \chapter{Notation}\label{chap:notation}
 %\newcommand{\superKmer}{sk}\todo{define super-k-mer}
@@ -346,7 +349,7 @@ As outlined in the \cref{chap:introduction}, the space consumption and query tim
 \newcommand{\CDF}[1]{F_{#1}}
 \newcommand{\varCDF}[1]{\textbf{F}_{#1}}
 
-Recall that we use $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to describe the level parameters on all levels up to and including the level $\level$ and that $\sequences{0}$ is the full set of input sequences on the first level, which does not depend on any parameters. Also recall that the set $\sequences{\level-1}$ of input sequences on level $\level$ depends on the level parameters $\levelParameters{\level-1}$ on all previous level, as those affect, whether k-mers minimizer is \frequent or \infrequent.
+Recall that we use $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to describe the level parameters on all levels up to and including the level $\level$ and that $\sequences{0}$ is the full set of input sequences on the first level, which does not depend on any parameters. Also recall that the set $\sequences{\level-1}$ of input sequences on level $\level$ depends on the level parameters $\levelParameters{\level-1}$ on all previous level, as those affect, whether k-mers minimizer is \frequent or \infrequent.\\
 
 Let $\distinctKmers{\level}$ be the set of distinct k-mers in a set of sequences $\sequences{\level-1}$. In other words, the set $\distinctKmers{\level}$ contains every distinct substring of length $k$ which appears in at least one of the sequences $S^\level_i \in \sequences{\level-1}$ which depend on the level parameters on previous levels:
 \begin{equation}
@@ -407,7 +410,7 @@ The average frequency of minimizers on a level $\level \in \setOfLevels$ is give
 \begin{equation}
 	\mathbb{E}[\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}] = \sum_{f \in \Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}} \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) * f
 \end{equation}
-For a given set of finite sequences the set of distinct minimizers on each level and for each combination of level parameters is finite by definition. It follows that for a given sequence and set of level parameters, the average frequency $\mathbb{E}[\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}]$ can always be computed, because the sample space $\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ is then finite by definition.
+For a given set of finite sequences the set of distinct minimizers on each level and for each combination of level parameters is finite by definition. It follows that for a given sequence and set of level parameters, the average frequency $\mathbb{E}[\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}]$ can always be computed, because the sample space $\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ is then finite by definition.\\
 
 More relevant to the optimization of level parameters is the average frequency of \infrequent minimizers i.e. the average frequency of minimizers whose frequency do not exceed the threshold $\threshold^\level$. We denote this value with $\averageFrequency(\levelParameters{\level})$ and can derive it from $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{m}}$ by computing a weighted sum over all frequencies up until the threshold $\threshold^\level$ and then norming the result by dividing through the percentage of \infrequent minimizers:
 \begin{equation} \label{equation:averageFrequency}
@@ -423,35 +426,8 @@ We define the number of distinct \infrequent minimizers $\numberOfDistinctMinimi
 	\numberOfDistinctMinimizers{\levelParameters{\level}} = |\distinctMinimizers{\level}| \cdot \CDF{\compactZV{M}{\levelParameters{\level}}}
 \end{equation}
 
-\section{Times for Operations on Data Structures}
-\todo[inline]{-> Experimente??}
-We denote the time needed to perform an operation $op$ on a data structure $struct$ with $\timeForOperationOnStructure{op}{struct}$ e.g. the time for a select query on the bitvector $S$ is $\timeForOperationOnStructure{\select}{S}$.
-\todo[inline]{incomplete. measure or model?}
-\textbf{Vector Access}
-Accessing an element of a Vector can be done in constant time, we use the following values based on measurements:
-\begin{align*}
-	\timeForOperationOnStructure{\contains}{R} &= ...\\
-	\timeForOperationOnStructure{\contains}{O} &= ...\\
-\end{align*}
 
-\textbf{Hash Set Access}
-Accessing an element of a hash set can be done in constant time, we use the following values based on measurements:
-\begin{align*}
-	\timeForOperationOnStructure{check}{H} &= ...
-\end{align*}
-
-\textbf{Bit Vector Rank Query}
-A bitvector of length $U$ with $n$ $1s$ can be encoded with $n\lceil log_2 U/n \rceil + 3n$ many bits supporting rank in $O(log_2(U/n)$ time \cite{okanohara2007practical}.
-\todo[inline]{does that help here? Doesn't the model require actual time instead of O notation - maybe measurements would be more suited}
-
-\textbf{Bit Vector Select Query}
-???
-
-\textbf{Comparison with Text}
-???
-
-
-\chapter{MINLP Modeling}\label{chap:minlp}
+\chapter{Mixed Integer Non Linear Program}\label{chap:minlp}
 We model the optimization problem as a Mixed Integer Non Linear Programming (MINLP). In \cref{sec:minlp_oneLevel} we model the lookup time and space needed by RSHash on one level in dependence of the level parameters and minimizers distribution. We then extend this to the case of several levels in \cref{sec:minlp_severalLevels}.\\
 In \cref{chap:experiments} we describe how to find the optimal level parameters for a given sequence using the MINLP.
 
@@ -464,10 +440,10 @@ Furthermore, the number $\nkmers$ of k-mers in the sequences the values $\CDF{\c
 Lastly, a measure of the times 
 $\timeForOperationOnStructure{\contains}{R}$,
 $\timeForOperationOnStructure{\select}{S}$,
-$\timeForOperationOnStructure{\contains}{O}$,
+$\timeForOperationOnStructure{\access}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$,
 $\timeForOperationOnStructure{check}{H}$
-needed for the contains query on bitvector $R$, the select queries on bitvector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
+needed for a contains rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
 
 \section{Model for One Level}\label{sec:minlp_oneLevel}
 Aiming to improve readability, we omit the superscript index indicating an instances belonging to a specific level as only one level is considered in this section e.g. the minimizer length is simply referred to as $\minimizerLength$ instead of $\minimizerLength^1$.
@@ -539,13 +515,13 @@ If the bit $R[\minimizerOf{\kmer}{}]$ is not set, the lookup is completed throug
 \end{align}
 
 The search for those k-mers $\kmer$ for which the bit $R[\minimizerOf{\kmer}{}]$ is set continues on the level by using the minimizers rank  $r = \rank_R(\minimizerOf{\kmer}{})$ in the select\todo{explain select and rank} queries $first = \select_S(r)$ and $last = \select_S(r+1)-1$ which tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored. These two queries take $2\timeForOperationOnStructure{\select}{S}$ time.\\
-Finally the presence of $\kmer$ in $T$ is checked at every minimizer offset in the interval $O[first:last]$ until $\kmer$ is either found or the end of the interval is reached. The average frequency $\varAverageFrequency$ of \infrequent minimizers is exactly the average length of this interval. In the lookup case, the comparison is terminated as soon as $\kmer$ is found for the first time, which is on average the case after $(\varAverageFrequency+1)/2$ comparisons\todo{this sould be true for the unitigs, however, for unprocessed genomes, many offsets can belong to the same k-mer - does that change something?} with each comparison taking $\timeForOperationOnStructure{\compare}{T}$ time.\\
+Finally the presence of $\kmer$ in $T$ is checked at every minimizer offset in the interval $O[first:last]$ until $\kmer$ is either found or the end of the interval is reached. The average frequency $\varAverageFrequency$ of \infrequent minimizers is exactly the average length of this interval. In the lookup case, the comparison is terminated as soon as $\kmer$ is found for the first time, which is on average the case after $(\varAverageFrequency+1)/2$ comparisons with each comparison taking $\timeForOperationOnStructure{\compare}{T}$ time.\\
 The following constraint models the complete time $\timeForOperationOnStructure{level}{}$ needed to search for a k-mers presence on the level:
-\newcommand{\levelTime}{\timeForOperationOnStructure{level}{} &= 2\timeForOperationOnStructure{\select}{S} + (\varAverageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\contains}{O} + \timeForOperationOnStructure{\compare}{T})}
+\newcommand{\levelTime}{\timeForOperationOnStructure{level}{} &= 2\timeForOperationOnStructure{\select}{S} + (\varAverageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T})}
 \begin{align}
 	\levelTime \label{constraint:levelTime}
 \end{align}
-Note that the value $\timeForOperationOnStructure{lookup}{}$ is the average time for a positive RSHash lookup, that is the time to lookup a k-mer which was randomly sampled from the sequence. In practice, queried k-mers may or may not appear in the sequence - hence the need for a lookup. Looking up a k-mer which does not appear in the sequence (negative lookup) would always take $\timeForOperationOnStructure{\contains}{R} + \timeForOperationOnStructure{check}{H}$; however, we do not account for this as the ratio of positive and negative queries is impossible predict.
+Note that the value $\timeForOperationOnStructure{lookup}{}$ is the average time for a positive RSHash lookup, that is the time to lookup a k-mer which was randomly sampled from the sequence. In practice, queried k-mers may or may not appear in the sequence - hence the need for a lookup. Looking up a k-mer which does not appear in the sequence (negative lookup) would always take $\timeForOperationOnStructure{\contains}{R} + \timeForOperationOnStructure{check}{H}$; however, we do not account for this as the ratio of positive and negative queries is impossible predict.\\
 
 Without further constraints, solving the described MINLP for minimal $\timeForOperationOnStructure{lookup}{}$ results in a solution where the $\indicatorm_\minimizerLength$, $\indicatort_\threshold$ corresponding to the smallest $m \in \possibleMinimizerLengths$, $t \in \possibleThresholds$ will be set to one.\\
 This is expected, as this leads to the smallest possible $\varCDF{K}$ which minimizes the k-mers having to be looked up in the text and maximizes the lookups in the (faster) hash set.\\
@@ -579,10 +555,10 @@ The space consumption of RSHash can be decomposed into the space needed for the 
 	\varNumberOfDistinctMinimizers &\in \RR^+_0 \label{variable:nDIM}\\
 	\nDIMExpression \label{constraint:nDIM}
 \end{align}
-We note that for continuous sequences one could also model $\varNumberOfDistinctMinimizers$ by computing the number $\varCDF{K} \cdot \nkmers$ of k-mers with \infrequent minimizers and dividing it by the average frequency $\varAverageFrequency$ of minimizers multiplied with the ratio $(k-\varMinimizerLength+2)/2$ of k-mers covered per minimizer. This should decrease the models complexity as it would replace the non-linear constraint $\cref{constraint:nDIM}$ with a linear one. However, the ratio $(k-\varMinimizerLength+2)/2$ is only valid for continuous sequences $S$ of lengths $|S| \gg k > \varMinimizerLength$, rendering it useless both for sequences which have been preprocessed to remove duplicate k-mers and for \cref{sec:minlp_severalLevels} where the input on higher levels which consists of many relatively short super-k-mers.
+We note that for continuous sequences one could also model $\varNumberOfDistinctMinimizers$ by computing the number $\varCDF{K} \cdot \nkmers$ of k-mers with \infrequent minimizers and dividing it by the average frequency $\varAverageFrequency$ of minimizers multiplied with the ratio $(k-\varMinimizerLength+2)/2$ of k-mers covered per minimizer. This should decrease the models complexity as it would replace the non-linear constraint $\cref{constraint:nDIM}$ with a linear one. However, the ratio $(k-\varMinimizerLength+2)/2$ is only valid for continuous sequences $S$ of lengths $|S| \gg k > \varMinimizerLength$, rendering it useless both for sequences which have been preprocessed to remove duplicate k-mers and for \cref{sec:minlp_severalLevels} where the input on higher levels which consists of many relatively short super-k-mers.\\
 
 Using Elias-Fano-Encoding, a bitvector of size $U$ with $n$ bits set to one can be compressed to
-$n (\lceil log_2(U/n) \rceil + 3)$ \cite{okanohara2007practical} \todo{woher kommt diese formel, kann sie so im paper nicht finden}. Therefore, we can model the bits per k-mer needed to store $R$ by using this compression and dividing this by the total number $\nkmers$ of k-mers yields the constraint describing the bits per k-mer of $R$:
+$n (\lceil log_2(U/n) \rceil + 3)$ \cite{okanohara2007practical}. Therefore, we can model the bits per k-mer needed to store $R$ by using this compression and dividing this by the total number $\nkmers$ of k-mers yields the constraint describing the bits per k-mer of $R$:
 \newcommand{\bpkR}{bpk_{R} &= \frac{\varNumberOfDistinctMinimizers}{\nkmers} \cdot \left(\lceil 2\varMinimizerLength - log_2\varNumberOfDistinctMinimizers \rceil + 3 \right)}
 \begin{align}
 	\bpkR \label{constraint:bpkR}
@@ -660,7 +636,7 @@ One could for example search for level parameters minimizing the lookup time whi
 	\\
 	&\timeForOperationOnStructure{\contains}{R},
 	\timeForOperationOnStructure{\select}{S},
-	\timeForOperationOnStructure{\contains}{O},
+	\timeForOperationOnStructure{\access}{O},
 	\timeForOperationOnStructure{\compare}{T},
 	\timeForOperationOnStructure{check}{H}
 \end{align*}
@@ -714,8 +690,6 @@ One could for example search for level parameters minimizing the lookup time whi
 \section{Model for Several Levels}\label{sec:minlp_severalLevels}
 In the following, we adapt the constraints defined for using only one level in \cref{sec:minlp_oneLevel} to model the use of $\numberOfLevels \in \NN^+$ levels with $\setOfLevels = \{ \level \in \NN^+ \mid \level \leq \numberOfLevels \}$ being the set of levels used\footnote{We model the space consumption and lookup time for any positive natural number of levels even though RSHash currently only supports the use of one, two or three levels \cite{schulte-mattler_rshash_2026}.}.\\
 When modeling several levels, we add a superscript $\level$ to variables in order to indicate there belonging to a level $\level \in \setOfLevels$ e.g. $\varMinimizerLength^1, \varMinimizerLength^2$ and $\varMinimizerLength^3$ denote the optimal minimizer lengths on level $1,2$ and $3$.\\
-We still assume, that the times $\timeForOperationOnStructure{\contains}{R^\level},\timeForOperationOnStructure{\select}{S^\level},\timeForOperationOnStructure{\contains}{O^\level},\timeForOperationOnStructure{\compare}{T},\timeForOperationOnStructure{check}{H}$ are (practically) independent of the parameters $\varMinimizerLength^\level, \varThreshold^\level$ and the level $\level$. \todo{reason in chap: experiments}
-\\
 
 Unique sets of binary indicator variables $\indicatorm^\level_\minimizerLength$ and $\indicatort^\level$ are needed for the level parameters $\varMinimizerLength^\level$ and $\varThreshold^\level$ of each level $\level$.
 The constraints regarding these variables are analog to those when using only one level:
@@ -757,10 +731,10 @@ For each level $l$ we model $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\varAv
 \end{align*}
 
 \subsection{Lookup Time}
-The search time on a level $l \in \setOfLevels$ can be leveled analogously to that on one level:
+The search time on a level $l \in \setOfLevels$ can be modeled analogously to that on one level:
 \begin{align*}
 	\timeForOperationOnStructure{level}{}^\level & \in \RR^+_0 &\mid \forall l \in \setOfLevels\\
-	\timeForOperationOnStructure{level}{}^\level &= 2\timeForOperationOnStructure{\select}{S^2} + \frac{\varAverageFrequency^\level+1}{2}  \cdot (\timeForOperationOnStructure{\contains}{O^2} + \timeForOperationOnStructure{\compare}{T}) &\mid \forall l \in \setOfLevels
+	\timeForOperationOnStructure{level}{}^\level &= 2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^\level+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}) &\mid \forall l \in \setOfLevels
 \end{align*}
 
 For $\varCDF{K}^\level$ of the k-mers on a level $l \in \setOfLevels$ the lookup is completed by a search through the offsets on that level whilst the remaining $(1-\varCDF{K}^\level)$ of queries result in a lookup on the next level.\\
@@ -769,7 +743,7 @@ We can thus model the lookup time recursively:
 	\timeForOperationOnStructure{lookup}{}^{l} &= 
 	\begin{cases}
 	\begin{aligned}
-		\timeForOperationOnStructure{\contains}{R^\level} &+ \varCDF{K}^\level \cdot \timeForOperationOnStructure{level}{}^\level\\
+		\timeForOperationOnStructure{\contains}{R} &+ \varCDF{K}^\level \cdot \timeForOperationOnStructure{level}{}^\level\\
 		&+ (1-\varCDF{K}^\level) \cdot \timeForOperationOnStructure{lookup}{}^{l+1}
 	\end{aligned} &\mid l \in \setOfLevels\\
 	\timeForOperationOnStructure{check}{H} &\mid l \notin \setOfLevels
@@ -778,21 +752,21 @@ We can thus model the lookup time recursively:
 
 Considering the set $\setOfLevels = \{ 1,2 \}$ of two levels as an example, this results in the following total lookup time:
 \begin{align*}
-	\timeForOperationOnStructure{lookup}{}^1 = \timeForOperationOnStructure{\contains}{R^1} +&~ \varCDF{K}^1 \cdot \timeForOperationOnStructure{level}{}^1\\
-		+&~ (1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\contains}{R^2} + \varCDF{K}^2 \cdot \timeForOperationOnStructure{level}{}^2\\
+	\timeForOperationOnStructure{lookup}{}^1 = \timeForOperationOnStructure{\contains}{R} +&~ \varCDF{K}^1 \cdot \timeForOperationOnStructure{level}{}^1\\
+		+&~ (1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\contains}{R} + \varCDF{K}^2 \cdot \timeForOperationOnStructure{level}{}^2\\
 		&~ \phantom{(1-\varCDF{K}^1) \cdot \Big( \timeForOperationOnStructure{\contains}{R^2}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Big)\\
 \end{align*}
 Inserting $\timeForOperationOnStructure{level}{}^1$ and $\timeForOperationOnStructure{level}{}^2$ yields:
 \begin{align*}
 	\timeForOperationOnStructure{lookup}{}^1 =
-		\timeForOperationOnStructure{\contains}{R^1} +&~ \varCDF{K}^1 \cdot (2\timeForOperationOnStructure{\select}{S^1} + \frac{\varAverageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\contains}{O^1} + \timeForOperationOnStructure{\compare}{T}))\\
-			+&~ (1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R^2} + \varCDF{K}^2 \cdot (2\timeForOperationOnStructure{\select}{S^2} + \frac{\varAverageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\contains}{O^2} + \timeForOperationOnStructure{\compare}{T}))\\
-			&~\phantom{(1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R^2}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Bigg)
+		\timeForOperationOnStructure{\contains}{R} +&~ \varCDF{K}^1 \cdot (2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^1+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
+			+&~ (1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R} + \varCDF{K}^2 \cdot (2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
+			&~\phantom{(1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Bigg)
 \end{align*}
-\todo[inline]{insertion weglassen?}
+\todo[inline]{Frage: Soll ich das Einsetzten lieber weglassen?}
 
 \subsection{Space Consumption}
-\textbf{The text $T$} is only being stored once, so the constant approximation $bpk_T \approx 2$ can be used for several levels as well.
+\textbf{The text $T$} is only being stored once, so the constant approximation $bpk_T \approx 2$ can be used for several levels as well.\\
 
 \textbf{The number of distinct \infrequent minimizers} $\varNumberOfDistinctMinimizers^\level$ on each level $\level$ can modeled analogously to $\varCDF{M}^\level$, $\varCDF{K}^\level$ and $\varAverageFrequency^\level$:
 \begin{align*}
@@ -822,12 +796,13 @@ Inserting $\timeForOperationOnStructure{level}{}^1$ and $\timeForOperationOnStru
 
 \textbf{The hash set $H$} only contains an entry for k-mers $\kmer$, which have frequent minimizers on all levels.
 The bits per k-mer for the hash set can thus be modeled as 
-\[ bpk_H = \left(\prod_{l=1}^{L} 1-\varCDF{K}^\level\right) \cdot \frac{64}{\alpha}\]
+\[ bpk_H = \left(\prod_{l=1}^{L} 1-\varCDF{K}^\level\right) \cdot \frac{64}{\alpha}\]\\
 
 \textbf{The total bits per k-mer} for $L$ levels only differ to those on one level, as there are now a vector $R,S$ and $O$ on each level:
 \[ bpk_{total} = bpk_T + \sum_{l=1}^{L} \left(bpk_{R^\level} + bpk_{S^\level} + bpk_{O^\level}\right) + bpk_H\]
 
 \chapter{Experiments}\label{chap:experiments}
+\todo[inline]{aktualisieren}
 We evaluate how suited the MINLP proposed in \cref{chap:minlp} is for finding optimal level parameters by analyzing how accurate the modeled lookup time and space consumption are compared to the actual lookup time measured and space needed when building RSHash. We then examine how well the model can be optimized using the SCIP solver \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023}. Whether the resulting parameters are actually optimal in practice is highly dependent on how accurate the model is in the first place.
 
 \section{Datasets}
@@ -836,14 +811,11 @@ We assess the proposed MINLP both on the datasets themselves as well as on prepr
 
 
 \section{Considered Parameters} \label{sec:consideredParameters}
-For the following experiments we use k-mers of length $k = 31$ and the largest number of levels $\numberOfLevels = 3$ that is currently supported by RSHash.
-\\
+For the following experiments we use k-mers of length $k = 31$ and the largest number of levels $\numberOfLevels = 3$ that is currently supported by RSHash.\\
 RSHash currently works with thresholds up to $255$.
-Technically, using the proposed MINLP to find optimal level parameters for a specified optimization goal, one would have to consider every minimizer lengths $1 \leq \minimizerLength < k$ and all thresholds $1 \leq \threshold \leq 255$. However, using the proposed model requires computing the distributions of minimizers for each possible combination of parameters. In practice using $3$ levels would require computing the distributions for $30^3 \cdot 255^3 \approx 448 \cdot 10^9$ combinations of level parameters which is is not viable.
-\\
+Technically, using the proposed MINLP to find optimal level parameters for a specified optimization goal, one would have to consider every minimizer lengths $1 \leq \minimizerLength < k$ and all thresholds $1 \leq \threshold \leq 255$. However, using the proposed model requires computing the distributions of minimizers for each possible combination of parameters. In practice using $3$ levels would require computing the distributions for $30^3 \cdot 255^3 \approx 448 \cdot 10^9$ combinations of level parameters which is is not viable.\\
 
-When using the maximum threshold $\threshold=255$ and minimizers of length $15$ leads to a percentage of \infrequent  minimizers below $percentage$\todo{percentage einfügen!!} for each of the datasets considered. As this already leads to a comparatively large hash set, minimizer lengths $\minimizerLength < 15$ can be disregarded when searching for level parameters which lead to relatively low query times whilst also keeping the data structure fairly compact.
-\\
+When using the maximum threshold $\threshold=255$ and minimizers of length $15$ leads to a percentage of \infrequent  minimizers below $percentage$\todo{percentage einfügen!!} for each of the datasets considered. As this already leads to a comparatively large hash set, minimizer lengths $\minimizerLength < 15$ can be disregarded when searching for level parameters which lead to relatively low query times whilst also keeping the data structure fairly compact.\\
 When using a small threshold $\threshold=32$ the percentage of \infrequent minimizers of length $25$ is above $percentage$\todo{percentage einfügen!!} for each of the datasets considered. 
 Whilst this would lead to a small hash set, the compression would be small, as each minimizer covers only approximately $(31-25+2)/2 = 4$ k-mers\todo{begründung überarbeiten; approximation gilt nur für erstes level und eventuell gar nicht für unitigs}. Because of this, considering minimizer lengths between fifteen and twenty five should be sufficient for analyzing the model. To further reduce the number of parameter combinations we only consider uneven minimizer lengths.
 \begin{equation}
@@ -862,17 +834,11 @@ With these sets of considered parameters, using $3$ levels would result in $6^3 
 For a non-decreasing sequence of length $k'$, chosen from $n$ values, the number of possibilities is $\binom{n+k'-1}{k'}$. That means that when choosing three minimizer lengths out of six possible values and three thresholds out of three possible values, the total number of possible parameter combinations is $\binom{6+3-1}{3} \cdot \binom{3+3-1}{3} = 560$.
 
 \section{Computing the Model Input} \label{sec:computationOfModelInput}
-In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the original/preprocessed datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $\numberOfLevels = 3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
+In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the raw/preprocessed datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $\numberOfLevels = 3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
 The required stats are the total number $\nkmers$ of k-mers in the input sequence and the cumulative distributions of minimizer frequencies $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$, the average frequencies $\averageFrequency(\levelParameters{\level})$ and the number of distinct \infrequent minimizers $\numberOfDistinctMinimizers{\levelParameters{\level}}$ for every non-decreasing combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $1 \leq \level \leq 3$.\\
 
 These stats can be brute-forced for every dataset considered by iterating over each non-decreasing combination of the specified level parameters and actually building RSHash with those parameters. We use the RSHash algorithm implemented by \cite{schulte-mattler_rshash_2026} which is available at \url{https://github.com/jonsmcode/rshash}.\\ Whilst there are more efficient approaches to only compute the model input, we chose this approach as it not only computes an accurate model input but also allows to measure space consumption of the data structures components and the operation times on each of these components which we will later use to assess the accuracy of the values modeled by the MINLP.\\
-Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each level as well as the bits per k-mer to store the text and hash set which are only stored once and not per level. We measure the operation times
-$\timeForOperationOnStructure{\contains}{R^l}$,
-$\timeForOperationOnStructure{\select}{S^l}$,
-$\timeForOperationOnStructure{\contains}{O^l}$,
-$\timeForOperationOnStructure{\compare}{T}$ and
-$\timeForOperationOnStructure{check}{H}$
-needed for the contains query on bitvector $R$, the select queries on bitvector $S$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. We also measure the average lookup time $\timeForOperationOnStructure{lookup}{}$. These times are average times of performing each operation $100000$ subsequent times.
+Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each level as well as the bits per k-mer to store the text and hash set which are only stored once and not per level. We also measure the average lookup time $\timeForOperationOnStructure{lookup}{}$ by measuring the lookup for $100000$ k-mers randomly selected from the sequence.\\
 
 \begin{algorithm} 
 	\caption{Computation of Minimizer Distribution} \label{algo:computeMinDistr}
@@ -890,39 +856,63 @@ needed for the contains query on bitvector $R$, the select queries on bitvector 
 		\State $\CDF{\compactZV{M}{\levelParameters{\level}}},
 		\CDF{\compactZV{K}{\levelParameters{\level}}},
 		\averageFrequency(\levelParameters{\level}), \numberOfDistinctMinimizers{\levelParameters{\level}} \gets RSHash.getDistributionStats()$
-		\State $spaceConsumptions_{\levelParameters{L}} \gets RSHash.getSpaceConsumptions()$
-		\State $operationTimes_{\levelParameters{L}} \gets RSHash.measureTimes(noSamples=100000)$
+		\State $spaceConsumptions [\levelParameters{L}] \gets RSHash.getSpaceConsumptions()$
+		\State $\timeForOperationOnStructure{lookup}{} [\levelParameters{L}] \gets RSHash.benchLookup(noSamples=100000)$
 		\EndFor
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
+Lastly, we use a constant approximation for the times needed for a contains query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$ a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. Based on measurements we use:
+\begin{align}
+	\timeForOperationOnStructure{\contains}{R^l} &= 30ns\\
+	\timeForOperationOnStructure{\select}{S^l} &= 35ns  \\
+	\timeForOperationOnStructure{\access}{O^l} &= 100ns  \\
+	\timeForOperationOnStructure{\compare}{T} &= 100ns   \\
+	\timeForOperationOnStructure{check}{H} &= 20ns
+\end{align}
+\todo[inline]{welche werden final genuzt?}
 
-\todo[inline]{Explain results of minimizer distribution across several levels}
-\section{Observations Regarding the Minimizer Distribution}
-RSHash uses several levels aiming to repeatedly take advantage of the sparse and skewed distribution of minimizers. This requires using a different hash functions to compute minimizers on each level. Using the same function on every level would mean that give eual minimizer length and threshold, those minimizers which are \frequent on a level would also be \frequent on the next.
-We observe that despite of the minimizers being computed using a different hash function, their distributions on levels $\level > 1$ remain highly dependent on the distributions on all previous levels. It seems that 
-\begin{itemize}
-	\item higher levels distributions are highly dependent on previous parameters (hypothesis: highly repetitive regions are more likely to have \infrequent minimizers on every level regardless of the hash functions used)
-	\item probability functions of minimizer distributions always follow a log normal / log logistic distribution?? Because there cumulative probability function has logarithmic growth, considering exponentially growing thresholds like $2,4,8,16,32,64,128$ is a viable choice (the change between $2$ and $4$ is proportional (equal?) to that between $64$ and $128$)
-	\item outlook: it might be possible to only compute a selection of distributions and extrapolate the remaining ones
-\end{itemize}
+
+\section{Observations Regarding the Computed Stats}
+\subsection*{Minimizer Distribution}
+\begin{figure} \label{fig:multilevelDistribution}
+	\centering
+	\input{./figures/multilevel_cumulative_distributions.tex}
+	\caption{The cumulative percentage $F_M$ of minimizers with frequency up to $f$ on each level for the raw genomes Kestrel, Cod and Human. The values were measured using minimizers of length $17$ and the threshold $32$ for every level.}
+\end{figure}
+Recall that RSHash uses several levels aiming to repeatedly take advantage of the sparse and skewed distribution of minimizers. This requires using a different hash functions to compute minimizers on each level as using the same function on every level would mean that give equal minimizer length and threshold, those minimizers which are \frequent on a level would also be \frequent on the next.
+We observe that despite of the minimizers being computed using a different hash function, their distributions on levels $\level > 1$ remain highly dependent on the distributions on all previous levels.  \Cref{fig:multilevelDistribution} shows this for the raw genomes using the level parameters $\levelParameters{\level} = (17,17,17,32,32,32)$.\\
+
+It seems that super-k-mers with \frequent minimizers on one level are more likely to also have \frequent minimizers on subsequent levels.
+A possible explanation for this observation are repetitively regions of the sequence in which a subsequences shorter than $k$ repeats many times over. K-mers in such regions would be likely to share the same minimizer regardless of the hash function used to compute it, resulting in those minimizers being frequent on every level. This could be verified by searching for such repeating substrings in those super-k-mers which are frequent on all levels.
+
+\subsection*{Operation Times}
+Recall that times 
+$\timeForOperationOnStructure{\contains}{R}$,
+$\timeForOperationOnStructure{\select}{S}$,
+$\timeForOperationOnStructure{\access}{O}$,
+$\timeForOperationOnStructure{\compare}{T}$,
+$\timeForOperationOnStructure{check}{H}$
+needed for a contains rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$ are part of the model input and considered to be constant.\\
+The measured times for these operations show that they actually vary in dependence of the level parameters. This is expected as ...
 
 \section{Model Accuracy}
 We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute model input, the actual space consumption and the measured operation times for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
-For each original and preprocessed sequence and each combination of the level parameters considered, we then use a modified version of the proposed model which forces the exact combination of level parameters and returns the modeled space consumption and lookup time.
+For each raw and preprocessed sequence and each combination of the level parameters considered, we then use a modified version of the proposed model which forces the exact combination of level parameters and returns the modeled space consumption and lookup time.
 
 \subsection{Lookup Time}
 
 
 \subsection{Space Consumption}
+\input{./figures/stats_evaluating_space_consumption.tex}
 \todo[inline]{Absatz zu $bpk_{total}$ schreiben}
-For both the original and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $..$\todo{max error eintragen}.\\
-The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the original sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\\todo[inline]{Frage: soll ich den Abschnitt bezüglich $bpk_T$ hier in der auswertung lassen oder die $bpk_T$ als Parameter zum Model hinzufügen (diese zu berechnen ist im Vergleich mit den restlichen stats sehr günstig)?}
+For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $..$\todo{max error eintragen}.\\
+The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\\todo[inline]{Frage: soll ich den Abschnitt bezüglich $bpk_T$ hier in der auswertung lassen oder die $bpk_T$ als Parameter zum Model hinzufügen (diese zu berechnen ist im Vergleich mit den restlichen stats sehr günstig)?}
 
 RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values.\\
-However, even with this adjustment the modeled space consumption of the hash set is neither correct for the original genomes nor for the preprocessed ones. Whilst we model the bits per k-mer $bpk_H$ of the hash set as a continues function, our measurements seem to take values from a discrete distribution.\\
+However, even with this adjustment the modeled space consumption of the hash set is neither correct for the raw genomes nor for the preprocessed ones. Whilst we model the bits per k-mer $bpk_H$ of the hash set as a continues function, our measurements seem to take values from a discrete distribution.\\
 This observation can also be explained by the hash sets implementation: Upon declaration a c++ hash set starts of with a hash function mapping keys to a hash space of a relatively small size. That size is doubled whenever a certain criteria regarding the hash sets load is no longer fulfilled. This discrete behavior with varying loads cannot be captured by a continues model using a constant load factor.\\
-In addition to this, the model tends to overestimate the hash sets size for the original sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. This effect is again negligent for the common kestrels genome, where
+In addition to this, the model tends to overestimate the hash sets size for the raw sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. This effect is again negligent for the common kestrels genome, where
 \todo[inline]{Plots? Wenn ja, welche?}
 
 \section{Limitations}
@@ -946,6 +936,8 @@ In another approach we will try to approximate the distributions on higher level
 	\item hash table instead of hash set - contains one entry (key:k-mer, value:offset) for each appearance of every k-mer (no longer distinct) - for the unitigs, this shouldn't have an effect
 	\item Locate benötigt eine Liste mit allen offsets: $bpk_H = (1-\varCDF{K}) \cdot \frac{(64 + (log_2|T|\cdot frequency))}{\alpha}$
 \end{itemize}
+
+\textbf{Extrapolation Minimizer Distributions:} As the minimizer distribution on each level is affected by that on the previous ones, it might be possible to only compute a selection of distributions and extrapolate the remaining ones. This 
 
 \textbf{Sub sampling}
 For large genomes, the computing of the model input could be sped up  by randomly sub sampling a certain percentage of the genomes k-mers and computing the minimizer distributions on those. A smaller percentage would then mean a faster computation at the cost of losing accuracy.

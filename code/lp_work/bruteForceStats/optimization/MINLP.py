@@ -167,8 +167,8 @@ def MINLP(
         else: #fixed, really inaccurate values
             scip.addCons(t_contains_R_vars[l] == 30.0)
             scip.addCons(t_select_S_vars[l] == 35.0)
-            scip.addCons(t_access_O_vars[l] == 10.0)
-            scip.addCons(t_compare_T_vars[l] == 10.0)
+            scip.addCons(t_access_O_vars[l] == 100.0)
+            scip.addCons(t_compare_T_vars[l] == 100.0)
             scip.addCons(t_access_H == 20.0)
         scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + ((f_avg_vars[l]+1)/2)*(t_access_O_vars[l]+t_compare_T_vars[l]))
 
@@ -181,7 +181,7 @@ def MINLP(
     #recursivly build the t_lookup constraint level by level
     remaining_time = t_access_H
     for l in reversed(range(no_levels)):
-        remaining_time = t_contains_R_vars[l] + F_K_vars[l] * t_level_vars[l] + (1 - F_K_vars[l]) * remaining_time
+        remaining_time = (t_contains_R_vars[l] + F_K_vars[l] * t_level_vars[l] + (1 - F_K_vars[l]) * remaining_time)
 
     scip.addCons(t_lookup == remaining_time, name="t_lookup")
     scip.addCons(t_lookup <= max_lookup_time)

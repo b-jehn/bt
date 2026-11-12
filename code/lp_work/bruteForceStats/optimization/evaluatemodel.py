@@ -215,8 +215,7 @@ for sequence_name in GENOMES:
                         data["measured"].append(measured_value)
                         data["diff"].append(measured_value-modeled_value)
 
-    print("computing correlation coefficients - ATTENTION - plot_data NO LONGER DIFFERENTIATES BETWEEN LEVELS!!") 
-    correlation_stats_path = sequence_path / "correlation_coefficients.csv"
+    correlation_stats_path = sequence_path / "correlation_stats.csv"
     fieldnames = []
     correlation_coefficients = []
     raw_error_medians = []
@@ -245,10 +244,19 @@ for sequence_name in GENOMES:
                 squared_error_medians.append(np.median(np.power(differences, 2)))
             
     with open(correlation_stats_path, 'w') as csvfile:
-        headers = ["value", "corr_coeff", "raw_err_median", "abs_err_median", "sqrd_err_median"]
+        headers = ["metric", "corr_coeff", "raw_err_median", "abs_err_median", "sqrd_err_median"]
         writer = csv.writer(csvfile)
         writer.writerow(headers)
         writer.writerows([name,coeff,raw_e_m,abs_e_m,sqrd_e_m] for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians))
+        
+    stats_evaluating_space_consumption_path = sequence_path / f"stats_evaluating_space_consumption{sequence_name}.csv"
+    
+    with open(correlation_stats_path, newline="") as f:
+        source_rows = list(csv.reader(f))
+
+    with open(stats_evaluating_space_consumption_path, "w", newline="") as f:
+        csv.writer(f).writerows(list(zip(*source_rows)))
+    
     #create plots
     plots_path = genome_plots / "Modeled vs Measured"
     if(not OVERWRITE_PLOTS and plots_path.is_dir()):
