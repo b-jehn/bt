@@ -1,0 +1,40 @@
+\newcommand{\rawStatsKestrel}{correlation_stats_Falco_tinnunculus.FalTin1.0.dna.toplevel}
+\newcommand{\rawStatsCod}{correlation_stats_Gadus_morhua.gadMor3.0.dna.toplevel}
+\newcommand{\rawStatsHuman}{correlation_stats_Homo_sapiens.GRCh38.dna.toplevel}
+
+\newcommand{\unitigs}[1]{#1.fa.unitigs}
+
+\newcommand{\datapath}[1]{./data/#1.csv}
+
+\begin{table} \label{fig:correlation_stats_overview_kestrel_raw}
+	\csvautotabular{\datapath{\rawStatsKestrel}}
+	\caption{Kestrel (Raw)}
+\end{table}
+
+\begin{table} \label{fig:correlation_stats_overview_kestrel_unitigs}
+	\csvautotabular{\datapath{\unitigs{\rawStatsKestrel}}}
+	\caption{Kestrel (Unitigs)}
+\end{table}
+
+\begin{table} \label{fig:correlation_stats_overview_cod_raw}
+	\csvautotabular{\datapath{\rawStatsCod}}
+	\caption{Cod (Raw)}
+\end{table}
+
+\begin{table} \label{fig:correlation_stats_overview_cod_unitigs}
+	\csvautotabular{\datapath{\unitigs{\rawStatsCod}}}
+	\caption{Cod (Unitigs)}
+\end{table}
+
+
+\begin{table} \label{fig:correlation_stats_overview_human_raw}
+	\csvautotabular{\datapath{\rawStatsHuman}}
+	\caption{Human (Raw)}
+\end{table}
+
+\begin{table} \label{fig:correlation_stats_overview_human_unitigs}
+	\csvautotabular{\datapath{\unitigs{\rawStatsHuman}}}
+	\caption{Human (Unitigs)}
+\end{table}
+
+\todo[inline]{TODO: wenn format der Tabelle final => für alle Datensätze einfügen}

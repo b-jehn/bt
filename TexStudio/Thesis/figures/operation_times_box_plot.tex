@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{statistics}
+
+\newcommand{\access}{acc}
+\newcommand{\contains}{rank}
+\newcommand{\rank}{rank}
+\newcommand{\select}{sel}
+\newcommand{\compare}{comp}
+
+\newcommand{\timeForOperationOnStructure}[2]{T_{#1_{#2}}} %#1:operation - e.g. rank, #2:structure - e.g. R
+
+\begin{document}
+\begin{tikzpicture}
+	%xtick={1,2,3},
+\begin{axis}[
+boxplot/draw direction=y,
+xtick={1},
+xticklabels={test},
+]
+
+\addplot+[
+boxplot,
+] table[
+col sep=comma,
+y index=0,
+] {../data/allOperationTimes.csv};
+
+\addplot+[
+boxplot,
+] table[
+col sep=comma,
+y index=1,
+] {../data/allOperationTimes.csv};
+\end{axis}
+\end{tikzpicture}
+\end{document}
+%$\timeForOperationOnStructure{\contains}{R^1}$,
+%$\timeForOperationOnStructure{\contains}{R^2}$,
+%$\timeForOperationOnStructure{\contains}{R^3}$,
+%$\timeForOperationOnStructure{\select}{S^1}$,
+%$\timeForOperationOnStructure{\select}{S^2}$,
+%$\timeForOperationOnStructure{\select}{S^3}$,
+%$\timeForOperationOnStructure{\access}{O^1}$,
+%$\timeForOperationOnStructure{\access}{O^2}$,
+%$\timeForOperationOnStructure{\access}{O^3}$,
+%$\timeForOperationOnStructure{\compare}{T^1}$,
+%$\timeForOperationOnStructure{\compare}{T^2}$,
+%$\timeForOperationOnStructure{\compare}{T^3}$,
+%$\timeForOperationOnStructure{\check}{H}$,
+%$\timeForOperationOnStructure{lookup}{}$},

@@ -68,7 +68,7 @@
 \usepackage{pgfplots}
 \usepackage{siunitx}
 \usepackage{pgfplotstable}
-\usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{groupplots, statistics}
 \pgfplotsset{compat=1.18}
 \usepackage{csvsimple}
 
@@ -862,23 +862,16 @@ Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
-Lastly, we use a constant approximation for the times needed for a contains query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$ a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. Based on measurements we use:
-\begin{align}
-	\timeForOperationOnStructure{\contains}{R^l} &= 30ns\\
-	\timeForOperationOnStructure{\select}{S^l} &= 35ns  \\
-	\timeForOperationOnStructure{\access}{O^l} &= 100ns  \\
-	\timeForOperationOnStructure{\compare}{T} &= 100ns   \\
-	\timeForOperationOnStructure{check}{H} &= 20ns
-\end{align}
-\todo[inline]{welche werden final genuzt?}
-
 
 \section{Observations Regarding the Computed Stats}
+\creflabelformat{figure}{Figure}
+\crefalias{Figure}{figure}
+
 \subsection*{Minimizer Distribution}
-\begin{figure} \label{fig:multilevelDistribution}
+\begin{figure} 
 	\centering
 	\input{./figures/multilevel_cumulative_distributions.tex}
-	\caption{The cumulative percentage $F_M$ of minimizers with frequency up to $f$ on each level for the raw genomes Kestrel, Cod and Human. The values were measured using minimizers of length $17$ and the threshold $32$ for every level.}
+	\caption{The cumulative percentage $F_M$ of minimizers with frequency up to $f$ on each level for the raw genomes Kestrel, Cod and Human. The values were measured using minimizers of length $17$ and the threshold $32$ for every level.} \label{fig:multilevelDistribution}
 \end{figure}
 Recall that RSHash uses several levels aiming to repeatedly take advantage of the sparse and skewed distribution of minimizers. This requires using a different hash functions to compute minimizers on each level as using the same function on every level would mean that give equal minimizer length and threshold, those minimizers which are \frequent on a level would also be \frequent on the next.
 We observe that despite of the minimizers being computed using a different hash function, their distributions on levels $\level > 1$ remain highly dependent on the distributions on all previous levels.  \Cref{fig:multilevelDistribution} shows this for the raw genomes using the level parameters $\levelParameters{\level} = (17,17,17,32,32,32)$.\\
@@ -894,7 +887,19 @@ $\timeForOperationOnStructure{\access}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$,
 $\timeForOperationOnStructure{check}{H}$
 needed for a contains rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$ are part of the model input and considered to be constant.\\
-The measured times for these operations show that they actually vary in dependence of the level parameters. This is expected as ...
+The measured times for these operations show that they actually vary in dependence of the level parameters. This is expected as \todo{...}
+
+\todo[inline]{Hier kommt noch jeweils ein box plot die Verteilung der gemessenen Werte!!!}
+
+Based on these measurements we use the following values:
+\begin{align}
+	\timeForOperationOnStructure{\contains}{R^l} &= ns\\
+	\timeForOperationOnStructure{\select}{S^l} &= ns  \\
+	\timeForOperationOnStructure{\access}{O^l} &= ns  \\
+	\timeForOperationOnStructure{\compare}{T} &= ns   \\
+	\timeForOperationOnStructure{check}{H} &= ns
+\end{align}
+\todo[inline]{welche werden final genuzt?}
 
 \section{Model Accuracy}
 We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute model input, the actual space consumption and the measured operation times for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
@@ -902,18 +907,20 @@ For each raw and preprocessed sequence and each combination of the level paramet
 
 \subsection{Lookup Time}
 
-
 \subsection{Space Consumption}
-\input{./figures/stats_evaluating_space_consumption.tex}
+$r$, $\mathbb{E}(Pred-Obs)$, $\mathbb{E}(|Pred-Obs|)$
+\\
+\input{./figures/correlation_stats_overview.tex}
+\todo[inline]{Die Tabellen fasse ich noch kompakter zusammen}
 \todo[inline]{Absatz zu $bpk_{total}$ schreiben}
 For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $..$\todo{max error eintragen}.\\
-The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\\todo[inline]{Frage: soll ich den Abschnitt bezüglich $bpk_T$ hier in der auswertung lassen oder die $bpk_T$ als Parameter zum Model hinzufügen (diese zu berechnen ist im Vergleich mit den restlichen stats sehr günstig)?}
+The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\
 
 RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values.\\
 However, even with this adjustment the modeled space consumption of the hash set is neither correct for the raw genomes nor for the preprocessed ones. Whilst we model the bits per k-mer $bpk_H$ of the hash set as a continues function, our measurements seem to take values from a discrete distribution.\\
 This observation can also be explained by the hash sets implementation: Upon declaration a c++ hash set starts of with a hash function mapping keys to a hash space of a relatively small size. That size is doubled whenever a certain criteria regarding the hash sets load is no longer fulfilled. This discrete behavior with varying loads cannot be captured by a continues model using a constant load factor.\\
 In addition to this, the model tends to overestimate the hash sets size for the raw sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. This effect is again negligent for the common kestrels genome, where
-\todo[inline]{Plots? Wenn ja, welche?}
+\todo[inline]{Hier kommt noch eine Abbildung rein, die diese Beobachtung für eines der Genome zeigt}
 
 \section{Limitations}
 The poorly modeled lookup time renders the MINLP useless for finding optimal level parameters for a specified optimization goal.

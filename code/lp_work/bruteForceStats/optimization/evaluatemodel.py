@@ -8,9 +8,7 @@ from itertools import product
 from datetime import datetime
 
 from pathlib import Path
-from dataclasses import fields
 from collections import defaultdict
-from typing import get_origin, get_type_hints
 
 from cascadingStats import *
 from MINLP import MINLP
@@ -26,6 +24,8 @@ GENOMES = ["Falco_tinnunculus.FalTin1.0.dna.toplevel",
             "Homo_sapiens.GRCh38.dna.toplevel",
             "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
 
+#GENOMES = [GENOMES[0]]
+
 
 OPTIMIZATION_GOAL = "t_lookup"   #"t_lookup" or "bpk_total"
 MAX_LOOKUP_TIME = np.inf
@@ -38,6 +38,27 @@ NO_LEVELS = 3
 NON_DECREASING_PARAMETERS = True
 
 OVERWRITE_PLOTS = False
+
+setOfMinimizerLengths = []
+for m1 in MINIMIZER_LENGTHS_CONSIDERED:
+    for m2 in MINIMIZER_LENGTHS_CONSIDERED:
+        if NON_DECREASING_PARAMETERS and m2 < m1:
+            continue
+        for m3 in MINIMIZER_LENGTHS_CONSIDERED:
+            if NON_DECREASING_PARAMETERS and m3 < m2:
+                continue
+            setOfMinimizerLengths.append([m1,m2,m3])
+            
+setOfThresholds = []
+for t1 in THRESHOLDS_CONSIDERED:
+    for t2 in THRESHOLDS_CONSIDERED:
+        if NON_DECREASING_PARAMETERS and t2 < t1:
+            continue
+        for t3 in THRESHOLDS_CONSIDERED:
+            if NON_DECREASING_PARAMETERS and t3 < t2:
+                continue
+            setOfThresholds.append([t1,t2,t3])
+
 
 #TODO: tmp, for testing
 forcedMinimizerLength = []
@@ -62,17 +83,17 @@ for sequence_name in GENOMES:
     data_path = sequence_path / "data"
     data_path.mkdir(exist_ok=True, parents=True)
 
-    modeled_AND_measured_stats_jsonfile_path = data_path / 'modeled_AND_measured_stats.json'
-    modeled_AND_measured_stats = []
-    if(modeled_AND_measured_stats_jsonfile_path.exists()):
-        print("loading modeled_AND_measured_stats from previous computations json file")
-        # Load modeled_AND_measured_stats from json file
-        with open(modeled_AND_measured_stats_jsonfile_path, "r", encoding="utf-8") as file:
-            modeled_AND_measured_stats = [
-                tuple(pair) for pair in modeled_AND_measured_stats_from_jsonable(json.load(file))
+    predicted_AND_observed_stats_jsonfile_path = data_path / 'predicted_AND_observed_stats.json'
+    predicted_AND_observed_stats = []
+    if(predicted_AND_observed_stats_jsonfile_path.exists()):
+        print("loading predicted_AND_observed_stats from previous computations json file")
+        # Load predicted_AND_observed_stats from json file
+        with open(predicted_AND_observed_stats_jsonfile_path, "r", encoding="utf-8") as file:
+            predicted_AND_observed_stats = [
+                tuple(pair) for pair in predicted_AND_observed_stats_from_jsonable(json.load(file))
         ]
     else:
-        print("computing modeled_AND_measured_stats")
+        print("computing predicted_AND_observed_stats")
         genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
         genome_stats_directory = Path(f"../allStats/{sequence_name}")
         fill_cascading_stats(root_stats=genome_stats, 
@@ -84,29 +105,17 @@ for sequence_name in GENOMES:
                             minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED,
                             thresholdsConsidered=THRESHOLDS_CONSIDERED,
                             nonDecreasingParameters=True)
-
-        setOfMinimizerLengths = []
-        for m1 in range(15,26,2):
-            for m2 in range(m1,26,2):
-                for m3 in range(m2,26,2):
-                    setOfMinimizerLengths.append([m1,m2,m3])
-                    
-        setOfThresholds = []
-        for t1 in range(5,8):
-            for t2 in range(t1,8):
-                for t3 in range(t2,8):
-                    setOfThresholds.append([2**t1,2**t2,2**t3])
                     
         #setOfMinimizerLengths = [[17,17,17]]
         #setOfThresholds = [[128,128,128]]
 
         for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
-            measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
+            observedSpace, observedTimes = getObservedStats(genome_stats_directory, 
                                                             forcedMinimizerLengths,
                                                             forcedThresholds)
             
             print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
-            modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
+            predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
                 optimization_goal="t_lookup",
                 max_lookup_time=MAX_LOOKUP_TIME,
                 max_bpk_total=MAX_BPK_TOTAL,
@@ -119,13 +128,13 @@ for sequence_name in GENOMES:
                 nonDecreasingParameters=NON_DECREASING_PARAMETERS,
                 forceParameters=[forcedMinimizerLengths,forcedThresholds])
             
-            modeled_AND_measured_stats.append((modeledSpace, measuredSpace))
-            modeled_AND_measured_stats.append((modeledTimes, measuredTimes))
+            predicted_AND_observed_stats.append((predictedSpace, observedSpace))
+            predicted_AND_observed_stats.append((predictedTimes, observedTimes))
             
             
-        # write modeled_AND_measured_stats to json file
-        with open(str(modeled_AND_measured_stats_jsonfile_path), "w", encoding="utf-8") as file:
-            json.dump(modeled_AND_measured_stats_to_jsonable(modeled_AND_measured_stats), file, indent=2)
+        # write predicted_AND_observed_stats to json file
+        with open(str(predicted_AND_observed_stats_jsonfile_path), "w", encoding="utf-8") as file:
+            json.dump(predicted_AND_observed_stats_to_jsonable(predicted_AND_observed_stats), file, indent=2)
 
 
     errors_jsonfile_path = data_path / "errors.json"
@@ -143,29 +152,54 @@ for sequence_name in GENOMES:
         ##############
         # Collect errors by stats class, field, and level.
         # Generative AI use Disclaimer:
-        #   the following code for computing the squarred error for every pai of modeled and measured stats
-        #   and every value modeled was generated using GPT-6 Luna
+        #   the following code for computing the squarred error for every pai of predicted and observed stats
+        #   and every value predicted was generated using GPT-6 Luna
         ##############
         print("computing model errors")
-        for modeled, measured in modeled_AND_measured_stats:
-            stats_class = type(modeled).__name__
+        for predicted, observed in predicted_AND_observed_stats:
+            stats_class = type(predicted).__name__
 
-            for stat_field in fields(modeled):
+            for stat_field in fields(predicted):
                 name = stat_field.name
-                modeled_value = getattr(modeled, name)
-                measured_value = getattr(measured, name)
+                predicted_value = getattr(predicted, name)
+                observed_value = getattr(observed, name)
 
-                if isinstance(modeled_value, list):
-                    for level, (m, obs) in enumerate(zip(modeled_value, measured_value)):
+                if isinstance(predicted_value, list):
+                    for level, (pred, obs) in enumerate(zip(predicted_value, observed_value)):
                         key = (stats_class, name, level)
-                        errors.setdefault(key, []).append(m - obs)
+                        errors.setdefault(key, []).append(pred - obs)
                 else:
                     key = (stats_class, name, None)
-                    errors.setdefault(key, []).append(modeled_value - measured_value)
+                    errors.setdefault(key, []).append(predicted_value - observed_value)
 
         # write errors to json file
         with open(str( data_path / 'errors.json'), 'w') as f:
             json.dump([[list(k), v] for k, v in errors.items()], f)
+    
+    ####################
+    #sorted_lookup_times_path = sequence_path / "sorted_lookup_times.txt"
+    #if(not sorted_lookup_times_path.is_file()):
+    #    #sort parameter pairs by lookup time 
+    #    print(f"writing sorted lookup times to: {sorted_lookup_times_path}")
+    #    param_lookuptimes = {}
+    #    for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
+    #        observedSpace, observedTimes = getObservedStats(Path(f"../allStats/{sequence_name}"), 
+    #                                                        forcedMinimizerLengths,
+    #                                                        forcedThresholds)
+    #        params_string = str(getParameterDirectory(forcedMinimizerLengths, forcedThresholds))
+    #        param_lookuptimes[params_string] = observedTimes.LookupTime
+    #        
+    #    with open(sorted_lookup_times_path, "w") as f:
+    #        for params, lookuptime in sorted(param_lookuptimes.items(), key=lambda item: item[1]):
+    #            f.write(f"{params}: {lookuptime}\n")
+    #        f.close()
+    #    
+    
+    #############
+    # Stuff for Thesis gets stored here
+    #############
+    thesis_results_path = Path("../thesis_results")
+    thesis_results_path.mkdir(parents=True, exist_ok=True)
 
     ##############
     # code for plotting data starts here
@@ -173,49 +207,51 @@ for sequence_name in GENOMES:
     genome_plots = sequence_path / "plots"
     genome_plots.mkdir(exist_ok=True, parents=True)
     ##############
-    # Compare modeled vs measured lookup time
+    # Compare predicted vs observed lookup time
     # Generative AI use Disclaimer:
-    #   the following code for plotting the measured vs the the modeled VALUES was generated using GPT-6 Luna
+    #   the following code for plotting the observed vs the the predicted VALUES was generated using GPT-6 Luna
     ##############
-    # extract stats pairs from modeled_AND_measured_stats
+    # extract stats pairs from predicted_AND_observed_stats
     stats_classes = (spaceConsumption_Stats, operationTimes_Stats)
+    
     # Prepare storage for each class and field.
     plot_data = {
         stats_class: {
-            stat_field.name: [{"modeled": [], "measured": [], "diff": []}] * NO_LEVELS
+            stat_field.name: [{"predicted": [], "observed": [], "diff": []}] * NO_LEVELS
             if get_origin(get_type_hints(stats_class)[stat_field.name]) is list
-            else {"modeled": [], "measured": [], "diff": []}
+            else {"predicted": [], "observed": [], "diff": []}
             for stat_field in fields(stats_class)
         }
         for stats_class in stats_classes
     }
 
-    # Iterate over modeled_AND_measured_stats only once.
-    for modeled, measured in modeled_AND_measured_stats:
+    # Iterate over predicted_AND_observed_stats only once.
+    for predicted, observed in predicted_AND_observed_stats:
         for stats_class in stats_classes:
-            if isinstance(modeled, stats_class) and isinstance(measured, stats_class):
+            if isinstance(predicted, stats_class) and isinstance(observed, stats_class):
                 for stat_field in fields(stats_class):
                     field_name = stat_field.name
-                    modeled_value = getattr(modeled, field_name)
-                    measured_value = getattr(measured, field_name)
+                    predicted_value = getattr(predicted, field_name)
+                    observed_value = getattr(observed, field_name)
                     data = plot_data[stats_class][field_name]
                     
                     #TODO: REMOVE, only temporary
-                    #if(field_name == "Lookup_time" and (modeled_value < 300 or modeled_value > 500)):
+                    #if(field_name == "Lookup_time" and (predicted_value < 300 or predicted_value > 500)):
                     #    continue
 
-                    if isinstance(modeled_value, list) and isinstance(measured_value, list):
+                    if isinstance(predicted_value, list) and isinstance(observed_value, list):
                         # Pair corresponding list elements.
-                        for level, (modeled_item, measured_item) in enumerate(zip(modeled_value, measured_value)):
-                            data[level]["modeled"].append(modeled_item)
-                            data[level]["measured"].append(measured_item)
-                            data[level]["diff"].append(measured_item-modeled_item)
+                        for level, (predicted_item, observed_item) in enumerate(zip(predicted_value, observed_value)):
+                            data[level]["predicted"].append(predicted_item)
+                            data[level]["observed"].append(observed_item)
+                            data[level]["diff"].append(observed_item-predicted_item)
                     else:
-                        data["modeled"].append(modeled_value)
-                        data["measured"].append(measured_value)
-                        data["diff"].append(measured_value-modeled_value)
+                        data["predicted"].append(predicted_value)
+                        data["observed"].append(observed_value)
+                        data["diff"].append(observed_value-predicted_value)
+                        
+    correlation_stats_path = sequence_path / f"correlation_stats_{sequence_name}.csv"
 
-    correlation_stats_path = sequence_path / "correlation_stats.csv"
     fieldnames = []
     correlation_coefficients = []
     raw_error_medians = []
@@ -223,68 +259,79 @@ for sequence_name in GENOMES:
     squared_error_medians = []
     for stats_class in stats_classes:
         for field_name, data in plot_data[stats_class].items():
+            if stats_class == operationTimes_Stats and not field_name == "LookupTime":
+                continue
             if get_origin(get_type_hints(stats_class)[field_name]) is list:
                 for level in range(NO_LEVELS):
-                    modeled_values = data[level]["modeled"]
-                    measured_values = data[level]["measured"]
+                    predicted_values = data[level]["predicted"]
+                    observed_values = data[level]["observed"]
                     differences = data[level]["diff"]
-                    fieldnames.append(f"{field_name}_{level}")
-                    correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
+                    fieldnames.append(f"{field_name}{level}")
+                    correlation_coefficients.append(np.corrcoef(predicted_values, observed_values)[0, 1])
                     raw_error_medians.append(np.median(differences))
                     absolute_error_medians.append(np.median(np.absolute(differences)))
                     squared_error_medians.append(np.median(np.power(differences, 2)))
             else:
-                modeled_values = data["modeled"]
-                measured_values = data["measured"]
+                predicted_values = data["predicted"]
+                observed_values = data["observed"]
                 differences = data["diff"]
-                fieldnames.append(field_name)
-                correlation_coefficients.append(np.corrcoef(modeled_values, measured_values)[0, 1])
+                fieldnames.append(f"{field_name}")
+                correlation_coefficients.append(np.corrcoef(predicted_values, observed_values)[0, 1])
                 raw_error_medians.append(np.median(differences))
                 absolute_error_medians.append(np.median(np.absolute(differences)))
                 squared_error_medians.append(np.median(np.power(differences, 2)))
             
     with open(correlation_stats_path, 'w') as csvfile:
-        headers = ["metric", "corr_coeff", "raw_err_median", "abs_err_median", "sqrd_err_median"]
+        corr_coeff_tex = "$r$"
+        rawErrMedian_tex = f"$\\mathbb{{E}}(Pred-Obs)$"
+        absErrMedian_tex = f"$\\mathbb{{E}}(|Pred-Obs|)$"
+        sqrdErrMedian_tex = f"$\\mathbb{{E}}(Pred-Obs)^2$"
+        headers = ["metric", corr_coeff_tex, rawErrMedian_tex, absErrMedian_tex, sqrdErrMedian_tex]
         writer = csv.writer(csvfile)
         writer.writerow(headers)
-        writer.writerows([name,coeff,raw_e_m,abs_e_m,sqrd_e_m] for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians))
-        
+        writer.writerows([field_name_to_tex[name], *(f"{x:.2e}" for x in (coeff, raw_e_m, abs_e_m, sqrd_e_m))] for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians))
+     
+    """
+    //transpose stats   
     stats_evaluating_space_consumption_path = sequence_path / f"stats_evaluating_space_consumption{sequence_name}.csv"
-    
     with open(correlation_stats_path, newline="") as f:
         source_rows = list(csv.reader(f))
-
     with open(stats_evaluating_space_consumption_path, "w", newline="") as f:
         csv.writer(f).writerows(list(zip(*source_rows)))
+    """
     
     #create plots
-    plots_path = genome_plots / "Modeled vs Measured"
+    plots_path = genome_plots / "Predicted vs Observed"
     if(not OVERWRITE_PLOTS and plots_path.is_dir()):
-        print(f"Modeled vs Measured plots already exists at {plots_path}")
+        print(f"Predicted vs Observed plots already exists at {plots_path}")
     else:
         plots_path.mkdir(exist_ok=True, parents=True)
-        print(f"plotting Modeled vs Measured values plots")
+        print(f"plotting Predicted vs Observed values plots")
         
         # Create one plot for each field.
         for stats_class in stats_classes:
             for field_name, data in plot_data[stats_class].items():
+                if stats_class == operationTimes_Stats and not field_name == "LookupTime":
+                    continue
                 if get_origin(get_type_hints(stats_class)[field_name]) is list:
                     for level in range(NO_LEVELS):
-                        modeled_values = data[level]["modeled"]
-                        measured_values = data[level]["measured"]
+                        predicted_values = data[level]["predicted"]
+                        observed_values = data[level]["observed"]
                         
-                        if not modeled_values:
+                        if not predicted_values:
                             continue
                         
                         title = f"{field_name}_{level} for {sequence_name.replace('.','_')}"
 
+                        ax=plt.gca()
+                        ax.set_aspect('equal')
                         #plot red diagonal where x=y
-                        plt.axline((0,0),slope=1,linestyle='-',color='red',label="modeled=measured")
+                        plt.axline((0,0),slope=1,linestyle='-',color='red',label="predicted=observed")
                         plt.legend()
                         
-                        plt.scatter(measured_values, modeled_values)
-                        plt.xlabel(f"Measured {field_name}_{level}")
-                        plt.ylabel(f"Modeled {field_name}_{level}")
+                        plt.scatter(predicted_values, observed_values)
+                        plt.xlabel(f"Predicted {field_name}_{level}")
+                        plt.ylabel(f"Observed {field_name}_{level}")
                         plt.title(title)
                         plt.grid(True)
                         plt.tight_layout()
@@ -292,21 +339,23 @@ for sequence_name in GENOMES:
                         plt.close()
 
                 else:
-                    modeled_values = data["modeled"]
-                    measured_values = data["measured"]
+                    predicted_values = data["predicted"]
+                    observed_values = data["observed"]
                     
-                    if not modeled_values:
+                    if not predicted_values:
                         continue
 
                     title = f"{field_name} for {sequence_name.replace('.','_')}"
-
+                    
+                    ax=plt.gca()
+                    ax.set_aspect('equal')
                     #plot red diagonal where x=y
-                    plt.axline((0,0),slope=1,linestyle='-',color='red',label="modeled=measured")
+                    plt.axline((0,0),slope=1,linestyle='-',color='red',label="predicted=observed")
                     plt.legend()
                     
-                    plt.scatter(measured_values, modeled_values)
-                    plt.xlabel(f"Measured {field_name}")
-                    plt.ylabel(f"Modeled {field_name}")
+                    plt.scatter(predicted_values, observed_values)
+                    plt.xlabel(f"Predicted {field_name}")
+                    plt.ylabel(f"Observed {field_name}")
                     plt.title(title)
                     plt.grid(True)
                     plt.tight_layout()
@@ -363,7 +412,7 @@ for sequence_name in GENOMES:
                 plt.close()
                 
     print("\n")
-
+    
 
     #============================#
     #OUTPUT INFO

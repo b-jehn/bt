@@ -152,7 +152,10 @@ def plotDistributionsOfOperationTimes(genome_stats: Path, genome_plots: Path):
         
 
 def main() -> None:
-    stats_directory = Path(f"allStats")  #directory for stats of all genomes
+    thesis_results_path = Path("thesis_results")
+    thesis_results_path.mkdir(parents=True, exist_ok=True)
+    
+    stats_directory = Path("allStats")  #directory for stats of all genomes
     if(not stats_directory.is_dir()):
         return
     

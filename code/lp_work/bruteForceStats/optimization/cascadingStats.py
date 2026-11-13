@@ -2,25 +2,42 @@ import csv
 from dataclasses import dataclass, field, is_dataclass, fields
 from pathlib import Path
 from itertools import product
+from typing import get_origin, get_type_hints
 import re
 
 @dataclass
 class spaceConsumption_Stats:
-    bpk_T: float = field(default_factory=float)
-    bpk_R: list[float] = field(default_factory=list[float])
-    bpk_S: list[float] = field(default_factory=list[float])
-    bpk_O: list[float] = field(default_factory=list[float])
-    bpk_H: float = field(default_factory=float)
-    bpk_total: float = field(default_factory=float)
+    bpkT: float = field(default_factory=float)
+    bpkR: list[float] = field(default_factory=list[float])
+    bpkS: list[float] = field(default_factory=list[float])
+    bpkO: list[float] = field(default_factory=list[float])
+    bpkH: float = field(default_factory=float)
+    bpkTotal: float = field(default_factory=float)
 
 @dataclass
 class operationTimes_Stats:
-    R_contains: list[float] = field(default_factory=list[float])
-    S_select: list[float] = field(default_factory=list[float])
-    O_access: list[float] = field(default_factory=list[float])
-    T_compare: list[float] = field(default_factory=list[float])
-    H_access: float = field(default_factory=float)
-    Lookup_time: float = field(default_factory=float)
+    Rcontains: list[float] = field(default_factory=list[float])
+    Sselect: list[float] = field(default_factory=list[float])
+    Oaccess: list[float] = field(default_factory=list[float])
+    Tcompare: list[float] = field(default_factory=list[float])
+    Haccess: float = field(default_factory=float)
+    LookupTime: float = field(default_factory=float)
+
+field_name_to_tex = {
+    "bpkT":"$bpk_T$",
+    "bpkH":"$bpk_H$",
+    "bpkTotal":f"$bpk_{{total}}$",
+    "Haccess":f"$\\timeForOperationOnStructure{{\\check}}{{H}}$",
+    "LookupTime":f"$\\timeForOperationOnStructure{{lookup}}{{}}$"
+}
+for l in range(3):
+    field_name_to_tex[f"bpkR{l}"] = f"$bpk_{{R^{l+1}}}$"
+    field_name_to_tex[f"bpkS{l}"] = f"$bpk_{{S^{l+1}}}$"
+    field_name_to_tex[f"bpkO{l}"] = f"$bpk_{{O^{l+1}}}$"
+    field_name_to_tex[f"Rcontains{l}"] = f"$\\timeForOperationOnStructure{{\\contains}}{{R^{l+1}}}$"
+    field_name_to_tex[f"Sselect{l}"] = f"$\\timeForOperationOnStructure{{\\select}}{{S^{l+1}}}$"
+    field_name_to_tex[f"Oaccess{l}"] = f"$\\timeForOperationOnStructure{{\\access}}{{O^{l+1}}}$"
+    field_name_to_tex[f"Tcompare{l}"] = f"$\\timeForOperationOnStructure{{\\compare}}{{T^{l+1}}}$"
 
 @dataclass
 class Distribution_Stats:
@@ -116,40 +133,40 @@ def getCascadingDistribution_Stats(cascading_stats: Distribution_Stats, minimize
 def column_values(rows: list[dict[str, str]], column: str) -> list[float]:
     return [float(row[column]) for row in rows]
 
-def getMeasuredStats(genome_stats_path: Path,
+def getObservedStats(genome_stats_path: Path,
                     minimizer_lengths: list[int],
                     thresholds: list[int]) -> tuple[spaceConsumption_Stats, operationTimes_Stats]:
     stats_path =  genome_stats_path / getParameterDirectory(minimizer_lengths, thresholds) / "space_consumption.csv"
     with stats_path.open() as f:
         space_rows = list(csv.DictReader(f, skipinitialspace=True))
         space = spaceConsumption_Stats(
-            bpk_T=float(space_rows[0]["bpk_text"]),
-            bpk_R=column_values(space_rows, "bpk_R"),
-            bpk_S=column_values(space_rows, "bpk_S"),
-            bpk_O=column_values(space_rows, "bpk_O"),
-            bpk_H=float(space_rows[0]["bpk_H"]),
-            bpk_total=float(space_rows[0]["bpk_total"])
+            bpkT=float(space_rows[0]["bpk_text"]),
+            bpkR=column_values(space_rows, "bpk_R"),
+            bpkS=column_values(space_rows, "bpk_S"),
+            bpkO=column_values(space_rows, "bpk_O"),
+            bpkH=float(space_rows[0]["bpk_H"]),
+            bpkTotal=float(space_rows[0]["bpk_total"])
         )
     
     stats_path =  stats_path.parent / "times_per_operation.csv"
     with stats_path.open() as f:
         time_rows = list(csv.DictReader(f, skipinitialspace=True))
         times = operationTimes_Stats(
-            R_contains=column_values(time_rows, "R_contains"),
-            S_select=column_values(time_rows, "S_select"),
-            O_access=column_values(time_rows, "O_access"),
-            T_compare=column_values(time_rows, "T_compare"),
-            H_access=float(time_rows[0]["H_access"]),
+            Rcontains=column_values(time_rows, "R_contains"),
+            Sselect=column_values(time_rows, "S_select"),
+            Oaccess=column_values(time_rows, "O_access"),
+            Tcompare=column_values(time_rows, "T_compare"),
+            Haccess=float(time_rows[0]["H_access"]),
         )
     
     lookup_log =  stats_path.parent / "lookup.log"
     match=re.search(r"^time_per_kmer = ((?:\d+(?:\.\d*)?|\.\d+))", lookup_log.read_text(), re.MULTILINE)  #regular expression matches with the text after "time_per_kmer = "
-    times.Lookup_time = float(match.group(1))   #match group retrieves the text matching with the regular expression
+    times.LookupTime = float(match.group(1))   #match group retrieves the text matching with the regular expression
     
     return space, times
 
 ##############
-# helpers to write the array modeled_AND_measured_stats to a json file / recover it from a json file
+# helpers to write the array predicted_AND_observed_stats to a json file / recover it from a json file
 # Generative AI use Disclaimer:
 #   the following code was generated using GPT-6 Luna
 ##############
@@ -158,22 +175,22 @@ STATS_TYPES = {
     "operationTimes_Stats": operationTimes_Stats,
 }
 
-def modeled_AND_measured_stats_to_jsonable(value):
+def predicted_AND_observed_stats_to_jsonable(value):
     if is_dataclass(value):
         return {
             "__type__": type(value).__name__,
-            **{f.name: modeled_AND_measured_stats_to_jsonable(getattr(value, f.name)) for f in fields(value)}
+            **{f.name: predicted_AND_observed_stats_to_jsonable(getattr(value, f.name)) for f in fields(value)}
         }
     if isinstance(value, (list, tuple)):
-        return [modeled_AND_measured_stats_to_jsonable(item) for item in value]
+        return [predicted_AND_observed_stats_to_jsonable(item) for item in value]
     return value
 
-def modeled_AND_measured_stats_from_jsonable(value):
+def predicted_AND_observed_stats_from_jsonable(value):
     if isinstance(value, list):
-        return [modeled_AND_measured_stats_from_jsonable(item) for item in value]
+        return [predicted_AND_observed_stats_from_jsonable(item) for item in value]
 
     if isinstance(value, dict):
-        decoded = {key: modeled_AND_measured_stats_from_jsonable(item) for key, item in value.items()}
+        decoded = {key: predicted_AND_observed_stats_from_jsonable(item) for key, item in value.items()}
         type_name = decoded.pop("__type__", None)
 
         if type_name is not None:

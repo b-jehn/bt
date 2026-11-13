@@ -59,6 +59,7 @@ error_file_path = data_path / "squarred_errors.json"
 
 genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)}) 
 genome_stats_directory = Path(f"../allStats/{SEQUENCE_NAME}")
+
 fill_cascading_stats(root_stats=genome_stats, 
                     genome_stats_path=genome_stats_directory, 
                     level=1, 
@@ -75,11 +76,11 @@ setOfThresholds = [[32, 32, 32]]
 for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
     print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
     #TODO
-    measuredSpace, measuredTimes = getMeasuredStats(genome_stats_directory, 
+    observedSpace, observedTimes = getObservedStats(genome_stats_directory, 
                                                     forcedMinimizerLengths,
                                                     forcedThresholds)
     
-    modeledSpace, modeledTimes, info, solution, elapsed_seconds = MINLP(
+    predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
         optimization_goal="t_lookup",
         max_lookup_time=math.inf,
         max_bpk_total=math.inf,
@@ -92,19 +93,19 @@ for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, s
         nonDecreasingParameters=NON_DECREASING_PARAMETERS,
         forceParameters=[forcedMinimizerLengths,forcedThresholds],
         hideOutput=False,
-        operationTimes=measuredTimes,
+        operationTimes=observedTimes,
         inverseTimes=False)
     
     for line in info:
         print(line, end='')
     
     print(f"minimizer_lengths: {forcedMinimizerLengths}, thresholds. {forcedThresholds}")
-    print("stats:\nmeasured space\nmodeled space\n")
-    for f in fields(modeledSpace):
+    print("stats:\nobserved space\npredicted space\n")
+    for f in fields(predictedSpace):
         name = f.name
-        #print(f"{name}:\n{getattr(measuredSpace, name)}\n{getattr(modeledSpace, name)}\n")
+        #print(f"{name}:\n{getattr(observedSpace, name)}\n{getattr(predictedSpace, name)}\n")
         
-    print("stats:\nmeasured times\nmodeled times:")
-    for f in fields(modeledTimes):
+    print("stats:\nobserved times\npredicted times:")
+    for f in fields(predictedTimes):
         name = f.name
-        print(f"{name}:\n{getattr(measuredTimes, name)}\n{getattr(modeledTimes, name)}\n")
+        print(f"{name}:\n{getattr(observedTimes, name)}\n{getattr(predictedTimes, name)}\n")

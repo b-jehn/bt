@@ -158,18 +158,19 @@ def MINLP(
         #constraints regarding the structure operation times        
         if(inverseTimes):
             continue
-        elif(len(operationTimes.R_contains) == no_levels):
-            scip.addCons(t_contains_R_vars[l] == operationTimes.R_contains[l])
-            scip.addCons(t_select_S_vars[l] == operationTimes.S_select[l])
-            scip.addCons(t_access_O_vars[l] == operationTimes.O_access[l])
-            scip.addCons(t_compare_T_vars[l] == operationTimes.T_compare[l])
-            scip.addCons(t_access_H == operationTimes.H_access)
+        elif(len(operationTimes.Rcontains) == no_levels):
+            scip.addCons(t_contains_R_vars[l] == operationTimes.Rcontains[l])
+            scip.addCons(t_select_S_vars[l] == operationTimes.Sselect[l])
+            scip.addCons(t_access_O_vars[l] == operationTimes.Oaccess[l])
+            scip.addCons(t_compare_T_vars[l] == operationTimes.Tcompare[l])
+            scip.addCons(t_access_H == operationTimes.Haccess)
         else: #fixed, really inaccurate values
-            scip.addCons(t_contains_R_vars[l] == 30.0)
-            scip.addCons(t_select_S_vars[l] == 35.0)
-            scip.addCons(t_access_O_vars[l] == 100.0)
-            scip.addCons(t_compare_T_vars[l] == 100.0)
-            scip.addCons(t_access_H == 20.0)
+            scip.addCons(t_contains_R_vars[l] == 230.0)
+            scip.addCons(t_select_S_vars[l] == 22.0)
+            scip.addCons(t_access_O_vars[l] == 6.0)
+            scip.addCons(t_compare_T_vars[l] == 18.0)
+            scip.addCons(t_access_H == 12.0)
+    
         scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + ((f_avg_vars[l]+1)/2)*(t_access_O_vars[l]+t_compare_T_vars[l]))
 
         
@@ -178,12 +179,11 @@ def MINLP(
         #scip.addCons(t_select_S_vars[l] == log(f_avg_vars[l])/log(2.0))
         
 
-    #recursivly build the t_lookup constraint level by level
     remaining_time = t_access_H
     for l in reversed(range(no_levels)):
-        remaining_time = (t_contains_R_vars[l] + F_K_vars[l] * t_level_vars[l] + (1 - F_K_vars[l]) * remaining_time)
-
-    scip.addCons(t_lookup == remaining_time, name="t_lookup")
+        remaining_time = t_contains_R_vars[l] + F_K_vars[l] * t_level_vars[l] + (1 - F_K_vars[l]) * remaining_time
+        
+    t_lookup_constraint = scip.addCons(t_lookup == remaining_time, name="t_lookup")
     scip.addCons(t_lookup <= max_lookup_time)
     if(inverseTimes):
         scip.addCons(t_lookup == operationTimes.Lookup_time)
@@ -197,6 +197,7 @@ def MINLP(
     #SOLVE
     #============================#
     if(not hideOutput): 
+        scip.printCons(t_lookup_constraint)
         print("starting solving")
     start_time = perf_counter()
     scip.optimize()
@@ -209,27 +210,26 @@ def MINLP(
         return None
     
     sol = scip.getBestSol()
-    
     #============================#
     #CREATE INFO
     #============================#
     space = spaceConsumption_Stats()
     times = operationTimes_Stats()
     
-    space.bpk_T = bpk_T
-    space.bpk_H = sol[bpk_H]
-    space.bpk_total = sol[bpk_total]
-    times.H_access = sol[t_access_H]
-    times.Lookup_time = sol[t_lookup]
+    space.bpkT = bpk_T
+    space.bpkH = sol[bpk_H]
+    space.bpkTotal = sol[bpk_total]
+    times.Haccess = sol[t_access_H]
+    times.LookupTime = sol[t_lookup]
     for l in range(no_levels):
-        space.bpk_R.append(sol[bpk_R_vars[l]])
-        space.bpk_S.append(sol[bpk_S_vars[l]])
-        space.bpk_O.append(sol[bpk_O_vars[l]])
+        space.bpkR.append(sol[bpk_R_vars[l]])
+        space.bpkS.append(sol[bpk_S_vars[l]])
+        space.bpkO.append(sol[bpk_O_vars[l]])
         
-        times.R_contains.append(sol[t_contains_R_vars[l]])
-        times.S_select.append(sol[t_select_S_vars[l]])
-        times.O_access.append(sol[t_access_O_vars[l]])
-        times.T_compare.append(sol[t_compare_T_vars[l]])
+        times.Rcontains.append(sol[t_contains_R_vars[l]])
+        times.Sselect.append(sol[t_select_S_vars[l]])
+        times.Oaccess.append(sol[t_access_O_vars[l]])
+        times.Tcompare.append(sol[t_compare_T_vars[l]])
         
     info = []
     info.append(f"with optimization goal: {optimization_goal},\nMAX_LOOKUP_TIME = {max_lookup_time} and\nMAX_BPK_TOTAL = {max_bpk_total}\n\n")
