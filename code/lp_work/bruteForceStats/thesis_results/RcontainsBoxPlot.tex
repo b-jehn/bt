@@ -1,0 +1,14 @@
+\begin{tikzpicture}
+            \begin{axis}[
+                boxplot/draw direction=y,
+                xtick={1,2,3,4,5},
+                xticklabels={{$\timeForOperationOnStructure{\contains}{R^1}$},{$\timeForOperationOnStructure{\contains}{R^2}$},{$\timeForOperationOnStructure{\contains}{R^3}$}},
+                x tick label style={align=center},
+                ylabel={Measured Time (ns)},
+            ]
+            \addplot+ [boxplot prepared={draw position=1, lower whisker=138.882, lower quartile=191.25799999999998, median=215.03, upper quartile=244.313, upper whisker=320.824}] coordinates {};
+\addplot+ [boxplot prepared={draw position=2, lower whisker=36.8516, lower quartile=101.95275000000001, median=119.861, upper quartile=145.71125, upper whisker=211.199}] coordinates {};
+\addplot+ [boxplot prepared={draw position=3, lower whisker=35.8562, lower quartile=85.84190000000001, median=100.5095, upper quartile=119.30225, upper whisker=169.385}] coordinates {};
+\end{axis}
+            \end{tikzpicture}
+            

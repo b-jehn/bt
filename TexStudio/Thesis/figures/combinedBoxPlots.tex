@@ -1,0 +1,16 @@
+\begin{tikzpicture}
+            \begin{axis}[
+                boxplot/draw direction=y,
+                xtick={1,2,3,4,5},
+                xticklabels={{$\timeForOperationOnStructure{\contains}{R}$},{$\timeForOperationOnStructure{\select}{S}$},{$\timeForOperationOnStructure{\access}{O}$},{$\timeForOperationOnStructure{\compare}{T}$},{$\timeForOperationOnStructure{check}{H}$}},
+                x tick label style={align=center},
+                ylabel={Measured Time (ns)},
+            ]
+            \addplot+ [draw=black, boxplot prepared={draw position=1, lower whisker=28.3553, lower quartile=101.1695, median=132.173, upper quartile=195.5475, upper whisker=335.796}] coordinates {};
+\addplot+ [draw=black, boxplot prepared={draw position=2, lower whisker=8.29739, lower quartile=11.576775000000001, median=13.82165, upper quartile=19.037574999999997, upper whisker=30.1998}] coordinates {};
+\addplot+ [draw=black, boxplot prepared={draw position=3, lower whisker=0.61052, lower quartile=2.114865, median=3.878525, upper quartile=5.1838049999999996, upper whisker=9.77881}] coordinates {};
+\addplot+ [draw=black, boxplot prepared={draw position=4, lower whisker=2.30586, lower quartile=4.35256, median=6.587795, upper quartile=18.558425, upper whisker=39.858}] coordinates {};
+\addplot+ [draw=black, boxplot prepared={draw position=5, lower whisker=2.33915, lower quartile=16.5644, median=23.736800000000002, upper quartile=27.63425, upper whisker=44.0691}] coordinates {};
+\end{axis}
+            \end{tikzpicture}
+            

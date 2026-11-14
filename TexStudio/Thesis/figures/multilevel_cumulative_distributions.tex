@@ -17,32 +17,32 @@
 			legend to name=sharedlegend,
 			legend columns=3,
 			]
-		\addplot table[col sep=comma, x=frequency, y=F_M_1]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_1]
 		{./data/F_M_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv};
 		\addlegendentry{Level $1$}
-		\addplot table[col sep=comma, x=frequency, y=F_M_2]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_2]
 		{./data/F_M_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv};
 		\addlegendentry{Level $2$}
-		\addplot table[col sep=comma, x=frequency, y=F_M_3]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_3]
 		{./data/F_M_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv};
 		\addlegendentry{Level $3$}
 		
 		% Second panel
 		\nextgroupplot[title={Cod}]
-		\addplot table[col sep=comma, x=frequency, y=F_M_1]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_1]
 		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
-		\addplot table[col sep=comma, x=frequency, y=F_M_2]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_2]
 		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
-		\addplot table[col sep=comma, x=frequency, y=F_M_3]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_3]
 		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
 		
 		% Third panel
 		\nextgroupplot[title={Human}]
-		\addplot table[col sep=comma, x=frequency, y=F_M_1]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_1]
 		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
-		\addplot table[col sep=comma, x=frequency, y=F_M_2]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_2]
 		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
-		\addplot table[col sep=comma, x=frequency, y=F_M_3]
+		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_3]
 		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
 		
 	\end{groupplot}

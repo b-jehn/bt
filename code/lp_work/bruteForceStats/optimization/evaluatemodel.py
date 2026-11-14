@@ -67,6 +67,13 @@ forcedThresholds = []
 evaluation_results = Path(f"evaluation_results")
 evaluation_results.mkdir(exist_ok=True, parents=True)
 
+def floatToTex(value) -> str:
+    if np.isnan(value):
+        return r"\mathrm{NaN}"
+    else:
+        mantissa, exponent = f"{value:.3e}".split("e")
+        return rf"${mantissa} \times 10^{{{int(exponent)}}}$"
+
 for sequence_name in GENOMES:
     sequence_path = f'../../../rshash/DNA_datasets/{sequence_name}.fa'
     sequence_length = 0
@@ -151,7 +158,7 @@ for sequence_name in GENOMES:
         ##############
         ##############
         # Collect errors by stats class, field, and level.
-        # Generative AI use Disclaimer:
+        # Generative "AI" use Disclaimer:
         #   the following code for computing the squarred error for every pai of predicted and observed stats
         #   and every value predicted was generated using GPT-6 Luna
         ##############
@@ -208,7 +215,7 @@ for sequence_name in GENOMES:
     genome_plots.mkdir(exist_ok=True, parents=True)
     ##############
     # Compare predicted vs observed lookup time
-    # Generative AI use Disclaimer:
+    # Generative "AI" use Disclaimer:
     #   the following code for plotting the observed vs the the predicted VALUES was generated using GPT-6 Luna
     ##############
     # extract stats pairs from predicted_AND_observed_stats
@@ -250,7 +257,7 @@ for sequence_name in GENOMES:
                         data["observed"].append(observed_value)
                         data["diff"].append(observed_value-predicted_value)
                         
-    correlation_stats_path = sequence_path / f"correlation_stats_{sequence_name}.csv"
+    correlation_stats_path = evaluation_results / f"correlation_stats_{sequence_name}.csv"
 
     fieldnames = []
     correlation_coefficients = []
@@ -286,11 +293,12 @@ for sequence_name in GENOMES:
         rawErrMedian_tex = f"$\\mathbb{{E}}(Pred-Obs)$"
         absErrMedian_tex = f"$\\mathbb{{E}}(|Pred-Obs|)$"
         sqrdErrMedian_tex = f"$\\mathbb{{E}}(Pred-Obs)^2$"
-        headers = ["metric", corr_coeff_tex, rawErrMedian_tex, absErrMedian_tex, sqrdErrMedian_tex]
+        headers = ["variable", corr_coeff_tex, rawErrMedian_tex, absErrMedian_tex, sqrdErrMedian_tex]
         writer = csv.writer(csvfile)
         writer.writerow(headers)
-        writer.writerows([field_name_to_tex[name], *(f"{x:.2e}" for x in (coeff, raw_e_m, abs_e_m, sqrd_e_m))] for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians))
-     
+        for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians):
+            writer.writerow([field_name_to_tex[name], "%.4f" % coeff] + [floatToTex(value) for value in (raw_e_m, abs_e_m, sqrd_e_m)])
+
     """
     //transpose stats   
     stats_evaluating_space_consumption_path = sequence_path / f"stats_evaluating_space_consumption{sequence_name}.csv"
@@ -364,7 +372,7 @@ for sequence_name in GENOMES:
     
     ##############
     # Make one box plot per field/level pair. 
-    # Generative AI use Disclaimer:
+    # Generative "AI" use Disclaimer:
     #   the following code for creating box plots of the squarred_errors was generated using GPT-6 Luna
     ##############
     for error_type in ("absolute_error", "squared_error"):

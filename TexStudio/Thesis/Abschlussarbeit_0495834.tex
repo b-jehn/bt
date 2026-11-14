@@ -47,16 +47,16 @@
 \usepackage[pdfdisplaydoctitle,menucolor=orange!40!black,filecolor=magenta!40!black,urlcolor=blue!40!black,linkcolor=red!40!black,citecolor=green!40!black,colorlinks]{hyperref}
 \hypersetup{pdftitle={\mytitle}, pdfauthor={\myname}}
 
-
-%%=========== Timestamp on each page. Helpful to keep track of versions. 
-%%=========== Remove in final thesis!!!
-%\usepackage{scalefnt}
-%\usepackage{scrtime}
-%\usepackage{eso-pic}
-%\AddToShipoutPicture{
-%	\put(20,50){\textcolor[gray]{0.5}{\begin{tabular}{l} \thesisType{} \hspace{1cm} \myname \\ \mytitle{} (Compile date: \today/\thistime)\end{tabular}}}
-%}
-%%=========== End Timestamp
+%Stop figure captions from being indented
+\usepackage{caption}
+\captionsetup[figure]{
+	format=plain,
+	singlelinecheck=false
+}
+\captionsetup[table]{
+	format=plain,
+	singlelinecheck=false
+}
 
 
 %=========== graphics, in particular tikz
@@ -443,7 +443,7 @@ $\timeForOperationOnStructure{\select}{S}$,
 $\timeForOperationOnStructure{\access}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$,
 $\timeForOperationOnStructure{check}{H}$
-needed for a contains rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
+needed for a rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$. The computation of the minimizer distribution as well as the times needed to perform these actions on the specified data structures is outlined in \cref{chap:experiments}.
 
 \section{Model for One Level}\label{sec:minlp_oneLevel}
 Aiming to improve readability, we omit the superscript index indicating an instances belonging to a specific level as only one level is considered in this section e.g. the minimizer length is simply referred to as $\minimizerLength$ instead of $\minimizerLength^1$.
@@ -867,11 +867,11 @@ Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each
 \creflabelformat{figure}{Figure}
 \crefalias{Figure}{figure}
 
-\subsection*{Minimizer Distribution}
+\subsection{Minimizer Distribution}
 \begin{figure} 
 	\centering
 	\input{./figures/multilevel_cumulative_distributions.tex}
-	\caption{The cumulative percentage $F_M$ of minimizers with frequency up to $f$ on each level for the raw genomes Kestrel, Cod and Human. The values were measured using minimizers of length $17$ and the threshold $32$ for every level.} \label{fig:multilevelDistribution}
+	\caption{The percentage $F_M$ of minimizers with frequency up to $f$ on each level for the raw genomes Kestrel, Cod and Human. The percentages were measured using minimizers of length $17$ and the threshold $32$ for every level. Recall that the percentages $F_M$ are defined in relation to the number of k-mers left over on each level - not to the total number of k-mers (\cref{sec:minimizerDistribution_severalLevels}).} \label{fig:multilevelDistribution}
 \end{figure}
 Recall that RSHash uses several levels aiming to repeatedly take advantage of the sparse and skewed distribution of minimizers. This requires using a different hash functions to compute minimizers on each level as using the same function on every level would mean that give equal minimizer length and threshold, those minimizers which are \frequent on a level would also be \frequent on the next.
 We observe that despite of the minimizers being computed using a different hash function, their distributions on levels $\level > 1$ remain highly dependent on the distributions on all previous levels.  \Cref{fig:multilevelDistribution} shows this for the raw genomes using the level parameters $\levelParameters{\level} = (17,17,17,32,32,32)$.\\
@@ -879,39 +879,89 @@ We observe that despite of the minimizers being computed using a different hash 
 It seems that super-k-mers with \frequent minimizers on one level are more likely to also have \frequent minimizers on subsequent levels.
 A possible explanation for this observation are repetitively regions of the sequence in which a subsequences shorter than $k$ repeats many times over. K-mers in such regions would be likely to share the same minimizer regardless of the hash function used to compute it, resulting in those minimizers being frequent on every level. This could be verified by searching for such repeating substrings in those super-k-mers which are frequent on all levels.
 
-\subsection*{Operation Times}
+\subsection{Operation Times} \label{subsec:observationsOperationTimes}
+\begin{figure}
+	\centering
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\resizebox{\linewidth}{!}{%
+			\input{./figures/combinedBoxPlots.tex}
+		}
+		%\caption*{}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\resizebox{\linewidth}{!}{%
+			\input{./figures/RcontainsBoxPlot.tex}
+		}
+		%\caption*{}
+	\end{minipage}
+	\caption{Box plots showing the distribution of measured operation times for all considered level parameters across all benchmark datasets.
+		The left plot shows the combined distribution of the measured times 
+		$\timeForOperationOnStructure{\contains}{R}$,
+		$\timeForOperationOnStructure{\select}{S}$,
+		$\timeForOperationOnStructure{\access}{O}$,
+		$\timeForOperationOnStructure{\compare}{T}$,
+		$\timeForOperationOnStructure{check}{H}$
+		across all levels.
+		The right plot shows the distribution of the measured times 
+		$\timeForOperationOnStructure{\contains}{R^1}$,
+		$\timeForOperationOnStructure{\contains}{R^2}$,
+		$\timeForOperationOnStructure{\contains}{R^3}$
+		needed for a rank query on bitvector $R$ on level one, two or three.}
+	\label{fig:measureOperationTimes}
+\end{figure}
 Recall that times 
 $\timeForOperationOnStructure{\contains}{R}$,
 $\timeForOperationOnStructure{\select}{S}$,
 $\timeForOperationOnStructure{\access}{O}$,
-$\timeForOperationOnStructure{\compare}{T}$,
+$\timeForOperationOnStructure{\compare}{T}$ and
 $\timeForOperationOnStructure{check}{H}$
-needed for a contains rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$ are part of the model input and considered to be constant.\\
-The measured times for these operations show that they actually vary in dependence of the level parameters. This is expected as \todo{...}
+needed for a rank query on bitvector $R$, a select queries on bitvector $S$, accessing an offset in $O$, a comparison with the text $T$ at a random offset and checking whether a key exists in the hash set $H$ are part of the model input and considered to be constant.\\
+The distributions of the measured times for these operations (\cref{fig:measureOperationTimes}) show that they do not only depend on the level parameters but also substantially vary between levels. The time $\timeForOperationOnStructure{\contains}{R}$ for a rank query shows the highest variance with the lower ($101.17ns$) and upper ($195.55ns$) quartile across all measured values being almost $100ns$ apart. Its median across all levels is approximately $132.17ns$ and significantly varies when separating the measured values by levels one ($215.03ns$), two ($119.86ns$) and three ($100.51ns$).\\
+The distribution of the measured times for $\timeForOperationOnStructure{\select}{S}$ and
+$\timeForOperationOnStructure{\access}{O}$ have significantly smaller variances but also show declining medians for rising levels. This dependency of the level can be explained by the choice of only considering non-decreasing level parameters. This means that the vectors $R$, $S$ and $O$ on higher levels are significantly smaller than those on lower ones, allowing for faster query times.\\
+The times $\timeForOperationOnStructure{\compare}{T}$ to compare a k-mer with the text at an offset and $\timeForOperationOnStructure{check}{H}$ to check whether the hash set contains a k-mer also appear to depend on the level parameters.
 
-\todo[inline]{Hier kommt noch jeweils ein box plot die Verteilung der gemessenen Werte!!!}
-
-Based on these measurements we use the following values:
+These observations imply that the choice of using constant values for the times required for each operation is likely to lead to inaccuracies regarding the modeled lookup time $\timeForOperationOnStructure{lookup}{}$. Based on the measured medians we use the following times for the model input:
 \begin{align}
-	\timeForOperationOnStructure{\contains}{R^l} &= ns\\
-	\timeForOperationOnStructure{\select}{S^l} &= ns  \\
-	\timeForOperationOnStructure{\access}{O^l} &= ns  \\
-	\timeForOperationOnStructure{\compare}{T} &= ns   \\
-	\timeForOperationOnStructure{check}{H} &= ns
+	\timeForOperationOnStructure{\contains}{R^l} &= 132.17ns\\
+	\timeForOperationOnStructure{\select}{S^l} &= 13.82ns  \\
+	\timeForOperationOnStructure{\access}{O^l} &= 3.88ns  \\
+	\timeForOperationOnStructure{\compare}{T} &= 6.59ns   \\
+	\timeForOperationOnStructure{check}{H} &= 23.74ns
 \end{align}
-\todo[inline]{welche werden final genuzt?}
 
 \section{Model Accuracy}
-We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute model input, the actual space consumption and the measured operation times for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
-For each raw and preprocessed sequence and each combination of the level parameters considered, we then use a modified version of the proposed model which forces the exact combination of level parameters and returns the modeled space consumption and lookup time.
+\newcommand{\NAMEcorrCoef}{r}
+\newcommand{\NAMEmeanErrRaw}{\bar{\mathcal{E}}}
+\newcommand{\NAMEmeanErrAbs}{\bar{|\mathcal{E}|}}
+\newcommand{\NAMEmeanErrSqrd}{\bar{\mathcal{E}^2}}
+\newcommand{\corrCoef}{\NAMEcorrCoef = cov(Pred,Obs)/(\sigma_{Pred}*\sigma_{Obs})}
+\newcommand{\meanErrRaw}{\NAMEmeanErrRaw = \mathbb{E}(Pred-Obs)}
+\newcommand{\meanErrAbs}{\NAMEmeanErrAbs = \mathbb{E}(|Pred-Obs|)}
+\newcommand{\meanErrSqrd}{\NAMEmeanErrSqrd = \mathbb{E}((Pred-Obs)^2)}
+\begin{table}
+	\centering
+	\input{./figures/modelErrorOverview.tex}
+	\caption{MINLP evaluation for the variables modeling total bits per k-mer $bpk_{total}$ and lookup time $\timeForOperationOnStructure{lookup}{}$. The tables show the predicted (modeled) values $Pred$ compared against the observed (measured) ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\NAMEcorrCoef$, the mean error $\NAMEmeanErrRaw$, the mean absolute error $\NAMEmeanErrAbs$ and the mean squared error $\NAMEmeanErrSqrd$ for each of the two variables. All values have been rounded to four significant figures.} 
+	\label{tab:modelErrorOverview}
+\end{table}
+We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute the model input and measure the actual space consumption and lookup time for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
+We then use a modified version of the proposed MINLP which forces an exact combination of level parameters to compute the modeled space consumption and lookup time for each combination of the level parameters considered on each raw and preprocessed sequence. We also refer to the modeled values as $Pred$ (predicted) and to the measured values as $Obs$ (observed).\\
+We evaluate the models accuracy by comparing the predicted and observed values of the modeled variables using several statistical measures. Firstly we compute the (Pearson) correlation coefficient $\corrCoef$ for each variable and dataset. This coefficient measures linear dependence and takes a value in $[-1,1] \cap \RR$ with coefficients close to $\pm 1$ indicating a strong correlation of the predicted and measured values whilst a coefficient close to $0$ can be interpreted as little to no correlation.\\
+Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether variables are being over or underestimated, the mean absolute error $\meanErrAbs$ to avoid cancellation of positive and negative errors and the mean squared error $\meanErrSqrd$ to indicate substantial outliers which would not show in $\NAMEmeanErrRaw$ and $\NAMEmeanErrAbs$. 
+\cref{tab:modelErrorOverview} shows the these measures for the predicted and observed values of the lookup time total bits per k-mer across all datasets.
 
 \subsection{Lookup Time}
+The correlation coefficients of the lookup times predicted and observed values show that they correlate only weakly for the Kestrels genome (Raw: $\NAMEcorrCoef = 0.4840$, Unitigs: $\NAMEcorrCoef = 0.3947$) and little to none with for the Cods (Raw: $\NAMEcorrCoef = 0.1406$, Unitigs: $\NAMEcorrCoef = -0.0210$) and Humans (Raw: $\NAMEcorrCoef = 0.2828$, Unitigs: $\NAMEcorrCoef = 0.2914$) genome. A likely explanation for this is the choice of using constant times $\timeForOperationOnStructure{\contains}{R}$,
+$\timeForOperationOnStructure{\select}{S}$,
+$\timeForOperationOnStructure{\access}{O}$,
+$\timeForOperationOnStructure{\compare}{T}$ and
+$\timeForOperationOnStructure{check}{H}$ in the proposed MINLP. These values actually vary significantly for different level parameters, levels and genomes as outlined in \cref{subsec:observationsOperationTimes}.\\
+Not only do the measured and 
 
 \subsection{Space Consumption}
-$r$, $\mathbb{E}(Pred-Obs)$, $\mathbb{E}(|Pred-Obs|)$
-\\
-\input{./figures/correlation_stats_overview.tex}
-\todo[inline]{Die Tabellen fasse ich noch kompakter zusammen}
 \todo[inline]{Absatz zu $bpk_{total}$ schreiben}
 For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $..$\todo{max error eintragen}.\\
 The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\
@@ -944,9 +994,15 @@ In another approach we will try to approximate the distributions on higher level
 	\item Locate benötigt eine Liste mit allen offsets: $bpk_H = (1-\varCDF{K}) \cdot \frac{(64 + (log_2|T|\cdot frequency))}{\alpha}$
 \end{itemize}
 
-\textbf{Extrapolation Minimizer Distributions:} As the minimizer distribution on each level is affected by that on the previous ones, it might be possible to only compute a selection of distributions and extrapolate the remaining ones. This 
+\textbf{Model the times} $\timeForOperationOnStructure{\contains}{R}$,
+	$\timeForOperationOnStructure{\select}{S}$,
+	$\timeForOperationOnStructure{\access}{O}$,
+	$\timeForOperationOnStructure{\compare}{T}$ and
+	$\timeForOperationOnStructure{check}{H}$ instead of passing constant parameters.
 
-\textbf{Sub sampling}
+\textbf{Extrapolation minimizer distributions:} As the minimizer distribution on each level is affected by that on the previous ones, it might be possible to only compute a selection of distributions and extrapolate the remaining ones. This 
+
+\textbf{Sub sampling:}
 For large genomes, the computing of the model input could be sped up  by randomly sub sampling a certain percentage of the genomes k-mers and computing the minimizer distributions on those. A smaller percentage would then mean a faster computation at the cost of losing accuracy.
 
 \chapter{Conclusion}
@@ -988,5 +1044,10 @@ This approach is guaranteed to compute correct minimizer distributions for every
 However, this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
 \printbibliography[heading=bibintoc,title={Bibliography}]
+
+\appendix
+\chapter{Model Evaluation Tables}
+For every raw and preprocessed genome, the following tables show the comparison of the modeled (predicted: $Pred$) values against the measured (observed: $Obs$) ones. Specifically each table shows the correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ for each of the variables $bpk_R$, $bpk_S$ , $bpk_O$, , $bpk_T$, $bpk_H$, $bpk_{total}$ and $\timeForOperationOnStructure{lookup}{}$:
+\input{./figures/correlation_stats_overview.tex}
 
 \end{document}

@@ -165,11 +165,11 @@ def MINLP(
             scip.addCons(t_compare_T_vars[l] == operationTimes.Tcompare[l])
             scip.addCons(t_access_H == operationTimes.Haccess)
         else: #fixed, really inaccurate values
-            scip.addCons(t_contains_R_vars[l] == 230.0)
-            scip.addCons(t_select_S_vars[l] == 22.0)
-            scip.addCons(t_access_O_vars[l] == 6.0)
-            scip.addCons(t_compare_T_vars[l] == 18.0)
-            scip.addCons(t_access_H == 12.0)
+            scip.addCons(t_contains_R_vars[l] == 132.173)
+            scip.addCons(t_select_S_vars[l] == 13.82165)
+            scip.addCons(t_access_O_vars[l] == 3.878525)
+            scip.addCons(t_compare_T_vars[l] == 6.587795)
+            scip.addCons(t_access_H == 23.7368)
     
         scip.addCons(t_level_vars[l] == 2*t_select_S_vars[l] + ((f_avg_vars[l]+1)/2)*(t_access_O_vars[l]+t_compare_T_vars[l]))
 
