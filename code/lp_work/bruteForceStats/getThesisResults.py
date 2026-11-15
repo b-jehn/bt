@@ -9,7 +9,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 
 from optimization.cascadingStats import *
-from optimization.MINLP import *
+#from optimization.MINLP import *
 
 
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
@@ -29,6 +29,7 @@ GENOME_NAMES = ["Kestrel (Raw)",
                 "Cod (Unitigs)",
                 "Human (Raw)",
                 "Human (Unitigs)",]
+
 
 MINIMIZER_LENGTHS_CONSIDERED = [m for m in range(15,26,2)]
 THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]  
@@ -166,7 +167,7 @@ def getAllOperationTimes(stats_directory: Path, thesis_results_path: Path):
 
     # Generative "AI" use Disclaimer:
     #   the following function was generated using GPT-6 Luna
-def writeModelErrorOverview(result_path: Path, columns=1):
+def writeModelErrorOverview(result_path: Path, columns=1, withMeasuredOperationTimes=False):        
     variables = [
         r"$\timeForOperationOnStructure{lookup}{}$",
         r"$bpk_{total}$",
@@ -181,11 +182,16 @@ def writeModelErrorOverview(result_path: Path, columns=1):
     ]
 
     # Load each genome's CSV rows once.
+    stats_prefix=""
+    if withMeasuredOperationTimes:
+        stats_prefix="WITH_MEASURED_OPERATION_TIMES_"
+        
     rows_by_genome = {}
     for genome in GENOMES:
         csv_path = Path(
-            f"./optimization/evaluation_results/correlation_stats_{genome}.csv"
+            f"./optimization/{stats_prefix}evaluation_results/correlation_stats_{genome}.csv"
         )
+        print(f"getting stats from: {csv_path}")
         with csv_path.open(newline="", encoding="utf-8") as f:
             rows_by_genome[genome] = {
                 row["variable"]: row
@@ -198,12 +204,23 @@ def writeModelErrorOverview(result_path: Path, columns=1):
         r"\toprule",
     ]))
     for variable in variables:
-        lines = [
-            rf"\textbf{{{variable}}}" + " &" * (len(headers) - 1) + r" \\",
-            r"\midrule",
-            " & ".join(headers) + r" \\",
-            r"\midrule",
-        ]
+        table_header_suffix = ""
+        lines=[]
+        if withMeasuredOperationTimes:
+            if not variable == r"$\timeForOperationOnStructure{lookup}{}$":
+                continue
+            table_header_suffix = " - W.M.O.T."
+            lines = [
+                " & ".join(headers) + r" \\",
+                r"\midrule",
+            ]
+        else:
+            lines = [
+                rf"\textbf{{{variable}}}{table_header_suffix}" + " &" * (len(headers) - 1) + r" \\",
+                r"\midrule",
+                " & ".join(headers) + r" \\",
+                r"\midrule",
+            ]
 
         for dataset, genome in zip(GENOME_NAMES, GENOMES):
             rows = rows_by_genome[genome]
@@ -225,7 +242,7 @@ def writeModelErrorOverview(result_path: Path, columns=1):
                 f"{dataset} & {r_value} & {mean_error} & {mean_abs_error} & {mean_squared_error} \\\\"
             )
             
-        if not variable == variables[-1]:
+        if not withMeasuredOperationTimes and not variable == variables[-1]:
             lines.append(r"\midrule")
             lines.append(r"\midrule")
         
@@ -236,13 +253,18 @@ def writeModelErrorOverview(result_path: Path, columns=1):
         r"\end{tabular}",
     ]))
 
-    with (result_path / "modelErrorOverview.tex").open("w", encoding="utf-8") as f:
+    stats_name = "modelErrorOverview.tex"
+    if withMeasuredOperationTimes:
+        stats_name = "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"
+    
+    separator = "\n"
+    with (result_path / stats_name).open("w", encoding="utf-8") as f:
         f.write(separator.join(tables))
         
-def writeSortedLookupTimes(stats_directory: Path, result_path: Path):
+def writeSortedLookupTimes(stats_directory: Path, result_path: Path, start_slice_genomes=0, end_slice_genomes=[len(GENOMES)]):
     sortedLookupTimes = {}
     
-    for genome in GENOMES:
+    for genome in GENOMES[start_slice_genomes:end_slice_genomes]:
         print(f"getting lookup times for: {genome}")
         genome_stats_path = stats_directory / f"{genome}"  #directory for the stats of a specific genome
         if(not genome_stats_path.is_dir()):               
@@ -303,9 +325,11 @@ def main() -> None:
         return
     #getAllOperationTimes(stats_directory, thesis_results_path)
     
-    #writeModelErrorOverview(thesis_results_path, columns=1)
+    writeModelErrorOverview(thesis_results_path, columns=1)
     
-    writeSortedLookupTimes(stats_directory, thesis_results_path)
+    writeModelErrorOverview(thesis_results_path, columns=1, withMeasuredOperationTimes=True)
+    
+    #writeSortedLookupTimes(stats_directory, thesis_results_path, start_slice_genomes=4)
     
     
 

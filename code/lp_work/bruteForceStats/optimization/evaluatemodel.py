@@ -64,7 +64,7 @@ for t1 in THRESHOLDS_CONSIDERED:
 forcedMinimizerLength = []
 forcedThresholds = []
 
-evaluation_results = Path(f"MEASURED-TIMES_evaluation_results")
+evaluation_results = Path(f"evaluation_results")
 evaluation_results.mkdir(exist_ok=True, parents=True)
 
 def floatToTex(value) -> str:
@@ -130,8 +130,7 @@ for sequence_name in GENOMES:
                 distribution_stats=genome_stats,
                 load_factor=LOAD_FACTOR,
                 nonDecreasingParameters=NON_DECREASING_PARAMETERS,
-                forceParameters=[forcedMinimizerLengths,forcedThresholds],
-                operationTimes=observedTimes)
+                forceParameters=[forcedMinimizerLengths,forcedThresholds])
             
             predicted_AND_observed_stats.append((predictedSpace, observedSpace))
             predicted_AND_observed_stats.append((predictedTimes, observedTimes))

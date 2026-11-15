@@ -1,7 +1,7 @@
 \documentclass[a4paper,titlepage,onecolumn,oneside,12pt,nenglish,titlepage=firstiscover]{scrbook}
 % Um während der Entwurfsphase weniger leere Seiten zu haben, kann man oben "twoside" durch "oneside" ersetzen.
 
-%\usepackage{todonotes} % disable this package in final thesis!
+\usepackage{todonotes} % disable this package in final thesis!
 
 \usepackage[english]{babel} % language
 \usepackage[utf8]{inputenc} % encoding
@@ -47,8 +47,9 @@
 \usepackage[pdfdisplaydoctitle,menucolor=orange!40!black,filecolor=magenta!40!black,urlcolor=blue!40!black,linkcolor=red!40!black,citecolor=green!40!black,colorlinks]{hyperref}
 \hypersetup{pdftitle={\mytitle}, pdfauthor={\myname}}
 
-%Stop figure captions from being indented
+%Caption formatting
 \usepackage{caption}
+\usepackage[font=small,labelfont=bf]{caption}
 \captionsetup[figure]{
 	format=plain,
 	singlelinecheck=false
@@ -189,7 +190,7 @@ Faculty IV: Electrical Engineering and Computer Science\\
 \textbf{Freie Universität Berlin}\\
 Department of Mathematics and Computer Science\\
 Algorithmic Bioinformatics\\
-%\todo[inline]{welche uni angeben, welche reihenfolge..?}
+\todo[inline]{welche uni angeben, welche reihenfolge..?}
 \end{minipage}
 \hfill
 \begin{minipage}{0.16\textwidth}
@@ -247,10 +248,10 @@ authority.\\
 
 \newpage
 \section*{Abstract}
-%\todo[inline]{Draft}
+\todo[inline]{Draft}
 RSHash is a static, compressed data structure for k-mers that answers lookup queries using a leveled minimizer scheme with thresholds to cut off frequent minimizers. Building it requires specifying a minimizer lengths and a threshold for every level used. Choosing optimal parameters to build RSHash for a given genetic sequence and specification of optimality remains an open problem as both its space consumption and the lookup time depend on these parameters because they affect the distribution of minimizers. To address this, we first define properties of these distributions which are specifically relevant to the problem and propose a mixed integer non linear program (MINLP) modeling the space consumption and lookup time of RSHash aiming to combine it with a solver to find optimal parameters. We evaluate the proposed MINLP for a selection of benchmark datasets and can show that the model is highly accurate regarding RSHashs space consumption but less so for the lookup time. Furthermore, time complexity to compute the distribution stats required to run the model grow exponentially with the number of considered levels which means a similar complexity to that of a brutefore approach. 
 \section*{Zusammenfassung}
-%\todo[inline]{Passt so? => Ins Deutsche übersezten}
+\todo[inline]{Passt so? => Ins Deutsche übersezten}
 
 
 \newpage
@@ -330,7 +331,8 @@ Let $\numberOfLevels \in \NN^+$ be the number of levels specified. We refer to t
 We use the tuple $\levelParameters{\level} := (\minimizerLength^1, ..., \minimizerLength^\level, \threshold^1, ..., \threshold^\level) \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ to denote the level parameters up to level $\level$. For a specified tuple $\levelParameters{\level}$ of level parameters we use $\levelParameters{\level-1}$ to denote the level parameters $(\minimizerLength^1, ..., \minimizerLength^{\level-1}, \threshold^1, ..., \threshold^{\level-1})$ up to the previous level. Furthermore, we introduce the operator $\parameterAccess{\level}{\minimizerLength}{i} = \minimizerLength^i$ to denote retrieving the minimizer length specified for level $i$ from the level parameters and analogously $\parameterAccess{\level}{\threshold}{i}  = \threshold^i$.\\
 We write $\sequences{\level-1} := \{S^\level_1,S^\level_2,...,S^\level_n\}$ to denote the set of sequences on level $\level$ in dependence of the level parameters $\levelParameters{\level-1}$ on the previous levels i.e. the k-mers which have \infrequent minimizers on all previous levels. The full set of input sequences when building RSHash do not depend on any parameters, are denoted with $\sequences{0}$ and are sometimes referred to as the input "text".\\
 Let $\kmer \in \Sigma^{k}$ be a k-mer. The computation of its minimizer $\minimizerOf{\kmer}{\level}$ on level $l$ depends both on the specified minimizer length $\minimizerLength^\level$ as well as the hash function $\hashfunction{\level}$ on that level, which is not dependent of the level parameters but unique for every level. We denote the minimizers frequency with $\frequencyOf{\minimizerOf{\kmer}{\level}}$ which tells the combined number of the minimizer occurrences in a given set of input sequences.\\
-We call the minimizer of $\kmer$ \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the specified threshold on level $\level$. Minimizers with frequencies larger than the threshold are referred to as being \frequent.
+We call the minimizer of $\kmer$ \infrequent on level $\level$ only if $1 \leq \frequencyOf{\minimizerOf{\kmer}{\level}} \leq \threshold^\level$ holds i.e. the minimizer occurs at least once but no more than the specified threshold on level $\level$. On the other hand, \frequent minimizers are those with frequencies larger than the threshold.\\
+Let $B \in \{0,1\}^n$ be a one-indexed bitvector. For an index $i \in \NN^+$ with $i \leq n$, the vectors rank $\rank_B(i) = \sum_{j=1}^{i} B[j]$ tells the number of ones in $B$ up to index $i$. The select operation $\select_S(r) = min\{i \mid \rank_B(i) = r\}$ tells the index of the $r$th $1$ in $B$.
 
 \chapter{Sequence Statistics}\label{chap:sequenceStatistics}
 As outlined in the \cref{chap:introduction}, the space consumption and query time of RSHash are highly dependent on the choice of level parameters as those influence the distributions of minimizers on all levels. We define properties of the minimizer distribution which will be needed for modeling the space consumption and lookup time in \cref{chap:minlp}. Specifically relevant for this is the behavior of minimizer distributions across several levels, which is unique to the approach proposed by \citet{schulte-mattler_rshash_2026} and therefore not considered in previous works.
@@ -395,11 +397,17 @@ Its probability distribution $\probabilityDistribution{\manualZV{K}{\levelParame
 	\CDF{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}(f) &= \mathbb{P}(\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level} \leq f) = \sum_{i=1}^f \probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength^\level}}(i)
 \end{align}
 
-Let $\levelParameters{\level}$ be a combination of level parameters on a level $\level$. Recall that we use $\parameterAccess{\level}{\minimizerLength}{\level}$ to denote retrieving the minimizer length specified for level $\level$ from the level parameters and analogously for $\parameterAccess{\level}{\threshold}{\level}$. For better readability we introduce a more compact notation to denote the probability $\CDF{\compactZV{M}{\levelParameters{\level}}}$ of a minimizer being \infrequent on level $\level$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ of a k-mer having an \infrequent minimizer on that level, both in dependence of all level parameters:
+Let $\levelParameters{\level}$ be a combination of level parameters on a level $\level$. Recall that we use $\parameterAccess{\level}{\minimizerLength}{\level}$ to denote retrieving the minimizer length specified for level $\level$ from the level parameters and analogously for $\parameterAccess{\level}{\threshold}{\level}$. For better readability we introduce a more compact notation to denote accessing a specific value of the probability distributions and their cumulative distribution functions in dependence of $\levelParameters{\level}$:
 \begin{align}
-	\CDF{\compactZV{M}{\levelParameters{\level}}} &= \CDF{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})\\
+	\probabilityDistribution{\compactZV{M}{\levelParameters{\level}}} &= \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})
+	\\
+	\probabilityDistribution{\compactZV{K}{\levelParameters{\level}}} &= \probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})
+	\\
+	\CDF{\compactZV{M}{\levelParameters{\level}}} &= \CDF{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})
+	\\
 	\CDF{\compactZV{K}{\levelParameters{\level}}} &= \CDF{\manualZV{K}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(\parameterAccess{\level}{\threshold}{\level})
 \end{align}
+For example, $\CDF{\compactZV{M}{\levelParameters{\level}}}$ denotes the probability of a minimizer being \infrequent on level $\level$ in dependence of the level parameters on every level as specified in $\levelParameters{\level}$.
 
 \section{Average Frequencies} \label{sec:averagefrequencies}
 Let $\Omega_{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}}$ be the sample space of the random variable $\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength^\level}$ i.e. the set which contains all frequencies $f$ for which there is at least one minimizer $\minimizer$ on level $\level$ which occurs exactly $f$ times:
@@ -418,7 +426,7 @@ More relevant to the optimization of level parameters is the average frequency o
 	\sum\limits_{f=1}^{\threshold^\level} \probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\parameterAccess{\level}{\minimizerLength}{\level}}}(f) \cdot f 
 \end{equation}
 
-\section{Numbers of Distinct \textit{Infrequent} Minimizers}
+\section{Numbers of Distinct \textit{Infrequent} Minimizers} \label{sec:nDIM}
 \newcommand{\numberOfDistinctMinimizers}[1]{n_{DIM}(#1)}
 \newcommand{\varNumberOfDistinctMinimizers}{\textbf{n}_{\textbf{DIM}}}
 We define the number of distinct \infrequent minimizers $\numberOfDistinctMinimizers{\levelParameters{\level}}$ which also depend on all level parameters $\levelParameters{\level}$ of a level $\level$.  Their value can be computed py multiplying the total number of distinct minimizers on a level with the percentage of \infrequent ones:
@@ -426,6 +434,42 @@ We define the number of distinct \infrequent minimizers $\numberOfDistinctMinimi
 	\numberOfDistinctMinimizers{\levelParameters{\level}} = |\distinctMinimizers{\level}| \cdot \CDF{\compactZV{M}{\levelParameters{\level}}}
 \end{equation}
 
+\section{Computing the Sequence Statistics}
+\begin{algorithm} 
+	\begin{algorithmic} 
+		\Input $
+		\text{level } \level,
+		\text{max Level } \numberOfLevels,
+		\text{level parameters } \levelParameters{\level-1},
+		\text{sequences } \sequences{\level-1}
+		$
+		\Function{recursiveMinimizerDistribution}{$\level, \numberOfLevels, \levelParameters{\level-1} \sequences{\level-1}$}
+		\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
+		\For{$\minimizerLength \in \possibleMinimizerLengths$}
+		\State $\probabilityDistribution{\manualZV{M}{\levelParameters{\level-1}}{\minimizerLength}},
+		\probabilityDistribution{\manualZV{K}{\levelParameters{\level-1}}{\minimizerLength}} \gets getDistribution(\hashfunction{\level}, \sequences{\level-1}, m)$ \Comment $\hashfunction{\level}:$ hash function on level $\level$
+		
+		\For{$\threshold \in \possibleThresholds$}
+		\State $\levelParameters{\level} \gets extend(\levelParameters{\level-1}, m,t)$	\Comment $extend((m^1,t^1), m^2,t^2) = (m^1,m^2,t^1,t^2)$
+		\State $\sequences{\level} \gets getFrequentKmers(\level, \sequences{\level-1}, \minimizerLength, \threshold)$
+		\State 
+		\Call{recursiveMinimizerDistribution}{$\level+1, \numberOfLevels, \levelParameters{\level}, \sequences{\level}$}
+		
+		\EndFor
+		\EndFor
+		\EndFunction
+	\end{algorithmic}
+	\caption{Computation of Minimizer Distribution} \label{alg:recursiveDistributionComputation}
+\end{algorithm}
+Computing the sequence statistics for a specified sequence $\sequences{0}$ requires the empirical probability distributions $\probabilityDistribution{\compactZV{M}{\levelParameters{\level}}}$ and $\probabilityDistribution{\compactZV{K}{\levelParameters{\level}}}$ for every considered combination of level parameters $\levelParameters{\level}$ on every specified level $\level$. One way of determining these is to use a recursion over the levels. Each recursive calls input consist of the current level $\level$, the number $\numberOfLevels$ of levels specified, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
+On the other hand, the sets $\possibleMinimizerLengths$ and $\possibleThresholds$ of minimizer lengths and thresholds to be considered need to be specified globally.\\
+Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
+Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. \Cref{alg:recursiveDistributionComputation} shows described algorithm.
+
+This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm. However, actually building RSHash for every combination of level parameters, would imply duplicate computation of the distributions on lower levels. This is not the case for the recursive approach, which considers every distribution exactly once.\\
+Even though, this approach is therefore faster in practice, its runtime is still exponential in the number of levels specified. Possibilities of further speeding up this computation are outlined in \cref{chap:outlook}.
+
+Ones $\probabilityDistribution{\compactZV{M}{\levelParameters{\level}}}$ and $\probabilityDistribution{\compactZV{K}{\levelParameters{\level}}}$ have been determined, one can derive the respective cumulative distribution functions $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ (\cref{sec:minimizerDistribution_severalLevels}), the average frequencies $\averageFrequency(\levelParameters{\level})$ (\cref{sec:averagefrequencies}) and the numbers of distinct \infrequent minimizers $\numberOfDistinctMinimizers{\levelParameters{\level}}$ (\cref{sec:nDIM}).
 
 \chapter{Mixed Integer Non Linear Program}\label{chap:minlp}
 We model the optimization problem as a Mixed Integer Non Linear Programming (MINLP). In \cref{sec:minlp_oneLevel} we model the lookup time and space needed by RSHash on one level in dependence of the level parameters and minimizers distribution. We then extend this to the case of several levels in \cref{sec:minlp_severalLevels}.\\
@@ -502,7 +546,7 @@ Analogously we introduce $\varCDF{K} \in [0,1]$ to represent $\CDF{\compactZV{K}
 
 \subsection{Lookup Time}
 In order to model the time needed for a lookup using RSHash, we closely follow the lookup procedure as described by \citet{schulte-mattler_rshash_2026}:\\
-A k-mer $\kmer$ is looked up by first computing its minimizer $\minimizerOf{\kmer}{}$ and checking whether the bit $R[\minimizerOf{\kmer}{}]$ is set whilst simultaneously computing its rank $r = \rank_R(\minimizerOf{\kmer}{})$, taking $\timeForOperationOnStructure{\contains}{R}$ time (part of the model input \cref{sec:minlp_modelInput}).\\
+A k-mer $\kmer$ is looked up by first computing its minimizer $\minimizerOf{\kmer}{}$ and checking whether the bit $R[\minimizerOf{\kmer}{}]$ is set and if so simultaneously computing its rank $r = \rank_R(\minimizerOf{\kmer}{})$, taking $\timeForOperationOnStructure{\contains}{R}$ time (part of the model input \cref{sec:minlp_modelInput}).\\
 For the percentage $\varCDF{K}$ (\cref{constraint:percKmers}) of the k-mers this bit is set and the lookup is completed by searching for $\kmer$ on the level. We introduce the variable $\timeForOperationOnStructure{level}{} \in \RR^+_0$ to describe the time needed for this.\\
 If the bit $R[\minimizerOf{\kmer}{}]$ is not set, the lookup is completed through a lookup in the hash set $H$ taking $\timeForOperationOnStructure{check}{H}$ time (part of the model input \cref{sec:minlp_modelInput}). The variable $\timeForOperationOnStructure{lookup}{} \in \RR^+_0$ describing the lookup time can thus be modeled as:
 \newcommand{\lookupTimeExpression}{
@@ -514,8 +558,7 @@ If the bit $R[\minimizerOf{\kmer}{}]$ is not set, the lookup is completed throug
 	\lookupTimeExpression \label{constraint:lookupTime}
 \end{align}
 
-The search for those k-mers $\kmer$ for which the bit $R[\minimizerOf{\kmer}{}]$ is set continues on the level by using the minimizers rank  $r = \rank_R(\minimizerOf{\kmer}{})$ in the select %\todo{explain select and rank} 
-queries $first = \select_S(r)$ and $last = \select_S(r+1)-1$ which tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored. These two queries take $2\timeForOperationOnStructure{\select}{S}$ time.\\
+The search for those k-mers $\kmer$ for which the bit $R[\minimizerOf{\kmer}{}]$ is set continues on the level by using the minimizers previously computed rank  $r = \rank_R(\minimizerOf{\kmer}{})$ in the select queries $first = \select_S(r)$ and $last = \select_S(r+1)-1$. These tell the indices in Offsets $O$ where the minimizer’s first and last offset in the text $T$ are stored. The two select queries take $2\timeForOperationOnStructure{\select}{S}$ time.\\
 Finally the presence of $\kmer$ in $T$ is checked at every minimizer offset in the interval $O[first:last]$ until $\kmer$ is either found or the end of the interval is reached. The average frequency $\varAverageFrequency$ of \infrequent minimizers is exactly the average length of this interval. In the lookup case, the comparison is terminated as soon as $\kmer$ is found for the first time, which is on average the case after $(\varAverageFrequency+1)/2$ comparisons with each comparison taking $\timeForOperationOnStructure{\compare}{T}$ time.\\
 The following constraint models the complete time $\timeForOperationOnStructure{level}{}$ needed to search for a k-mers presence on the level:
 \newcommand{\levelTime}{\timeForOperationOnStructure{level}{} &= 2\timeForOperationOnStructure{\select}{S} + (\varAverageFrequency+1)/2 \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T})}
@@ -788,7 +831,7 @@ The bits per k-mer for the hash set can thus be modeled as
 \[ bpk_{total} = bpk_T + \sum_{l=1}^{L} \left(bpk_{R^\level} + bpk_{S^\level} + bpk_{O^\level}\right) + bpk_H\]
 
 \chapter{Experiments}\label{chap:experiments}
-%\todo[inline]{aktualisieren}
+\todo[inline]{aktualisieren}
 We evaluate how suited the MINLP proposed in \cref{chap:minlp} is for finding optimal level parameters by analyzing how accurate the modeled lookup time and space consumption are compared to the actual lookup time measured and space needed when building RSHash. We then examine how well the model can be optimized using the SCIP solver \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023}. Whether the resulting parameters are actually optimal in practice is highly dependent on how accurate the model is in the first place.
 
 \section{Datasets}
@@ -801,35 +844,29 @@ For the following experiments we use k-mers of length $k = 31$ and the largest n
 RSHash currently works with thresholds up to $255$.
 Technically, using the proposed MINLP to find optimal level parameters for a specified optimization goal, one would have to consider every minimizer lengths $1 \leq \minimizerLength < k$ and all thresholds $1 \leq \threshold \leq 255$. However, using the proposed model requires computing the distributions of minimizers for each possible combination of parameters. In practice using $3$ levels would require computing the distributions for $30^3 \cdot 255^3 \approx 448 \cdot 10^9$ combinations of level parameters which is is not viable.\\
 
-When using the maximum threshold $\threshold=255$ and minimizers of length $15$ leads to a percentage of \infrequent  minimizers below $TODO$ %\todo{percentage einfügen!!} 
+When using the maximum threshold $\threshold=255$ and minimizers of length $15$ leads to a percentage of \infrequent  minimizers below $TODO$ \todo{percentage einfügen!!} 
 for each of the datasets considered. As this already leads to a comparatively large hash set, minimizer lengths $\minimizerLength < 15$ can be disregarded when searching for level parameters which lead to relatively low query times whilst also keeping the data structure fairly compact.\\
-When using a small threshold $\threshold=32$ the percentage of \infrequent minimizers of length $25$ is above $TODO$ %\todo{percentage einfügen!!} 
+When using a small threshold $\threshold=32$ the percentage of \infrequent minimizers of length $25$ is above $TODO$ \todo{percentage einfügen!!} 
 for each of the datasets considered. 
-Whilst this would lead to a small hash set, the compression would be small, as each minimizer covers only approximately $(31-25+2)/2 = 4$ k-mers. %\todo{begründung überarbeiten; approximation gilt nur für erstes level und eventuell gar nicht für unitigs}
+Whilst this would lead to a small hash set, the compression would be small, as each minimizer covers only approximately $(31-25+2)/2 = 4$ k-mers. \todo{begründung überarbeiten; approximation gilt nur für erstes level und eventuell gar nicht für unitigs}
 Because of this, considering minimizer lengths between fifteen and twenty five should be sufficient for analyzing the model. To further reduce the number of parameter combinations we only consider uneven minimizer lengths.
 \begin{equation}
 	\possibleMinimizerLengths = \{\minimizerLength \in \NN \mid 15 \leq \minimizerLength \leq 25 \wedge \minimizerLength \% 2 = 1\}
 \end{equation}
-Recall that cumulative distribution functions $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ have logarithmic growth. %\todo{zeigen/beschreiben!!}
+Recall that cumulative distribution functions $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ have logarithmic growth. \todo{zeigen/beschreiben!!}
 It follows that using exponentially increasing thresholds should be sufficient for analyzing the MINLP.
-We consider the thresholds $32,64$ and $128$. %\todo{reason}
+We consider the thresholds $32,64$ and $128$. \todo{reason}
 
 \begin{equation}
 	\possibleThresholds = \{32,64,128\}
 \end{equation}
-With these sets of considered parameters, using $3$ levels would result in $6^3 \cdot 3^3 = 5,832$ combinations of level parameters. We reduce this even further by considering only non-decreasing parameter values on subsequent levels for both the minimizer lengths and thresholds. That means each combination of level parameters $\levelParameters{3} = (\minimizerLength^1, \minimizerLength^2, \minimizerLength^3, \threshold^1, \threshold^2, \threshold^3)$ fulfills $\minimizerLength^i \leq \minimizerLength^i+1$ and $\threshold^i \leq \threshold^i+1$ for all $i \in \{1,2\}$ which can be done because. %\todo{reason} %\todo[inline]{explain the constraint enforcing this in the MINLP and how the sum over possible minimizer combinations changes}
+With these sets of considered parameters, using $3$ levels would result in $6^3 \cdot 3^3 = 5,832$ combinations of level parameters. We reduce this even further by considering only non-decreasing parameter values on subsequent levels for both the minimizer lengths and thresholds. That means each combination of level parameters $\levelParameters{3} = (\minimizerLength^1, \minimizerLength^2, \minimizerLength^3, \threshold^1, \threshold^2, \threshold^3)$ fulfills $\minimizerLength^i \leq \minimizerLength^i+1$ and $\threshold^i \leq \threshold^i+1$ for all $i \in \{1,2\}$ which can be done because. \todo{reason} \todo[inline]{explain the constraint enforcing this in the MINLP and how the sum over possible minimizer combinations changes}
 \begin{align}
 	constraints...
 \end{align}
 For a non-decreasing sequence of length $k'$, chosen from $n$ values, the number of possibilities is $\binom{n+k'-1}{k'}$. That means that when choosing three minimizer lengths out of six possible values and three thresholds out of three possible values, the total number of possible parameter combinations is $\binom{6+3-1}{3} \cdot \binom{3+3-1}{3} = 560$.
 
 \section{Computing the Model Input} \label{sec:computationOfModelInput}
-In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the raw/preprocessed datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $\numberOfLevels = 3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
-The required stats are the total number $\nkmers$ of k-mers in the input sequence and the cumulative distributions of minimizer frequencies $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$, the average frequencies $\averageFrequency(\levelParameters{\level})$ and the number of distinct \infrequent minimizers $\numberOfDistinctMinimizers{\levelParameters{\level}}$ for every non-decreasing combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $1 \leq \level \leq 3$.\\
-
-These stats can be brute-forced for every dataset considered by iterating over each non-decreasing combination of the specified level parameters and actually building RSHash with those parameters. We use the RSHash algorithm implemented by \cite{schulte-mattler_rshash_2026} which is available at \url{https://github.com/jonsmcode/rshash}.\\ Whilst there are more efficient approaches to only compute the model input, we chose this approach as it not only computes an accurate model input but also allows to measure space consumption of the data structures components and the operation times on each of these components which we will later use to assess the accuracy of the values modeled by the MINLP.\\
-Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each level as well as the bits per k-mer to store the text and hash set which are only stored once and not per level. We also measure the average lookup time $\timeForOperationOnStructure{lookup}{}$ by measuring the lookup for $100000$ k-mers randomly selected from the sequence.\\
-
 \begin{algorithm} 
 	\caption{Computation of Minimizer Distribution} \label{algo:computeMinDistr}
 	\begin{algorithmic} 
@@ -852,6 +889,11 @@ Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
+In order to evaluate the accuracy of the proposed MINLP, we first show how to compute the model input for each of the raw/preprocessed datasets which we refer to as the set of sequences $\sequences{0}$. This is done for $\numberOfLevels = 3$ levels and non-decreasing level parameters as described in \cref{sec:consideredParameters}.\\
+The required stats are the total number $\nkmers$ of k-mers in the input sequence and the cumulative distributions of minimizer frequencies $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$, the average frequencies $\averageFrequency(\levelParameters{\level})$ and the number of distinct \infrequent minimizers $\numberOfDistinctMinimizers{\levelParameters{\level}}$ for every non-decreasing combination of level parameters $\levelParameters{\level} \in \possibleMinimizerLengths^\level \times \possibleThresholds^\level$ on every level $1 \leq \level \leq 3$.\\
+
+These stats can be brute-forced for every dataset considered by iterating over each non-decreasing combination of the specified level parameters and actually building RSHash with those parameters. We use the RSHash algorithm implemented by \cite{schulte-mattler_rshash_2026} which is available at \url{https://github.com/jonsmcode/rshash}.\\ Whilst there are more efficient approaches to only compute the model input, we chose this approach as it not only computes an accurate model input but also allows to measure space consumption of the data structures components and the operation times on each of these components which we will later use to assess the accuracy of the values modeled by the MINLP.\\
+Specifically we measure the bits per k-mer of the vectors $R, S$ and $O$ on each level as well as the bits per k-mer to store the text and hash set which are only stored once and not per level. We also measure the average lookup time $\timeForOperationOnStructure{lookup}{}$ by measuring the lookup for $100000$ k-mers randomly selected from the sequence.\\
 
 \section{Observations Regarding the Computed Stats}
 \creflabelformat{figure}{Figure}
@@ -939,7 +981,7 @@ These observations imply that the choice of using constant values for the times 
 \end{table}
 We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute the model input and measure the actual space consumption and lookup time for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
 We then use a modified version of the proposed MINLP which forces an exact combination of level parameters to compute the modeled space consumption and lookup time for each combination of the level parameters considered on each raw and preprocessed sequence. We also refer to the modeled values as $Pred$ (predicted) and to the measured values as $Obs$ (observed).\\
-We evaluate the models accuracy by comparing the predicted and observed values of the modeled variables using several statistical measures. Firstly we compute the (Pearson) correlation coefficient $\corrCoef$ for each variable and dataset. This coefficient measures linear dependence and takes a value in $[-1,1] \cap \RR$ with coefficients close to $\pm 1$ indicating a strong correlation of the predicted and measured values whilst a coefficient close to $0$ can be interpreted as little to no correlation.\\
+We evaluate the models accuracy by comparing the predicted and observed values of the modeled variables using several statistical measures. Firstly we compute the (Pearson) correlation coefficient $\corrCoef$ for each variable and dataset. This coefficient is invariant under separate changes in location and scale, rendering it a useful measure for linear dependence. It takes a value in $[-1,1] \cap \RR$ with coefficients close to $\pm 1$ indicating a strong correlation of the predicted and measured values whilst a coefficient close to $0$ can be interpreted as little to no correlation.\\
 Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether variables are being over or underestimated, the mean absolute error $\meanErrAbs$ to avoid cancellation of positive and negative errors and the mean squared error $\meanErrSqrd$ to indicate substantial outliers which would not show in $\NAMEmeanErrRaw$ and $\NAMEmeanErrAbs$. 
 \cref{tab:modelErrorOverview} shows the these measures for the predicted and observed values of the lookup time total bits per k-mer across all datasets.
 
@@ -947,35 +989,50 @@ Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether var
 \begin{figure} 
 	\centering
 	\input{./figures/lookupTimePlot.tex}
-	\caption{Scatter plots of the predicted and observed lookup times for each parameter combination on the raw (left) and preprocessed (right) human genomes. Each data point is labeled according to the minimizer length $\minimizerLength^1$ on level 1.} \label{fig:lookupTimePlot}
-\end{figure} %\todo{add caption}
+	\caption{Scatter plots of the predicted and observed (scaled by $10^4$) lookup times $\timeForOperationOnStructure{Lookup}{}$ for each parameter combination on the raw (left) and preprocessed (right) human genomes. The axis regarding the observed Each data point is labeled according to the minimizer length $\minimizerLength^1$ on level 1.} \label{fig:lookupTimePlot}
+\end{figure}
+\begin{table}
+	\centering
+	\input{./figures/WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex}
+	\caption{Evaluation of the lookup times computed using the measured times $\timeForOperationOnStructure{\contains}{R^\level}$,
+	$\timeForOperationOnStructure{\select}{S^\level}$,
+	$\timeForOperationOnStructure{\access}{O^\level}$ (for every level $1 \leq \level \leq 3$),
+	$\timeForOperationOnStructure{\compare}{T}$ and
+	$\timeForOperationOnStructure{check}{H}$ instead of the proposed constant ones for every genome and parameter combination considered. The table shows the Pearson correlation coefficient $\NAMEcorrCoef$, the mean error $\NAMEmeanErrRaw$, the mean absolute error $\NAMEmeanErrAbs$ and the mean squared error $\NAMEmeanErrSqrd$ computed for the predicted values compared against the observed ones. All values have been rounded to four significant figures.} 
+	\label{tab:WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview}
+\end{table}
 The correlation coefficients of the lookup times $\timeForOperationOnStructure{lookup}{}$ predicted and observed values show that they correlate only weakly for the Kestrels genome (Raw: $\NAMEcorrCoef = 0.4840$, Unitigs: $\NAMEcorrCoef = 0.3947$) and little to none with for the Cods (Raw: $\NAMEcorrCoef = 0.1406$, Unitigs: $\NAMEcorrCoef = -0.0210$) and Humans (Raw: $\NAMEcorrCoef = 0.2828$, Unitigs: $\NAMEcorrCoef = 0.2914$) genome. 
-Across all genomes the observed lookup times vary significantly, even for parameter combinations with almost identical predicted lookup times.\Cref{fig:lookupTimePlot} shows this for the human genome.\\
-A likely explanation for this is that times $\timeForOperationOnStructure{\contains}{R}$,
+Across all genomes the observed lookup times vary significantly, even for parameter combinations with almost identical predicted lookup times. \Cref{fig:lookupTimePlot} shows this for the human genome.\\
+A possible explanation for this is that the times $\timeForOperationOnStructure{\contains}{R}$,
 $\timeForOperationOnStructure{\select}{S}$,
 $\timeForOperationOnStructure{\access}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$ and
-$\timeForOperationOnStructure{check}{H}$ are constant parameters in the proposed MINLP whilst they actually vary significantly for different level parameters, levels and genomes as outlined in \cref{subsec:observationsOperationTimes}. However, this alone does not explain\\
-Furthermore observed lookup times are without exception three orders of magnitude larger than the predicted ones which could be explained by components of the lookup time which are not considered in the proposed model but count towards this time. One example for such components is the computation of a k-mers minimizer; however, this alone does not explain the magnitude of the error.\\
+$\timeForOperationOnStructure{check}{H}$ are constant parameters in the proposed MINLP whilst they actually vary significantly for different level parameters, levels and genomes as outlined in \cref{subsec:observationsOperationTimes}. We test this hypothesis by computing the predicted lookup time using the measured operation times $\timeForOperationOnStructure{\contains}{R^\level}$,
+$\timeForOperationOnStructure{\select}{S^\level}$,
+$\timeForOperationOnStructure{\access}{O^\level}$ (for every level $1 \leq \level \leq 3$),
+$\timeForOperationOnStructure{\compare}{T}$ and
+$\timeForOperationOnStructure{check}{H}$ for every genome and parameter combination considered. \Cref{tab:WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview} shows that computing the lookup times this way actually leads to even smaller correlation coefficients of the computed and observed values with mean errors similar to those when using constant operation times (\cref{tab:modelErrorOverview}).\todo{was folgt daraus??? Vielleicht Fehler in den Messungen als Erklärung?}\\
 
-A constant offset or linear scaling alone do not explain the observed inaccuracy as those would have no affect on the correlation coefficient. %\todo{überprüfen}
-Understanding the cause for this deviation and accounting for it requires further investigation. If successful, this could considerably improve the models accuracy and therefore render the model more suitable for the optimization of level parameters.
+In addition to only correlating weakly, the observed lookup times are without exception three orders of magnitude larger than the predicted ones. This could possibly be due to components which count towards the lookup time but are not considered in the proposed model. One such example is the time needed to compute a k-mers minimizer; however, this alone does not explain the magnitude of the error.\\
+Any constant offset to or linear scaling of either the modeled or measured times would not explain the observed inaccuracy regarding the lookup time as those would have no affect on the correlation coefficient which is invariant under separate changes in location and scale.\\
+
+Understanding what causes the deviation between the modeled and measured lookup times and accounting for it requires further investigation. If successful, this could considerably improve the models accuracy and therefore render the model more suitable for the optimization of level parameters.
 
 \subsection{Space Consumption}
-%\todo[inline]{Absatz zu $bpk_{total}$ schreiben}
-For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $TODO$. %\todo{max error eintragen}
+\todo[inline]{Absatz zu $bpk_{total}$ schreiben}
+For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $TODO$. \todo{max error eintragen}
 \\
 The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\
 
-RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values. %\todo{diesen Absatz simplizifieren (simplizieren ist ein schlechtes Wort für das, was es sagen soll..)}
+RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values. \todo{diesen Absatz simplizifieren (simplizieren ist ein schlechtes Wort für das, was es sagen soll..)}
 \\
 However, even with this adjustment the modeled space consumption of the hash set is neither correct for the raw genomes nor for the preprocessed ones. Whilst we model the bits per k-mer $bpk_H$ of the hash set as a continues function, our measurements seem to take values from a discrete distribution.\\
 This observation can also be explained by the hash sets implementation: Upon declaration a c++ hash set starts of with a hash function mapping keys to a hash space of a relatively small size. That size is doubled whenever a certain criteria regarding the hash sets load is no longer fulfilled. This discrete behavior with varying loads cannot be captured by a continues model using a constant load factor.\\
 In addition to this, the model tends to overestimate the hash sets size for the raw sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. This effect is again negligent for the common kestrels genome, where
-%\todo[inline]{Hier kommt noch eine Abbildung rein, die diese Beobachtung für eines der Genome zeigt}
+\todo[inline]{Hier kommt noch eine Abbildung rein, die diese Beobachtung für eines der Genome zeigt}
 
 \section{Optimization}
-%\todo[inline]{Suche nach optimalen parametern für jedes genom mit zielsetzung: nur lookup time, nur speicherbedarf und mix aus beidem - vergleich mit in \cite{schulte-mattler_rshash_2026} gewählten parametern}
+\todo[inline]{Suche nach optimalen parametern für jedes genom mit zielsetzung: nur lookup time, nur speicherbedarf und mix aus beidem - vergleich mit in \cite{schulte-mattler_rshash_2026} gewählten parametern}
 
 
 \section{Limitations}
@@ -985,15 +1042,15 @@ This approaches plausibility is heavily dependent on the time needed to compute 
 
 For this reason, an approach yielding only an approximation of the optimal level parameters but taking less time to do so could be of interest.
 
-We will further explore methods \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution. %\todo{TODO}
+We will further explore methods \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution. \todo{TODO}
 
-In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values. %\todo{TODO}
+In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values. \todo{TODO}
 
 \chapter{Outlook} \label{chap:outlook}
-%\todo[inline]{model negative lookups with a parameter for the ratio of positive/negative lookups}
+\todo[inline]{model negative lookups with a parameter for the ratio of positive/negative lookups}
 
 \textbf{Locate}
-%\todo[inline]{outline differences to lookup}
+\todo[inline]{outline differences to lookup}
 \begin{itemize}
 	\item lookup time: check every offset instead of only an average of half of the offsets
 	\item hash table instead of hash set - contains one entry (key:k-mer, value:offset) for each appearance of every k-mer (no longer distinct) - for the unitigs, this shouldn't have an effect
@@ -1012,43 +1069,6 @@ In another approach we will try to approximate the distributions on higher level
 For large genomes, the computing of the model input could be sped up  by randomly sub sampling a certain percentage of the genomes k-mers and computing the minimizer distributions on those. A smaller percentage would then mean a faster computation at the cost of losing accuracy.
 
 \chapter{Conclusion}
-
-\chapter{(stuff, den ich eventuell noch einarbeite)}
-A fairly straightforward way %\todo{zu umgangssprachlich?} 
-of computing these is to use a recursion over the levels. The input for each recursive call consist of the current level $\level$, the number of levels $\numberOfLevels$, the previous level parameters $\levelParameters{\level-1}$ and the set of input sequences in dependence of those parameters.\\
-Upon being called, the first minimizer $\minimizerLength \in \possibleMinimizerLengths$ is selected and used to compute the distribution stats for the input sequence on this level in dependence of $\minimizerLength$. The function then loops over each threshold $\threshold \in \possibleThresholds$, removes all k-mers with \infrequent minimizers when using $(\minimizerLength, \threshold)$ from the input sequences and then calls the recursion for the next level, which receives the next level, the previous parameters extended by $(\minimizerLength, \threshold)$ and the modified sequences as input.
-Only once this recursion is completed for every threshold $\threshold \in \possibleThresholds$, the next minimizer is picked from $\possibleMinimizerLengths$. The described algorithm:
-%\todo[inline]{soll ich hier erklären, wie die Berechnung in der Praxis noch ein bisschen schneller geschieht? Oder ist das an dieser Stelle egal, wenn es am grundlegenden Problem der exponentiellen Laufzeit nichts ändert?}
-\begin{algorithm} 
-	\caption{Computation of Minimizer Distribution}
-	\begin{algorithmic} 
-		\Input $
-		\text{level } \level,
-		\text{max Level } \numberOfLevels,
-		\text{level parameters } \levelParameters{\level-1},
-		\text{sequences } \sequences{\level-1}
-		$
-		\Function{recursiveMinimizerDistribution}{$\level, \numberOfLevels, \levelParameters{\level-1} \sequences{\level-1}$}
-		\If{$\level = \numberOfLevels$} \State \textbf{return} \EndIf
-		\For{$\minimizerLength \in \possibleMinimizerLengths$}
-		\For{$\threshold \in \possibleThresholds$}
-		\State $\levelParameters{\level} \gets extend(\levelParameters{\level-1}, m,t)$	\Comment $extend((m^1,t^1), m^2,t^2) = (m^1,m^2,t^1,t^2)$
-		\State $\sequences{\level} \gets getFrequentKmers(\level, \sequences{\level-1}, \minimizerLength, \threshold)$
-		\State 
-		\State $\CDF{\compactZV{M}{\levelParameters{\level}}},
-		\CDF{\compactZV{K}{\levelParameters{\level}}},
-		\averageFrequency(\levelParameters{\level}), \numberOfDistinctMinimizers{\levelParameters{\level}} \gets distributionStats(\hashfunction{\level}, \sequences{\level-1}, m)$
-		\State 
-		\Call{recursiveMinimizerDistribution}{$\level+1, \numberOfLevels, \levelParameters{\level}, \sequences{\level}$}
-		
-		\EndFor
-		\EndFor
-		\EndFunction
-	\end{algorithmic}
-\end{algorithm}
-
-This approach is guaranteed to compute correct minimizer distributions for every set of level parameters on every level as it effectively performs the same steps as the RSHash algorithm only without building the data structure itself. This also means, that one could include the building of bitvectors $R,S$ and $O$ on every level as well as the hash set $H$ and simply measure the space consumption and lookup time for every combination, which would render the MINLP obsolete.\\
-However, this approach is sufficient for computing the input needed for analyzing how well the MINLP models the lookup time and space consumption using only the minimizer distributions. Possibilities of speeding up the time needed are outlined in \cref{chap:outlook}.
 
 \printbibliography[heading=bibintoc,title={Bibliography}]
 
