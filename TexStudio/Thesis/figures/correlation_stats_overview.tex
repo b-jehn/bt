@@ -6,33 +6,33 @@
 
 \newcommand{\datapath}[1]{./data/#1.csv}
 
-\begin{table} \label{fig:correlation_stats_overview_kestrel_raw}
+\begin{table} 
 	\csvautotabular{\datapath{\rawStatsKestrel}}
-	\caption{Kestrel (Raw)}
+	\caption{Kestrel (Raw)} \label{fig:correlation_stats_overview_kestrel_raw}
 \end{table}
 
-\begin{table} \label{fig:correlation_stats_overview_kestrel_unitigs}
+\begin{table} 
 	\csvautotabular{\datapath{\unitigs{\rawStatsKestrel}}}
-	\caption{Kestrel (Unitigs)}
+	\caption{Kestrel (Unitigs)} \label{fig:correlation_stats_overview_kestrel_unitigs}
 \end{table}
 
-\begin{table} \label{fig:correlation_stats_overview_cod_raw}
+\begin{table} 
 	\csvautotabular{\datapath{\rawStatsCod}}
-	\caption{Cod (Raw)}
+	\caption{Cod (Raw)} \label{fig:correlation_stats_overview_cod_raw}
 \end{table}
 
-\begin{table} \label{fig:correlation_stats_overview_cod_unitigs}
+\begin{table} 
 	\csvautotabular{\datapath{\unitigs{\rawStatsCod}}}
-	\caption{Cod (Unitigs)}
+	\caption{Cod (Unitigs)} \label{fig:correlation_stats_overview_cod_unitigs}
 \end{table}
 
 
-\begin{table} \label{fig:correlation_stats_overview_human_raw}
+\begin{table} 
 	\csvautotabular{\datapath{\rawStatsHuman}}
-	\caption{Human (Raw)}
+	\caption{Human (Raw)} \label{fig:correlation_stats_overview_human_raw}
 \end{table}
 
-\begin{table} \label{fig:correlation_stats_overview_human_unitigs}
+\begin{table} 
 	\csvautotabular{\datapath{\unitigs{\rawStatsHuman}}}
-	\caption{Human (Unitigs)}
+	\caption{Human (Unitigs)} \label{fig:correlation_stats_overview_human_unitigs}
 \end{table}
