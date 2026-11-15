@@ -1,13 +1,16 @@
 from pathlib import Path
-import csv
+import csv, sys, os
 from itertools import product
 import matplotlib.pyplot as plt
 import itertools
+from operator import itemgetter 
 
 import numpy as np
 from scipy.stats import gaussian_kde
 
 from optimization.cascadingStats import *
+from optimization.MINLP import *
+
 
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
 N_SAMPLES = 100000 
@@ -134,6 +137,7 @@ def getAllOperationTimes(stats_directory: Path, thesis_results_path: Path):
         f"$\\timeForOperationOnStructure{{check}}{{H}}$"
     ]
 
+    #plot containing one boxplot for each operation time across all levels
     plotData = []
     for stats_field in fields(operationTimes_Stats):
         if stats_field.name == "LookupTime":
@@ -142,8 +146,9 @@ def getAllOperationTimes(stats_directory: Path, thesis_results_path: Path):
             plotData.append(list(itertools.chain.from_iterable(allTimes[stats_field.name])))
         else: plotData.append(allTimes[stats_field.name])
     
-    writeBoxPlotTex(plotLabels, plotData, (thesis_results_path / "combinedBoxPlots.tex"))
-        
+    writeBoxPlotTex(plotLabels, plotData, (thesis_results_path / "boxPlotsCombined.tex"))
+    
+    #plot for Rcontains on level one, two and three
     plotLabels = [
         f"$\\timeForOperationOnStructure{{\\contains}}{{R^1}}$",
         f"$\\timeForOperationOnStructure{{\\contains}}{{R^2}}$",
@@ -157,7 +162,7 @@ def getAllOperationTimes(stats_directory: Path, thesis_results_path: Path):
         for level in range(NO_LEVELS):
             plotData.append(allTimes[stats_field.name][level])
             
-    writeBoxPlotTex(plotLabels, plotData, (thesis_results_path / "RcontainsBoxPlot.tex"), colours=True)
+    writeBoxPlotTex(plotLabels, plotData, (thesis_results_path / "boxPlotsRcontains.tex"), colours=True)
 
     # Generative "AI" use Disclaimer:
     #   the following function was generated using GPT-6 Luna
@@ -231,20 +236,64 @@ def writeModelErrorOverview(result_path: Path, columns=1):
         r"\end{tabular}",
     ]))
 
-    #separator = "\n\\hfill\n" if columns > 1 else "\n\\par\\medskip\n"
-    separator = "\n"
-    
-    ##only necessary, if full figure is wanted
-    #body = separator.join(tables)
-    #tex_file_content = "\n".join([
-    #    r"\begin{figure}[htbp]",
-    #    r"\centering",
-    #    body,
-    #    r"\end{figure}",
-    #])
-
     with (result_path / "modelErrorOverview.tex").open("w", encoding="utf-8") as f:
         f.write(separator.join(tables))
+        
+def writeSortedLookupTimes(stats_directory: Path, result_path: Path):
+    sortedLookupTimes = {}
+    
+    for genome in GENOMES:
+        print(f"getting lookup times for: {genome}")
+        genome_stats_path = stats_directory / f"{genome}"  #directory for the stats of a specific genome
+        if(not genome_stats_path.is_dir()):               
+            continue
+        sequence_path = f'../../rshash/DNA_datasets/{genome}.fa'
+        if not os.path.isfile(sequence_path):
+            sys.exit(f"{sequence_path} is not a file")
+        log_sequence_length = np.log2(os.path.getsize(sequence_path))
+        
+        genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)})  
+        fill_cascading_stats(root_stats=genome_stats, 
+                            genome_stats_path=genome_stats_path, 
+                            level=1, 
+                            maxLevel=NO_LEVELS,
+                            currentMinimizerLengths=[MINIMIZER_LENGTHS_CONSIDERED[-1]] * NO_LEVELS,
+                            currentThresholds=[THRESHOLDS_CONSIDERED[-1]] * NO_LEVELS,
+                            minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED,
+                            thresholdsConsidered=THRESHOLDS_CONSIDERED,
+                            nonDecreasingParameters=True)
+                    
+        genomeLookupTimes = []
+        for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
+            observedSpace, observedTimes = getObservedStats(genome_stats_path, 
+                                                forcedMinimizerLengths,
+                                                forcedThresholds)
+            
+            print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
+            predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
+                optimization_goal="t_lookup",
+                max_lookup_time=np.inf,
+                max_bpk_total=np.inf,
+                log_sequence_length=log_sequence_length,
+                no_levels=NO_LEVELS, 
+                minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED, 
+                thresholdsConsidered=THRESHOLDS_CONSIDERED, 
+                distribution_stats=genome_stats,
+                load_factor=0.75,
+                nonDecreasingParameters=NON_DECREASING_PARAMETERS,
+                forceParameters=[forcedMinimizerLengths,forcedThresholds])
+
+            genomeLookupTimes.append([forcedMinimizerLengths, forcedThresholds, predictedTimes.LookupTime, observedTimes.LookupTime])
+
+        sortedLookupTimes[genome] = sorted(genomeLookupTimes, key=itemgetter(2), reverse=True)
+
+        print(f"writing sortedLookupTimes_{genome}.csv")
+        with open((result_path / f"sortedPredictedLookupTimes_{genome}.csv"), "w") as f:
+            headers = ["m1","m2","m3","t1","t2","t3","predictedLookupTime", "observedLookupTime"]
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            writer.writerows([*minimizer_lengths, *thresholds, predLookupTime, obsLookupTime] for minimizer_lengths,thresholds,predLookupTime,obsLookupTime in sortedLookupTimes[genome])
+        
 def main() -> None:
     thesis_results_path = Path("thesis_results")
     thesis_results_path.mkdir(parents=True, exist_ok=True)
@@ -254,7 +303,11 @@ def main() -> None:
         return
     #getAllOperationTimes(stats_directory, thesis_results_path)
     
-    writeModelErrorOverview(thesis_results_path, columns=1)
+    #writeModelErrorOverview(thesis_results_path, columns=1)
+    
+    writeSortedLookupTimes(stats_directory, thesis_results_path)
+    
+    
 
 if __name__ == '__main__':
     main()

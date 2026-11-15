@@ -4,7 +4,7 @@ from pyscipopt import Model, quicksum, quickprod, log
 from time import perf_counter
 from itertools import product
 
-from cascadingStats import *
+from .cascadingStats import *
 
 def MINLP(
     optimization_goal: str,

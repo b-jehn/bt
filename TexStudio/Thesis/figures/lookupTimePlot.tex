@@ -1,0 +1,76 @@
+\begin{tikzpicture}
+	\begin{groupplot}[
+		group style={
+			group size=2 by 1,
+			horizontal sep=0.06\textwidth,
+		},
+		width=0.47\textwidth,
+		height=5cm,
+		]
+		
+		% First panel
+		\nextgroupplot[
+		title={Human (Raw)},
+		ylabel={Observed $\timeForOperationOnStructure{lookup}{}$ (ns)},
+		xlabel={Predicted $\timeForOperationOnStructure{lookup}{}$ (ns)},
+		legend to name=sharedlegend,
+		legend columns=6,
+		]
+		\addplot[
+		only marks,
+		scatter,
+		point meta=explicit symbolic,
+		scatter/classes={
+			15={mark=*,mark size=1.5pt,draw=blue,fill=blue},
+			17={mark=*,mark size=1.5pt,draw=red,fill=red},
+			19={mark=*,mark size=1.5pt,draw=green!60!black,fill=green!60!black},
+			21={mark=*,mark size=1.5pt,draw=orange,fill=orange},
+			23={mark=*,mark size=1.5pt,draw=violet,fill=violet},
+			25={mark=*,mark size=1.5pt,draw=cyan!70!black,fill=cyan!70!black}
+		},
+		] table[
+		col sep=comma,
+		x=predictedLookupTime,
+		y=observedLookupTime,
+		meta=m1,
+		] {./data/sortedPredictedLookupTimes_Homo_sapiens.GRCh38.dna.toplevel.csv};
+		\addlegendimage{only marks,mark=*,draw=blue,fill=blue}
+		\addlegendentry{m1=15}
+		\addlegendimage{only marks,mark=*,draw=red,fill=red}
+		\addlegendentry{m1=17}
+		\addlegendimage{only marks,mark=*,draw=green!60!black,fill=green!60!black}
+		\addlegendentry{m1=19}
+		\addlegendimage{only marks,mark=*,draw=orange,fill=orange}
+		\addlegendentry{m1=21}
+		\addlegendimage{only marks,mark=*,draw=violet,fill=violet}
+		\addlegendentry{m1=23}
+		\addlegendimage{only marks,mark=*,draw=cyan!70!black,fill=cyan!70!black}
+		\addlegendentry{m1=25}
+
+		
+		% Second panel
+		\nextgroupplot[title={Human (Unitigs)}, xlabel={Predicted $\timeForOperationOnStructure{lookup}{}$ (ns)},]
+		\addplot[
+		only marks,
+		scatter,
+		point meta=explicit symbolic,
+		scatter/classes={
+			15={mark=*,mark size=1.5pt,draw=blue,fill=blue},
+			17={mark=*,mark size=1.5pt,draw=red,fill=red},
+			19={mark=*,mark size=1.5pt,draw=green!60!black,fill=green!60!black},
+			21={mark=*,mark size=1.5pt,draw=orange,fill=orange},
+			23={mark=*,mark size=1.5pt,draw=violet,fill=violet},
+			25={mark=*,mark size=1.5pt,draw=cyan!70!black,fill=cyan!70!black}
+		},
+		] table[
+		col sep=comma,
+		x=predictedLookupTime,
+		y=observedLookupTime,
+		meta=m1,
+		] {./data/sortedPredictedLookupTimes_Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs.csv};
+
+		
+	\end{groupplot}
+	\node at ($(group c1r1.south)!0.5!(group c2r1.south)$)
+	[below=1.2cm] {\pgfplotslegendfromname{sharedlegend}};
+\end{tikzpicture}

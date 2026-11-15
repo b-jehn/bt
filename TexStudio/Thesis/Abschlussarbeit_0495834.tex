@@ -310,7 +310,7 @@ However, this is highly dependent of both the chosen minimizer lengths which inf
 Choosing "good" level parameters to build the data structure for a given set of sequences currently requires manual testing and extensive understanding of the RSHash algorithm. 
 We attempt to model the space consumption and lookup time of RSHash depending on the level parameters aiming to expand the understanding about how those values are influenced by the parameters and to work towards automating the choice of optimal level parameters for a given genome and optimization goal.
 
-\chapter{Notation}\label{chap:notation}
+\chapter{Preliminaries}\label{chap:notation}
 %\newcommand{\superKmer}{sk}\todo{define super-k-mer}
 \newcommand{\numberOfLevels}{{L}}
 \newcommand{\setOfLevels}{\mathcal{L}}
@@ -763,7 +763,6 @@ Inserting $\timeForOperationOnStructure{level}{}^1$ and $\timeForOperationOnStru
 			+&~ (1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R} + \varCDF{K}^2 \cdot (2\timeForOperationOnStructure{\select}{S} + \frac{\varAverageFrequency^2+1}{2}  \cdot (\timeForOperationOnStructure{\access}{O} + \timeForOperationOnStructure{\compare}{T}))\\
 			&~\phantom{(1-\varCDF{K}^1) \cdot \Bigg(\timeForOperationOnStructure{\contains}{R}} + (1-\varCDF{K}^2) \cdot \timeForOperationOnStructure{check}{H} \Bigg)
 \end{align*}
-\todo[inline]{Frage: Soll ich das Einsetzten lieber weglassen?}
 
 \subsection{Space Consumption}
 \textbf{The text $T$} is only being stored once, so the constant approximation $bpk_T \approx 2$ can be used for several levels as well.\\
@@ -954,23 +953,32 @@ Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether var
 \cref{tab:modelErrorOverview} shows the these measures for the predicted and observed values of the lookup time total bits per k-mer across all datasets.
 
 \subsection{Lookup Time}
-The correlation coefficients of the lookup times predicted and observed values show that they correlate only weakly for the Kestrels genome (Raw: $\NAMEcorrCoef = 0.4840$, Unitigs: $\NAMEcorrCoef = 0.3947$) and little to none with for the Cods (Raw: $\NAMEcorrCoef = 0.1406$, Unitigs: $\NAMEcorrCoef = -0.0210$) and Humans (Raw: $\NAMEcorrCoef = 0.2828$, Unitigs: $\NAMEcorrCoef = 0.2914$) genome. A likely explanation for this is the choice of using constant times $\timeForOperationOnStructure{\contains}{R}$,
+\begin{figure} 
+	\centering
+	\input{./figures/lookupTimePlot.tex}
+	\caption{} \label{fig:lookupTimePlot}
+\end{figure}\todo{add caption}
+The correlation coefficients of the lookup times $\timeForOperationOnStructure{lookup}{}$ predicted and observed values show that they correlate only weakly for the Kestrels genome (Raw: $\NAMEcorrCoef = 0.4840$, Unitigs: $\NAMEcorrCoef = 0.3947$) and little to none with for the Cods (Raw: $\NAMEcorrCoef = 0.1406$, Unitigs: $\NAMEcorrCoef = -0.0210$) and Humans (Raw: $\NAMEcorrCoef = 0.2828$, Unitigs: $\NAMEcorrCoef = 0.2914$) genome. A likely explanation for this is that times $\timeForOperationOnStructure{\contains}{R}$,
 $\timeForOperationOnStructure{\select}{S}$,
 $\timeForOperationOnStructure{\access}{O}$,
 $\timeForOperationOnStructure{\compare}{T}$ and
-$\timeForOperationOnStructure{check}{H}$ in the proposed MINLP. These values actually vary significantly for different level parameters, levels and genomes as outlined in \cref{subsec:observationsOperationTimes}.\\
-Not only do the measured and 
+$\timeForOperationOnStructure{check}{H}$ are constant parameters in the proposed MINLP whilst they actually vary significantly for different level parameters, levels and genomes as outlined in \cref{subsec:observationsOperationTimes}.\\
+The observed lookup times are without exception larger than the predicted ones by three orders of magnitude. A constant offset or linear scaling alone do not explain the observed inaccuracy as those would have no affect on the correlation coefficient.\todo{überprüfen} Therefore, there is likely a large non-linear component of the lookup time which is not taken into account in the proposed MINLP. Understanding the cause for this deviation and accounting for it could considerably improve the models accuracy and therefore render the model more suitable for the optimization of level parameters.\todo{TODO: Letzer Absatz stimmt nicht wirklich. \cref{fig:lookupTimePlot} mit einbeziehen}
 
 \subsection{Space Consumption}
 \todo[inline]{Absatz zu $bpk_{total}$ schreiben}
 For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to an error of $..$\todo{max error eintragen}.\\
 The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\
 
-RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values.\\
+RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values.\todo{diesen Absatz simplizifieren (simplizieren ist ein schlechtes Wort für das, was es sagen soll..)}\\
 However, even with this adjustment the modeled space consumption of the hash set is neither correct for the raw genomes nor for the preprocessed ones. Whilst we model the bits per k-mer $bpk_H$ of the hash set as a continues function, our measurements seem to take values from a discrete distribution.\\
 This observation can also be explained by the hash sets implementation: Upon declaration a c++ hash set starts of with a hash function mapping keys to a hash space of a relatively small size. That size is doubled whenever a certain criteria regarding the hash sets load is no longer fulfilled. This discrete behavior with varying loads cannot be captured by a continues model using a constant load factor.\\
 In addition to this, the model tends to overestimate the hash sets size for the raw sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. This effect is again negligent for the common kestrels genome, where
 \todo[inline]{Hier kommt noch eine Abbildung rein, die diese Beobachtung für eines der Genome zeigt}
+
+\section{Optimization}
+\todo[inline]{Suche nach optimalen parametern für jedes genom mit zielsetzung: nur lookup time, nur speicherbedarf und mix aus beidem - vergleich mit in \cite{schulte-mattler_rshash_2026} gewählten parametern}
+
 
 \section{Limitations}
 The poorly modeled lookup time renders the MINLP useless for finding optimal level parameters for a specified optimization goal.

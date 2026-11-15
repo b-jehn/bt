@@ -37,7 +37,7 @@ THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]
 NO_LEVELS = 3
 NON_DECREASING_PARAMETERS = True
 
-OVERWRITE_PLOTS = False
+OVERWRITE_PLOTS = True
 
 setOfMinimizerLengths = []
 for m1 in MINIMIZER_LENGTHS_CONSIDERED:
@@ -113,9 +113,6 @@ for sequence_name in GENOMES:
                             thresholdsConsidered=THRESHOLDS_CONSIDERED,
                             nonDecreasingParameters=True)
                     
-        #setOfMinimizerLengths = [[17,17,17]]
-        #setOfThresholds = [[128,128,128]]
-
         for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
             observedSpace, observedTimes = getObservedStats(genome_stats_directory, 
                                                             forcedMinimizerLengths,
@@ -137,7 +134,6 @@ for sequence_name in GENOMES:
             
             predicted_AND_observed_stats.append((predictedSpace, observedSpace))
             predicted_AND_observed_stats.append((predictedTimes, observedTimes))
-            
             
         # write predicted_AND_observed_stats to json file
         with open(str(predicted_AND_observed_stats_jsonfile_path), "w", encoding="utf-8") as file:
@@ -356,12 +352,17 @@ for sequence_name in GENOMES:
                     title = f"{field_name} for {sequence_name.replace('.','_')}"
                     
                     ax=plt.gca()
-                    ax.set_aspect('equal')
                     #plot red diagonal where x=y
                     plt.axline((0,0),slope=1,linestyle='-',color='red',label="predicted=observed")
                     plt.legend()
                     
-                    plt.scatter(predicted_values, observed_values)
+                    if field_name == "LookupTime":
+                        plt.scatter(predicted_values, observed_values)
+                        ax.set_yscale('log')
+                    else:
+                        plt.scatter(predicted_values, observed_values)
+                        ax.set_aspect('equal')
+                    
                     plt.xlabel(f"Predicted {field_name}")
                     plt.ylabel(f"Observed {field_name}")
                     plt.title(title)
