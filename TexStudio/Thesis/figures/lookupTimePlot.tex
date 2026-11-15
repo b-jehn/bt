@@ -14,9 +14,11 @@
 		ylabel={Observed $\timeForOperationOnStructure{lookup}{}$ (ns)},
 		xlabel={Predicted $\timeForOperationOnStructure{lookup}{}$ (ns)},
 		legend to name=sharedlegend,
-		legend columns=6,
+		legend columns=7,
+		, ymax=15000
 		]
 		\addplot[
+		forget plot,
 		only marks,
 		scatter,
 		point meta=explicit symbolic,
@@ -34,23 +36,33 @@
 		y=observedLookupTime,
 		meta=m1,
 		] {./data/sortedPredictedLookupTimes_Homo_sapiens.GRCh38.dna.toplevel.csv};
+		\addlegendimage{empty legend}
+		\addlegendentry{$\minimizerLength^1:$}
+		
 		\addlegendimage{only marks,mark=*,draw=blue,fill=blue}
-		\addlegendentry{m1=15}
+		\addlegendentry{$15$}
+		
 		\addlegendimage{only marks,mark=*,draw=red,fill=red}
-		\addlegendentry{m1=17}
+		\addlegendentry{$17$}
+		
 		\addlegendimage{only marks,mark=*,draw=green!60!black,fill=green!60!black}
-		\addlegendentry{m1=19}
+		\addlegendentry{$19$}
+		
 		\addlegendimage{only marks,mark=*,draw=orange,fill=orange}
-		\addlegendentry{m1=21}
+		\addlegendentry{$21$}
+		
 		\addlegendimage{only marks,mark=*,draw=violet,fill=violet}
-		\addlegendentry{m1=23}
+		\addlegendentry{$23$}
+		
 		\addlegendimage{only marks,mark=*,draw=cyan!70!black,fill=cyan!70!black}
-		\addlegendentry{m1=25}
+		\addlegendentry{$25$}
+		
 
 		
 		% Second panel
-		\nextgroupplot[title={Human (Unitigs)}, xlabel={Predicted $\timeForOperationOnStructure{lookup}{}$ (ns)},]
+		\nextgroupplot[title={Human (Unitigs)}, xlabel={Predicted $\timeForOperationOnStructure{lookup}{}$ (ns)}, ymax=15000]
 		\addplot[
+	    forget plot,
 		only marks,
 		scatter,
 		point meta=explicit symbolic,
