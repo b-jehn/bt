@@ -1,5 +1,5 @@
 variable,$r$,$\mathbb{E}(Pred-Obs)$,$\mathbb{E}(|Pred-Obs|)$,$\mathbb{E}(Pred-Obs)^2$
-$bpk_T$,nan,$6.350 \times 10^{-3}$,$6.350 \times 10^{-3}$,$4.032 \times 10^{-5}$
+$bpk_T$,--,$6.350 \times 10^{-3}$,$6.350 \times 10^{-3}$,$4.032 \times 10^{-5}$
 $bpk_{R^1}$,1.0000,$-2.935 \times 10^{-4}$,$2.935 \times 10^{-4}$,$8.611 \times 10^{-8}$
 $bpk_{R^2}$,1.0000,$-2.935 \times 10^{-4}$,$2.935 \times 10^{-4}$,$8.611 \times 10^{-8}$
 $bpk_{R^3}$,1.0000,$-2.935 \times 10^{-4}$,$2.935 \times 10^{-4}$,$8.611 \times 10^{-8}$

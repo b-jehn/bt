@@ -253,10 +253,10 @@ authority.\\
 
 \newpage
 \section*{Abstract}
-\todo[inline]{Draft}
+%\todo[inline]{Draft}
 RSHash is a static, compressed data structure for k-mers that answers lookup queries using a leveled minimizer scheme with thresholds to cut off frequent minimizers. Building it requires specifying a minimizer lengths and a threshold for every level used. Choosing optimal parameters to build RSHash for a given genetic sequence and specification of optimality remains an open problem as both its space consumption and the lookup time depend on these parameters because they affect the distribution of minimizers. To address this, we first define properties of these distributions which are specifically relevant to the problem and propose a mixed integer non linear program (MINLP) modeling the space consumption and lookup time of RSHash aiming to combine it with a solver to find optimal parameters. We evaluate the proposed MINLP for a selection of benchmark datasets and can show that the model is highly accurate regarding RSHashs space consumption but less so for the lookup time. Furthermore, time complexity to compute the distribution stats required to run the model grow exponentially with the number of considered levels which means a similar complexity to that of a brutefore approach. 
 \section*{Zusammenfassung}
-\todo[inline]{Passt so? => Ins Deutsche übersezten}
+%\todo[inline]{Passt so? => Ins Deutsche übersezten}
 
 
 \newpage
@@ -317,7 +317,7 @@ Choosing "good" level parameters to build the data structure for a given set of 
 We attempt to model the space consumption and lookup time of RSHash depending on the level parameters aiming to expand the understanding about how those values are influenced by the parameters and to work towards automating the choice of optimal level parameters for a given genome and optimization goal.
 
 \chapter{Preliminaries}\label{chap:notation}
-%\newcommand{\superKmer}{sk}\todo{define super-k-mer}
+%\newcommand{\superKmer}{sk}%\todo{define super-k-mer}
 \newcommand{\numberOfLevels}{{L}}
 \newcommand{\setOfLevels}{\mathcal{L}}
 
@@ -439,7 +439,7 @@ We define the number of distinct \infrequent minimizers $\numberOfDistinctMinimi
 	\numberOfDistinctMinimizers{\levelParameters{\level}} = |\distinctMinimizers{\level}| \cdot \CDF{\compactZV{M}{\levelParameters{\level}}}
 \end{equation}
 
-\section{Computing the Sequence Statistics}
+\section{Computing the Sequence Statistics} \label{sec:computingSequenceStatistics}
 \begin{algorithm} 
 	\begin{algorithmic} 
 		\Input $
@@ -836,7 +836,7 @@ The bits per k-mer for the hash set can thus be modeled as
 \[ bpk_{total} = bpk_T + \sum_{l=1}^{L} \left(bpk_{R^\level} + bpk_{S^\level} + bpk_{O^\level}\right) + bpk_H\]
 
 \chapter{Experiments}\label{chap:experiments}
-\todo[inline]{aktualisieren, observations regarding measured values einbauen}
+%\todo[inline]{aktualisieren, observations regarding measured values einbauen}
 We evaluate how suited the MINLP proposed in \cref{chap:minlp} is for finding optimal level parameters by using a set of reference datasets (\cref{sec:datasets}) and a selection of considered level parameters (\cref{sec:consideredParameters}). In \cref{sec:computationOfModelInput} we show how to compute the model input and measure the actual space consumption and lookup time for every set of considered level parameters for each considered sequence. We use these to analyzing how accurate the modeled lookup time and space consumption are compared to the actual lookup time measured and space needed when building RSHash (\cref{sec:modelAccuracy}). In \cref{sec:optimization} we examine how well the model can be optimized using the SCIP solver \cite{AchterbergBertholdKochetal.2008, Achterberg2009, BestuzhevaChmielaMuellerSerranoVigerskeWegscheider2023}. Whether the resulting parameters are actually optimal in practice is highly dependent on how accurate the model is in the first place.
 
 \section{Datasets} \label{sec:datasets}
@@ -849,23 +849,23 @@ For the following experiments we use k-mers of length $k = 31$ and the largest n
 RSHash currently works with thresholds up to $255$.
 Technically, using the proposed MINLP to find optimal level parameters for a specified optimization goal, one would have to consider every minimizer lengths $1 \leq \minimizerLength < k$ and all thresholds $1 \leq \threshold \leq 255$. However, using the proposed model requires computing the distributions of minimizers for each possible combination of parameters. In practice using $3$ levels would require computing the distributions for $30^3 \cdot 255^3 \approx 448 \cdot 10^9$ combinations of level parameters which is is not viable.\\
 
-When using the maximum threshold $\threshold=255$ and minimizers of length $15$ leads to a percentage of \infrequent  minimizers below $TODO$ \todo{percentage einfügen!!} 
+When using the maximum threshold $\threshold=255$ and minimizers of length $15$ leads to a percentage of \infrequent  minimizers below $TODO$ %\todo{percentage einfügen!!} 
 for each of the datasets considered. As this already leads to a comparatively large hash set, minimizer lengths $\minimizerLength < 15$ can be disregarded when searching for level parameters which lead to relatively low query times whilst also keeping the data structure fairly compact.\\
-When using a small threshold $\threshold=32$ the percentage of \infrequent minimizers of length $25$ is above $TODO$ \todo{percentage einfügen!!} 
+When using a small threshold $\threshold=32$ the percentage of \infrequent minimizers of length $25$ is above $TODO$ %\todo{percentage einfügen!!} 
 for each of the datasets considered. 
-Whilst this would lead to a small hash set, the compression would be small, as each minimizer covers only approximately $(31-25+2)/2 = 4$ k-mers. \todo{begründung überarbeiten; approximation gilt nur für erstes level und eventuell gar nicht für unitigs}
+Whilst this would lead to a small hash set, the compression would be small, as each minimizer covers only approximately $(31-25+2)/2 = 4$ k-mers. %\todo{begründung überarbeiten; approximation gilt nur für erstes level und eventuell gar nicht für unitigs}
 Because of this, considering minimizer lengths between fifteen and twenty five should be sufficient for analyzing the model. To further reduce the number of parameter combinations we only consider uneven minimizer lengths.
 \begin{equation}
 	\possibleMinimizerLengths = \{\minimizerLength \in \NN \mid 15 \leq \minimizerLength \leq 25 \wedge \minimizerLength \% 2 = 1\}
 \end{equation}
-Recall that cumulative distribution functions $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ have logarithmic growth. \todo{zeigen/beschreiben!!}
+Recall that cumulative distribution functions $\CDF{\compactZV{M}{\levelParameters{\level}}}$ and $\CDF{\compactZV{K}{\levelParameters{\level}}}$ have logarithmic growth. %\todo{zeigen/beschreiben!!}
 It follows that using exponentially increasing thresholds should be sufficient for analyzing the MINLP.
-We consider the thresholds $32,64$ and $128$. \todo{reason}
+We consider the thresholds $32,64$ and $128$. %\todo{reason}
 
 \begin{equation}
 	\possibleThresholds = \{32,64,128\}
 \end{equation}
-With these sets of considered parameters, using $3$ levels would result in $6^3 \cdot 3^3 = 5,832$ combinations of level parameters. We reduce this even further by considering only non-decreasing parameter values on subsequent levels for both the minimizer lengths and thresholds. That means each combination of level parameters $\levelParameters{3} = (\minimizerLength^1, \minimizerLength^2, \minimizerLength^3, \threshold^1, \threshold^2, \threshold^3)$ fulfills $\minimizerLength^i \leq \minimizerLength^i+1$ and $\threshold^i \leq \threshold^i+1$ for all $i \in \{1,2\}$ which can be done because. \todo{reason} \todo[inline]{explain the constraint enforcing this in the MINLP and how the sum over possible minimizer combinations changes}
+With these sets of considered parameters, using $3$ levels would result in $6^3 \cdot 3^3 = 5,832$ combinations of level parameters. We reduce this even further by considering only non-decreasing parameter values on subsequent levels for both the minimizer lengths and thresholds. That means each combination of level parameters $\levelParameters{3} = (\minimizerLength^1, \minimizerLength^2, \minimizerLength^3, \threshold^1, \threshold^2, \threshold^3)$ fulfills $\minimizerLength^i \leq \minimizerLength^i+1$ and $\threshold^i \leq \threshold^i+1$ for all $i \in \{1,2\}$ which can be done because. %\todo{reason} %\todo[inline]{explain the constraint enforcing this in the MINLP and how the sum over possible minimizer combinations changes}
 \begin{align}
 	constraints...
 \end{align}
@@ -981,14 +981,15 @@ We will assess the implications of these observations in \cref{sec:modelAccuracy
 \begin{table}
 	\centering
 	\input{./figures/modelErrorOverview.tex}
-	\caption{MINLP evaluation for the variables modeling total bits per k-mer $bpk_{total}$ and lookup time $\timeForOperationOnStructure{lookup}{}$. The tables show the predicted (modeled) values $Pred$ compared against the observed (measured) ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ for each of the two variables. All values have been rounded to four significant figures.} 
+	\caption{Statistical evaluation of the variables modeling total bits per k-mer $bpk_{total}$ and lookup time $\timeForOperationOnStructure{lookup}{}$. The tables show the predicted (modeled) values $Pred$ compared against the observed (measured) ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ for each of the two variables. All values have been rounded to four significant figures.} 
 	\label{tab:modelErrorOverview}
 \end{table}
 We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute the model input and measure the actual space consumption and lookup time for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
 We then use a modified version of the proposed MINLP which forces an exact combination of level parameters to compute the modeled space consumption and lookup time for each combination of the level parameters considered on each raw and preprocessed sequence. We also refer to the modeled values as $Pred$ (predicted) and to the measured values as $Obs$ (observed).\\
 We evaluate the models accuracy by comparing the predicted and observed values of the modeled variables using several statistical measures. Firstly we compute the (Pearson) correlation coefficient $\corrCoef$ for each variable and dataset. This coefficient is invariant under separate changes in location and scale, rendering it a useful measure for linear dependence. It takes a value in $[-1,1] \cap \RR$ with coefficients close to $\pm 1$ indicating a strong correlation of the predicted and measured values whilst a coefficient close to $0$ can be interpreted as little to no correlation.\\
-Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether variables are being over or underestimated, the mean absolute error $\meanErrAbs$ to avoid cancellation of positive and negative errors and the mean squared error $\meanErrSqrd$ to indicate substantial outliers which would not show in $\NAMEmeanErrRaw$ and $\NAMEmeanErrAbs$. 
-\cref{tab:modelErrorOverview} shows the these measures for the predicted and observed values of the lookup time total bits per k-mer across all datasets.
+Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether variables are being over or underestimated, the mean absolute error $\meanErrAbs$ to avoid cancellation of positive and negative errors and the mean squared error $\meanErrSqrd$ to indicate substantial outliers which would not show in $\NAMEmeanErrRaw$ and $\NAMEmeanErrAbs$.
+\cref{tab:modelErrorOverview} shows the these measures for the predicted and observed values of the lookup time total bits per k-mer across all datasets.\\
+(In this section we present a selection of these measures aiming to point out those values deemed most relevant. For completeness all computed measures can be found in \cref{chap:completeModelEvaluationTables}.)
 
 \subsection{Lookup Time}
 \begin{figure} 
@@ -1016,7 +1017,7 @@ $\timeForOperationOnStructure{check}{H}$ are constant parameters in the proposed
 $\timeForOperationOnStructure{\select}{S^\level}$,
 $\timeForOperationOnStructure{\access}{O^\level}$ (for every level $1 \leq \level \leq 3$),
 $\timeForOperationOnStructure{\compare}{T}$ and
-$\timeForOperationOnStructure{check}{H}$ for every genome and parameter combination considered. \Cref{tab:WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview} shows that computing the lookup times this way actually leads to even smaller correlation coefficients of the computed and observed values with mean errors similar to those when using constant operation times (\cref{tab:modelErrorOverview}).\todo{was folgt daraus??? Vielleicht Fehler in den Messungen als Erklärung?}\\
+$\timeForOperationOnStructure{check}{H}$ for every genome and parameter combination considered. \Cref{tab:WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview} shows that computing the lookup times this way actually leads to even smaller correlation coefficients of the computed and observed values with mean errors similar to those when using constant operation times (\cref{tab:modelErrorOverview}). %\todo{was folgt daraus??? Vielleicht Fehler in den Messungen als Erklärung?}\\
 
 In addition to only correlating weakly, the observed lookup times are without exception three orders of magnitude larger than the predicted ones. This could possibly be due to components which count towards the lookup time but are not considered in the proposed model. One such example is the time needed to compute a k-mers minimizer; however, this alone does not explain the magnitude of the error.\\
 Any constant offset to or linear scaling of either the modeled or measured times would not explain the observed inaccuracy regarding the lookup time as those would have no affect on the correlation coefficient which is invariant under separate changes in location and scale.\\
@@ -1024,43 +1025,43 @@ Any constant offset to or linear scaling of either the modeled or measured times
 Understanding what causes the deviation between the modeled and measured lookup times and accounting for it requires further investigation. If successful, this could considerably improve the models accuracy and therefore render the model more suitable for the optimization of level parameters.
 
 \subsection{Space Consumption}
+\begin{table}
+	\centering
+	\input{./figures/bpk_T_H_Overview.tex}
+	\caption{Statistic evaluation for the variables modeling the total bits per k-mer $bpk_T$ for the text and $bpk_H$ for the hash set. The tables show the predicted values $Pred$ compared against the observed ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ for each of the two variables. All values have been rounded to four significant figures. The correlation coefficient for the predicted and observed values of $bpk_T$ is not defined as the variance $\sigma_{Pred}$ of its predicted value $bpk_T = 2$ is zero.} 
+	\label{tab:bpk_T_H_Overview}
+\end{table}
 \cref{tab:modelErrorOverview} shows that the smallest correlation coefficients across all considered sequences are $\NAMEcorrCoef \approx 0.7437$ for the Cods raw genome and $\NAMEcorrCoef \approx 0.8530$ for the raw Human genomes. These two genomes also show the most significant mean errors observed, namely $\NAMEmeanErrRaw \approx -7.677$ on the raw Cod and $\NAMEmeanErrRaw \approx -8.637$ on the raw Human genomes. Their respective mean absolute errors indicate that there are little to no positive errors for these values implying that the bits per k-mer for these two genomes are being strictly overestimated by approximately eight bits per k-mer.\\
 The correlation coefficients regarding $bpk_{total}$ for the four remaining datasets are at least $\NAMEcorrCoef \approx 0.9845$ with mean absolute errors of at most $\NAMEmeanErrAbs \approx 0.2092$ (both for Human (Unitigs)).
 These observations can be explained by assessing, how well the proposed MINLP predicts each component of which the total bits per k-mer are composed, namely these are the bits per k-mer $bpk_{R^\level}$, $bpk_{S^\level}$ and $bpk_{O^\level}$ required for storing the vectors $R$, $S$ and $O$ on all considered levels as well as $bpk_T$ and $bpk_H$ needed to store the text and hash set.\\
 
-For both the raw and preprocessed datasets the modeled space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ is accurate up to a mean absolute error of $\NAMEmeanErrAbs \approx 1.0161 \times 10^-2$ (for $bpk_{O^1}$, $bpk_{O^2}$ and $bpk_{O^3}$ on the preprocessed human genome).\todo{verweis auf Apendix? macht man so etwas?}\\
+For both the raw and preprocessed datasets the largest mean absolute error regarding the modeled and measured space consumption of the vectors $R^\level, S^\level$ and $O^\level$ on every level $1 \leq \level \leq 3$ are those of $bpk_{O^1}$, $bpk_{O^2}$ and $bpk_{O^3}$ for the preprocessed human genome. All three variables have a mean absolute error $\NAMEmeanErrAbs \approx 1.0161 \times 10^-2$. This shows that the proposed constraints for these variables model their space consumption accurately. However, it should be noted that this accuracy is only possible due to the precise computation of minimizer distributions.\\
+Since mean absolute errors of less than $0.02$ bits per k-mer are insignificant to the deviation of approximately eight bits per k-mer observed for the cods and humans raw genomes. These must therefor stem from inaccuracies in the modeled $bpk_T$ and $bpk_H$.\\
 
-\cref{TODO} shows ... \todo{TODO: Table of all bpk for text and hash set for all genomes}
+\cref{tab:bpk_T_H_Overview} shows that the modeled and measured bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$ differ significantly for the cods and humans genome.\\
+The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. However, the preprocessed genomes of the cod and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the MINLP input. The computation of this value is simple compared to the minimizer distributions required for the model input.\\
 
-The only significant deviations are for the bits per k-mer $bpk_T$ and $bpk_H$ needed to store the text and the hash set $H$. The chosen approximation of $bpk_T \approx 2$ holds for the raw sequences because those sequences are generally much longer than $k$. This is not necessarily the case when the input sequences have been preprocessed to remove duplicate k-mers. The preprocessed sequences are represented through unitigs, which are non-branching paths in the compact de Bruijn graph of the sequence. For highly repetitive genomes, their lengths are much closer to $k$, requiring more bits per k-mer to store. This effect is negligent for the common kestrels genome which contains almost no duplicate k-mers. The preprocessed genomes of atlantic cods and human need approximately $2.287$ and $2.312$ bits per k-mer. This could be accounted for by including the bits per k-mer needed to store a sequence in the model input as its computation is simple compared to the other stats which have to be computed for the model input.\\
-
-RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values. \todo{diesen Absatz simplizifieren (simplizieren ist ein schlechtes Wort für das, was es sagen soll..)}
+RSHash is implemented in c++ using $gtl::flat\_hash\_set$ which uses one byte of metadata for each entry in the hash set to allow faster queries. For a direct comparison of the measured and modeled space consumption, we can account for this by modifying the constraint to be $bpk_H = \left(\prod_{l=1}^{3} 1-\varCDF{K}^\level\right) \cdot \frac{64 + 8}{\alpha}$ which is equivalent to adding a bias term of $(1-\CDF{\compactZV{K}{\levelParameters{1}}})(1-\CDF{\compactZV{K}{\levelParameters{2}}})(1-\CDF{\compactZV{K}{\levelParameters{3}}}) \cdot 8/0.75$ to the modeled values. %\todo{diesen Absatz simplizifieren (simplizieren ist ein schlechtes Wort für das, was es sagen soll..)}
 \\
 However, even with this adjustment the modeled space consumption of the hash set is neither correct for the raw genomes nor for the preprocessed ones. Whilst we model the bits per k-mer $bpk_H$ of the hash set as a continues function, our measurements seem to take values from a discrete distribution.\\
-This observation can also be explained by the hash sets implementation: Upon declaration a c++ hash set starts of with a hash function mapping keys to a hash space of a relatively small size. That size is doubled whenever a certain criteria regarding the hash sets load is no longer fulfilled. This discrete behavior with varying loads cannot be captured by a continues model using a constant load factor. \cref{TODO} shows this for the cods raw genome. \todo{Hier kommt noch ein Plot hin, der diese Beobachtung für eines der Genome zeigt - Cod?}\\
+This observation can also be explained by the hash sets implementation: Upon declaration a c++ hash set starts of with a hash function mapping keys to a hash space of a relatively small size. That size is doubled whenever a certain criteria regarding the hash sets load is no longer fulfilled. This discrete behavior with varying loads cannot be captured by a continues model using a constant load factor. \cref{TODO} shows this for the cods raw genome. %\todo{Hier kommt noch ein Plot hin, der diese Beobachtung für eines der Genome zeigt - Cod?}\\
 
-In addition to this, the model tends to overestimate the hash sets size for the raw sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. \cref{TODO}\todo{selbe tabelle wie weiter oben} shows that this effect is again negligent for the common kestrels genome which contains almost no duplicate k-mers.
+In addition to this, the model tends to overestimate the hash sets size for the raw sequences. This is likely because repeating k-mers can count towards the percentage of k-mers with \infrequent minimizers on all levels and thus lead to a larger value of the modeled $bpk_H$. However, in practice these duplicate k-mers collapse to single entry in the hash set as the lookup only requires determining a single occurrence. \cref{tab:bpk_T_H_Overview} shows that this effect is again negligent for the common kestrels genome which contains almost no duplicate k-mers.
 
 \section{Optimization} \label{sec:optimization}
-\todo[inline]{Suche nach optimalen parametern für jedes genom mit zielsetzung: nur lookup time, nur speicherbedarf und mix aus beidem - vergleich mit in \cite{schulte-mattler_rshash_2026} gewählten parametern}
+%\todo[inline]{Suche nach optimalen parametern für jedes genom mit zielsetzung: nur lookup time, nur speicherbedarf und mix aus beidem - vergleich mit in \cite{schulte-mattler_rshash_2026} gewählten parametern}
 
 
 \section{Limitations}
-The poorly modeled lookup time renders the MINLP useless for finding optimal level parameters for a specified optimization goal.
+The modeled lookup times inaccuracy renders the MINLP useless for finding optimal level parameters for a specified optimization goal. %\todo{stimmt das??}
 
-This approaches plausibility is heavily dependent on the time needed to compute the model input as outlined \cref{sec:computationOfModelInput}. Especially the runtime for the computation of the distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of the level parameters $\levelParameters{\level}$ on every level $\level$ grows exponentially with the number of levels when computed by building RSHash.
-
-For this reason, an approach yielding only an approximation of the optimal level parameters but taking less time to do so could be of interest.
-
-We will further explore methods \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution. \todo{TODO}
-
-In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values. \todo{TODO}
+This approaches plausibility is heavily dependent on the time needed to compute the model input. Even though the recursive \cref{alg:recursiveDistributionComputation} for computing the distributions $\probabilityDistribution{\ZVM{\level}}$ and $\probabilityDistribution{\ZVK{\level}}$ for every combination of the level parameters $\levelParameters{\level}$ on every level $\level$ as outlined in \cref{sec:computingSequenceStatistics} is faster than the brute force \cref{algo:computeMinDistr} used for the experiments, the runtime of both algorithms grows exponentially with the number of levels.
 
 \chapter{Outlook} \label{chap:outlook}
-\todo[inline]{model negative lookups with a parameter for the ratio of positive/negative lookups}
+%\todo[inline]{model negative lookups with a parameter for the ratio of positive/negative lookups}
 
 \textbf{Locate}
-\todo[inline]{outline differences to lookup}
+%\todo[inline]{outline differences to lookup}
 \begin{itemize}
 	\item lookup time: check every offset instead of only an average of half of the offsets
 	\item hash table instead of hash set - contains one entry (key:k-mer, value:offset) for each appearance of every k-mer (no longer distinct) - for the unitigs, this shouldn't have an effect
@@ -1078,12 +1079,18 @@ In another approach we will try to approximate the distributions on higher level
 \textbf{Sub sampling:}
 For large genomes, the computing of the model input could be sped up  by randomly sub sampling a certain percentage of the genomes k-mers and computing the minimizer distributions on those. A smaller percentage would then mean a faster computation at the cost of losing accuracy.
 
+For this reason, an approach yielding only an approximation of the optimal level parameters but taking less time to do so could be of interest.
+
+We will further explore methods \cref{chap:subsampling} the genome in order to reduce the computation of minimizer distribution. %\todo{TODO}
+
+In another approach we will try to approximate the distributions on higher levels based on that on the first level in order to get around the exponential cost of computing those values. %\todo{TODO}
+
 \chapter{Conclusion}
 
 \printbibliography[heading=bibintoc,title={Bibliography}]
 
 \appendix
-\chapter{Model Evaluation Tables}
+\chapter{Complete Model Evaluation Tables} \label{chap:completeModelEvaluationTables}
 \cref{fig:correlation_stats_overview_kestrel_raw},
 \cref{fig:correlation_stats_overview_kestrel_unitigs},
 \cref{fig:correlation_stats_overview_cod_raw},

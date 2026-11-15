@@ -167,12 +167,7 @@ def getAllOperationTimes(stats_directory: Path, thesis_results_path: Path):
 
     # Generative "AI" use Disclaimer:
     #   the following function was generated using GPT-6 Luna
-def writeModelErrorOverview(result_path: Path, columns=1, withMeasuredOperationTimes=False):        
-    variables = [
-        r"$\timeForOperationOnStructure{lookup}{}$",
-        r"$bpk_{total}$",
-    ]
-
+def writeModelErrorOverview(result_path: Path, variables: list, columns=1, withMeasuredOperationTimes=False):        
     headers = [
         "Dataset",
         r"$\NAMEcorrCoef$",
@@ -204,19 +199,15 @@ def writeModelErrorOverview(result_path: Path, columns=1, withMeasuredOperationT
         r"\toprule",
     ]))
     for variable in variables:
-        table_header_suffix = ""
         lines=[]
         if withMeasuredOperationTimes:
-            if not variable == r"$\timeForOperationOnStructure{lookup}{}$":
-                continue
-            table_header_suffix = " - W.M.O.T."
             lines = [
                 " & ".join(headers) + r" \\",
                 r"\midrule",
             ]
         else:
             lines = [
-                rf"\textbf{{{variable}}}{table_header_suffix}" + " &" * (len(headers) - 1) + r" \\",
+                rf"\textbf{{{variable}}}" + " &" * (len(headers) - 1) + r" \\",
                 r"\midrule",
                 " & ".join(headers) + r" \\",
                 r"\midrule",
@@ -242,7 +233,7 @@ def writeModelErrorOverview(result_path: Path, columns=1, withMeasuredOperationT
                 f"{dataset} & {r_value} & {mean_error} & {mean_abs_error} & {mean_squared_error} \\\\"
             )
             
-        if not withMeasuredOperationTimes and not variable == variables[-1]:
+        if not variable == variables[-1]:
             lines.append(r"\midrule")
             lines.append(r"\midrule")
         
@@ -253,13 +244,8 @@ def writeModelErrorOverview(result_path: Path, columns=1, withMeasuredOperationT
         r"\end{tabular}",
     ]))
 
-    stats_name = "modelErrorOverview.tex"
-    if withMeasuredOperationTimes:
-        stats_name = "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"
-    
-    separator = "\n"
-    with (result_path / stats_name).open("w", encoding="utf-8") as f:
-        f.write(separator.join(tables))
+    with (result_path).open("w", encoding="utf-8") as f:
+        f.write("\n".join(tables))
         
 def writeSortedLookupTimes(stats_directory: Path, result_path: Path, start_slice_genomes=0, end_slice_genomes=[len(GENOMES)]):
     sortedLookupTimes = {}
@@ -325,9 +311,23 @@ def main() -> None:
         return
     #getAllOperationTimes(stats_directory, thesis_results_path)
     
-    writeModelErrorOverview(thesis_results_path, columns=1)
+    #variables = [
+    #    r"$\timeForOperationOnStructure{lookup}{}$",
+    #    r"$bpk_{total}$",
+    #]
+    #writeModelErrorOverview((thesis_results_path / "modelErrorOverview.tex"), variables, columns=1)
+    #
+    #variables = [
+    #    r"$\timeForOperationOnStructure{lookup}{}$",
+    #]
+    #writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
     
-    writeModelErrorOverview(thesis_results_path, columns=1, withMeasuredOperationTimes=True)
+    
+    variables = [
+        "$bpk_T$",
+        "$bpk_H$",
+    ]
+    writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
     
     #writeSortedLookupTimes(stats_directory, thesis_results_path, start_slice_genomes=4)
     

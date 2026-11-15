@@ -37,7 +37,7 @@ THRESHOLDS_CONSIDERED = [2**i for i in range(5,8)]
 NO_LEVELS = 3
 NON_DECREASING_PARAMETERS = True
 
-OVERWRITE_PLOTS = True
+OVERWRITE_PLOTS = False
 
 setOfMinimizerLengths = []
 for m1 in MINIMIZER_LENGTHS_CONSIDERED:
@@ -69,10 +69,16 @@ evaluation_results.mkdir(exist_ok=True, parents=True)
 
 def floatToTex(value) -> str:
     if np.isnan(value):
-        return r"\mathrm{NaN}"
+        return r"--"
     else:
         mantissa, exponent = f"{value:.3e}".split("e")
         return rf"${mantissa} \times 10^{{{int(exponent)}}}$"
+
+def coeffToTex(value):
+    if np.isnan(value):
+        return r"--"
+    else:
+        return ("%.4f" % coeff)
 
 for sequence_name in GENOMES:
     sequence_path = f'../../../rshash/DNA_datasets/{sequence_name}.fa'
@@ -293,7 +299,7 @@ for sequence_name in GENOMES:
         writer = csv.writer(csvfile)
         writer.writerow(headers)
         for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians):
-            writer.writerow([field_name_to_tex[name], "%.4f" % coeff] + [floatToTex(value) for value in (raw_e_m, abs_e_m, sqrd_e_m)])
+            writer.writerow([field_name_to_tex[name], coeffToTex(coeff)] + [floatToTex(value) for value in (raw_e_m, abs_e_m, sqrd_e_m)])
 
     """
     //transpose stats   
