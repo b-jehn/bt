@@ -291,12 +291,12 @@ for sequence_name in GENOMES:
                 squared_error_medians.append(np.median(np.power(differences, 2)))
             
     with open(correlation_stats_path, 'w') as csvfile:
-        corr_coeff_tex = "$r$"
+        corr_coeff_tex = f"$\\frac{{cov(Pred,Obs)}}{{\\sigma_{{Pred}} \\sigma_{{Obs}}}}$"
         rawErrMedian_tex = f"$\\mathbb{{E}}(Pred-Obs)$"
         absErrMedian_tex = f"$\\mathbb{{E}}(|Pred-Obs|)$"
         sqrdErrMedian_tex = f"$\\mathbb{{E}}(Pred-Obs)^2$"
         headers = ["variable", corr_coeff_tex, rawErrMedian_tex, absErrMedian_tex, sqrdErrMedian_tex]
-        writer = csv.writer(csvfile)
+        writer = csv.writer(csvfile, delimiter=";")
         writer.writerow(headers)
         for name,coeff,raw_e_m,abs_e_m,sqrd_e_m in zip(fieldnames, correlation_coefficients, raw_error_medians, absolute_error_medians, squared_error_medians):
             writer.writerow([field_name_to_tex[name], coeffToTex(coeff)] + [floatToTex(value) for value in (raw_e_m, abs_e_m, sqrd_e_m)])

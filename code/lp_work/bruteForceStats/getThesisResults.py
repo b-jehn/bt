@@ -168,12 +168,19 @@ def getAllOperationTimes(stats_directory: Path, thesis_results_path: Path):
     # Generative "AI" use Disclaimer:
     #   the following function was generated using GPT-6 Luna
 def writeModelErrorOverview(result_path: Path, variables: list, columns=1, withMeasuredOperationTimes=False):        
+    #headers = [
+    #    "Dataset",
+    #    r"$\NAMEcorrCoef$",
+    #    r"$\NAMEmeanErrRaw$",
+    #    r"$\NAMEmeanErrAbs$",
+    #    r"$\NAMEmeanErrSqrd$",
+    #]
     headers = [
         "Dataset",
-        r"$\NAMEcorrCoef$",
-        r"$\NAMEmeanErrRaw$",
-        r"$\NAMEmeanErrAbs$",
-        r"$\NAMEmeanErrSqrd$",
+        f"$\\frac{{cov(Pred,Obs)}}{{\\sigma_{{Pred}} \\sigma_{{Obs}}}}$",
+        f"$\\mathbb{{E}}(Pred-Obs)$",
+        f"$\\mathbb{{E}}(|Pred-Obs|)$",
+        f"$\\mathbb{{E}}(Pred-Obs)^2$",
     ]
 
     # Load each genome's CSV rows once.
@@ -366,22 +373,22 @@ def main() -> None:
         r"$\timeForOperationOnStructure{lookup}{}$",
         r"$bpk_{total}$",
     ]
-    #writeModelErrorOverview((thesis_results_path / "modelErrorOverview.tex"), variables, columns=1)
+    writeModelErrorOverview((thesis_results_path / "modelErrorOverview.tex"), variables, columns=1)
     
     variables = [
         r"$\timeForOperationOnStructure{lookup}{}$",
     ]
-    #writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
+    writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
     
     variables = [
         "$bpk_T$",
         "$bpk_H$",
     ]
-    #writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
+    writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
     
     #writeSortedLookupTimes(stats_directory, thesis_results_path, start_slice_genomes=4)
     
-    writeHashSetSizes(stats_directory, thesis_results_path, start_slice_genomes=2, end_slice_genomes=4)
+    #writeHashSetSizes(stats_directory, thesis_results_path, start_slice_genomes=2, end_slice_genomes=4)
     
     
 

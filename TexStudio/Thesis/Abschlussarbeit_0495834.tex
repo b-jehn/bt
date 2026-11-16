@@ -974,14 +974,14 @@ We will assess the implications of these observations in \cref{sec:modelAccuracy
 \newcommand{\NAMEmeanErrRaw}{\bar{\mathcal{E}}}
 \newcommand{\NAMEmeanErrAbs}{\bar{|\mathcal{E}|}}
 \newcommand{\NAMEmeanErrSqrd}{\bar{\mathcal{E}^2}}
-\newcommand{\corrCoef}{\NAMEcorrCoef = cov(Pred,Obs)/(\sigma_{Pred}*\sigma_{Obs})}
+\newcommand{\corrCoef}{\NAMEcorrCoef = cov(Pred,Obs)/(\sigma_{Pred} \sigma_{Obs})}
 \newcommand{\meanErrRaw}{\NAMEmeanErrRaw = \mathbb{E}(Pred-Obs)}
 \newcommand{\meanErrAbs}{\NAMEmeanErrAbs = \mathbb{E}(|Pred-Obs|)}
 \newcommand{\meanErrSqrd}{\NAMEmeanErrSqrd = \mathbb{E}((Pred-Obs)^2)}
 \begin{table}
 	\centering
 	\input{./figures/modelErrorOverview.tex}
-	\caption{Statistical evaluation of the variables modeling total bits per k-mer $bpk_{total}$ and lookup time $\timeForOperationOnStructure{lookup}{}$. The tables show the predicted (modeled) values $Pred$ compared against the observed (measured) ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ for each of the two variables. All values have been rounded to four significant figures.} 
+	\caption{Statistical evaluation of the variables modeling total bits per k-mer $bpk_{total}$ and lookup time $\timeForOperationOnStructure{lookup}{}$. The tables show the predicted (modeled) values $Pred$ compared against the observed (measured) ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient the mean error, the mean absolute error and the mean squared error for each of the two variables. All values have been rounded to four significant figures.} 
 	\label{tab:modelErrorOverview}
 \end{table}
 We asses the accuracy of the lookup time and space consumption modeled by the MINLP for each of the datasets considered. To do this we first compute the model input and measure the actual space consumption and lookup time for every non-decreasing combination of level parameters on three levels as outlined in \cref{sec:computationOfModelInput}.\\
@@ -1004,7 +1004,7 @@ Furthermore we compute the mean error $\meanErrRaw$ to gain insights whether var
 	$\timeForOperationOnStructure{\select}{S^\level}$,
 	$\timeForOperationOnStructure{\access}{O^\level}$ (for every level $1 \leq \level \leq 3$),
 	$\timeForOperationOnStructure{\compare}{T}$ and
-	$\timeForOperationOnStructure{check}{H}$ instead of the proposed constant ones for every genome and parameter combination considered. The table shows the Pearson correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ computed for the predicted values compared against the observed ones. All values have been rounded to four significant figures.} 
+	$\timeForOperationOnStructure{check}{H}$ instead of the proposed constant ones for every genome and parameter combination considered. The table shows the Pearson correlation coefficient, the mean error, the mean absolute error and the mean squared error computed for the predicted values compared against the observed ones. All values have been rounded to four significant figures.} 
 	\label{tab:WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview}
 \end{table}
 The correlation coefficients of the lookup times $\timeForOperationOnStructure{lookup}{}$ predicted and observed values show that they correlate only weakly for the Kestrels genome (Raw: $\NAMEcorrCoef \approx 0.4840$, Unitigs: $\NAMEcorrCoef \approx 0.3947$) and little to none with for the Cods (Raw: $\NAMEcorrCoef \approx 0.1406$, Unitigs: $\NAMEcorrCoef \approx -0.0210$) and Humans (Raw: $\NAMEcorrCoef \approx 0.2828$, Unitigs: $\NAMEcorrCoef \approx 0.2914$) genome. 
@@ -1028,7 +1028,7 @@ Understanding what causes the deviation between the modeled and measured lookup 
 \begin{table}
 	\centering
 	\input{./figures/bpk_T_H_Overview.tex}
-	\caption{Statistic evaluation for the variables modeling the total bits per k-mer $bpk_T$ for the text and $bpk_H$ for the hash set. The tables show the predicted values $Pred$ compared against the observed ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\corrCoef$, the mean error $\meanErrRaw$, the mean absolute error $\meanErrAbs$ and the mean squared error $\meanErrSqrd$ for each of the two variables. All values have been rounded to four significant figures. The correlation coefficient for the predicted and observed values of $bpk_T$ is not defined as the variance $\sigma_{Pred}$ of its predicted value $bpk_T = 2$ is zero.} 
+	\caption{Statistic evaluation for the variables modeling the total bits per k-mer $bpk_T$ for the text and $bpk_H$ for the hash set. The tables show the predicted values $Pred$ compared against the observed ones $Obs$. The metrics used for comparison are the Pearson correlation coefficient $\corrCoef$, the mean error, the mean absolute error and the mean squared error for each of the two variables. All values have been rounded to four significant figures. The correlation coefficient for the predicted and observed values of $bpk_T$ is not defined as the variance $\sigma_{Pred}$ of its predicted value $bpk_T = 2$ is zero.} 
 	\label{tab:bpk_T_H_Overview}
 \end{table}
 \begin{figure} 
