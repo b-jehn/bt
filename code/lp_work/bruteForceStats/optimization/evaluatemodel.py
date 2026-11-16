@@ -253,11 +253,11 @@ for sequence_name in GENOMES:
                         for level, (predicted_item, observed_item) in enumerate(zip(predicted_value, observed_value)):
                             data[level]["predicted"].append(predicted_item)
                             data[level]["observed"].append(observed_item)
-                            data[level]["diff"].append(observed_item-predicted_item)
+                            data[level]["diff"].append(predicted_item-observed_item)
                     else:
                         data["predicted"].append(predicted_value)
                         data["observed"].append(observed_value)
-                        data["diff"].append(observed_value-predicted_value)
+                        data["diff"].append(predicted_value-observed_value)
                         
     correlation_stats_path = evaluation_results / f"correlation_stats_{sequence_name}.csv"
 
