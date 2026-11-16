@@ -9,7 +9,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 
 from optimization.cascadingStats import *
-#from optimization.MINLP import *
+from optimization.MINLP import *
 
 
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
@@ -302,6 +302,57 @@ def writeSortedLookupTimes(stats_directory: Path, result_path: Path, start_slice
             writer.writerow(headers)
             writer.writerows([*minimizer_lengths, *thresholds, predLookupTime, obsLookupTime] for minimizer_lengths,thresholds,predLookupTime,obsLookupTime in sortedLookupTimes[genome])
         
+def writeHashSetSizes(stats_directory: Path, result_path: Path, start_slice_genomes=0, end_slice_genomes=[len(GENOMES)]):
+    for genome in GENOMES[start_slice_genomes:end_slice_genomes]:
+        print(f"getting bpk_H for: {genome}")
+        genome_stats_path = stats_directory / f"{genome}"  #directory for the stats of a specific genome
+        if(not genome_stats_path.is_dir()):               
+            continue
+        sequence_path = f'../../rshash/DNA_datasets/{genome}.fa'
+        if not os.path.isfile(sequence_path):
+            sys.exit(f"{sequence_path} is not a file")
+        log_sequence_length = np.log2(os.path.getsize(sequence_path))
+        
+        genome_stats = Distribution_Stats(n_kmers=0, n_minimizers=0, F_M=0, F_K=0, f_avg=0, next_level={(m,t): None for m,t in product(MINIMIZER_LENGTHS_CONSIDERED, THRESHOLDS_CONSIDERED)})  
+        fill_cascading_stats(root_stats=genome_stats, 
+                            genome_stats_path=genome_stats_path, 
+                            level=1, 
+                            maxLevel=NO_LEVELS,
+                            currentMinimizerLengths=[MINIMIZER_LENGTHS_CONSIDERED[-1]] * NO_LEVELS,
+                            currentThresholds=[THRESHOLDS_CONSIDERED[-1]] * NO_LEVELS,
+                            minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED,
+                            thresholdsConsidered=THRESHOLDS_CONSIDERED,
+                            nonDecreasingParameters=True)
+                    
+        hashSetSizes = []
+        for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, setOfThresholds):
+            observedSpace, observedTimes = getObservedStats(genome_stats_path, 
+                                                forcedMinimizerLengths,
+                                                forcedThresholds)
+            
+            print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
+            predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
+                optimization_goal="t_lookup",
+                max_lookup_time=np.inf,
+                max_bpk_total=np.inf,
+                log_sequence_length=log_sequence_length,
+                no_levels=NO_LEVELS, 
+                minimizerLengthsConsidered=MINIMIZER_LENGTHS_CONSIDERED, 
+                thresholdsConsidered=THRESHOLDS_CONSIDERED, 
+                distribution_stats=genome_stats,
+                load_factor=0.75,
+                nonDecreasingParameters=NON_DECREASING_PARAMETERS,
+                forceParameters=[forcedMinimizerLengths,forcedThresholds])
+
+            hashSetSizes.append([forcedMinimizerLengths[0], predictedSpace.bpkH, observedSpace.bpkH])
+
+        print(f"writing hashSetSizes_{genome}.csv")
+        with open((result_path / f"hashSetSizes_{genome}.csv"), "w") as f:
+            headers = ["m1", "PredBpkH", "ObsBpkH"]
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            writer.writerows(row for row in hashSetSizes)
+            
 def main() -> None:
     thesis_results_path = Path("thesis_results")
     thesis_results_path.mkdir(parents=True, exist_ok=True)
@@ -311,25 +362,26 @@ def main() -> None:
         return
     #getAllOperationTimes(stats_directory, thesis_results_path)
     
-    #variables = [
-    #    r"$\timeForOperationOnStructure{lookup}{}$",
-    #    r"$bpk_{total}$",
-    #]
+    variables = [
+        r"$\timeForOperationOnStructure{lookup}{}$",
+        r"$bpk_{total}$",
+    ]
     #writeModelErrorOverview((thesis_results_path / "modelErrorOverview.tex"), variables, columns=1)
-    #
-    #variables = [
-    #    r"$\timeForOperationOnStructure{lookup}{}$",
-    #]
-    #writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
     
+    variables = [
+        r"$\timeForOperationOnStructure{lookup}{}$",
+    ]
+    #writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
     
     variables = [
         "$bpk_T$",
         "$bpk_H$",
     ]
-    writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
+    #writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
     
     #writeSortedLookupTimes(stats_directory, thesis_results_path, start_slice_genomes=4)
+    
+    writeHashSetSizes(stats_directory, thesis_results_path, start_slice_genomes=2, end_slice_genomes=4)
     
     
 

@@ -72,7 +72,7 @@ def floatToTex(value) -> str:
         return r"--"
     else:
         mantissa, exponent = f"{value:.3e}".split("e")
-        return rf"${mantissa} \times 10^{{{int(exponent)}}}$"
+        return rf"${mantissa} \cdot 10^{{{int(exponent)}}}$"
 
 def coeffToTex(value):
     if np.isnan(value):

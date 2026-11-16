@@ -1,38 +1,30 @@
-\newcommand{\rawStatsKestrel}{correlation_stats_Falco_tinnunculus.FalTin1.0.dna.toplevel}
-\newcommand{\rawStatsCod}{correlation_stats_Gadus_morhua.gadMor3.0.dna.toplevel}
-\newcommand{\rawStatsHuman}{correlation_stats_Homo_sapiens.GRCh38.dna.toplevel}
-
-\newcommand{\unitigs}[1]{#1.fa.unitigs}
-
-\newcommand{\datapath}[1]{./data/#1.csv}
-
 \begin{table} 
-	\csvautotabular{\datapath{\rawStatsKestrel}}
+	\csvautotabular{./data/correlation_stats_Falco_tinnunculus.FalTin1.0.dna.toplevel.csv}
 	\caption{Kestrel (Raw)} \label{fig:correlation_stats_overview_kestrel_raw}
 \end{table}
 
 \begin{table} 
-	\csvautotabular{\datapath{\unitigs{\rawStatsKestrel}}}
+	\csvautotabular{./data/correlation_stats_Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs.csv}
 	\caption{Kestrel (Unitigs)} \label{fig:correlation_stats_overview_kestrel_unitigs}
 \end{table}
 
 \begin{table} 
-	\csvautotabular{\datapath{\rawStatsCod}}
+	\csvautotabular{./data/correlation_stats_Gadus_morhua.gadMor3.0.dna.toplevel.csv}
 	\caption{Cod (Raw)} \label{fig:correlation_stats_overview_cod_raw}
 \end{table}
 
 \begin{table} 
-	\csvautotabular{\datapath{\unitigs{\rawStatsCod}}}
+	\csvautotabular{./data/correlation_stats_Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs.csv}
 	\caption{Cod (Unitigs)} \label{fig:correlation_stats_overview_cod_unitigs}
 \end{table}
 
 
 \begin{table} 
-	\csvautotabular{\datapath{\rawStatsHuman}}
+	\csvautotabular{./data/correlation_stats_Homo_sapiens.GRCh38.dna.toplevel.csv}
 	\caption{Human (Raw)} \label{fig:correlation_stats_overview_human_raw}
 \end{table}
 
 \begin{table} 
-	\csvautotabular{\datapath{\unitigs{\rawStatsHuman}}}
+	\csvautotabular{./data/correlation_stats_Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs.csv}
 	\caption{Human (Unitigs)} \label{fig:correlation_stats_overview_human_unitigs}
 \end{table}
