@@ -17,10 +17,10 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-GENOMES = ["Gadus_morhua.gadMor3.0.dna.toplevel",
-            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
-            "Falco_tinnunculus.FalTin1.0.dna.toplevel",
+GENOMES = ["Falco_tinnunculus.FalTin1.0.dna.toplevel",
             "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+            "Gadus_morhua.gadMor3.0.dna.toplevel",
+            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
             "Homo_sapiens.GRCh38.dna.toplevel",
             "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
 
@@ -71,7 +71,7 @@ def optimize(log_sequence_length: float, genome_stats: Distribution_Stats,  logP
     return modeledSpace.bpkTotal, modeledTimes.LookupTime
             
 def main():
-    for sequence in GENOMES[:1]:
+    for sequence in GENOMES:
         sequence_path = f'../../../rshash/DNA_datasets/{sequence}.fa'
         if not os.path.isfile(sequence_path):
             sys.exit(f"{sequence_path} is not a file")
@@ -92,23 +92,19 @@ def main():
         result_path = Path(f"./optimizationResults")
         result_path.mkdir(parents=True, exist_ok=True)
         
-        logPath = result_path / f"{sequence}/optimization.log"
+        logPath = result_path / f"logOptimization_{sequence}.log"
         csvPath = result_path / f"optimizationResults_{sequence}.csv"
         
         # initialise files / clear previous contend
-        #with open(logPath, 'w') as file:
-        #    pass
-        #with open(csvPath, "w") as f:
-        #    headers = ["optGoal", "maxBPK", "maxLookupTime", "m1", "m2", "m3", "t1", "t2", "t3","modeledBPK","modeledLookupTime"]
-        #    writer = csv.writer(f)
-        #    writer.writerow(headers)
-        
-        #_, min_lookupTime = optimize(sequence, logPath, csvPath, opt_goal="t_lookup")
-        
-        #min_bpk, _ = optimize(sequence, logPath, csvPath, opt_goal="bpk_total")
-        min_lookupTime = 300.0
-        min_bpk = 15.0
-        
+        with open(logPath, 'w') as file:
+            pass
+        with open(csvPath, "w") as f:
+            headers = ["optGoal", "maxBPK", "maxLookupTime", "m1", "m2", "m3", "t1", "t2", "t3","modeledBPK","modeledLookupTime"]
+            writer = csv.writer(f)
+            writer.writerow(headers)
+    
+        _, min_lookupTime = optimize(log_sequence_length, genome_stats, logPath, csvPath, opt_goal="t_lookup")
+        min_bpk, _ = optimize(log_sequence_length, genome_stats, logPath, csvPath, opt_goal="bpk_total")
         optimize(log_sequence_length, genome_stats, logPath, csvPath, opt_goal="t_lookup", max_bpkTotal=1.5*min_bpk)
         optimize(log_sequence_length, genome_stats, logPath, csvPath, opt_goal="bpk_total", max_lookupTime=1.5*min_lookupTime)
         
