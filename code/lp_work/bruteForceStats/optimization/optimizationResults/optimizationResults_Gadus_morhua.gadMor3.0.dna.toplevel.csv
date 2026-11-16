@@ -1,0 +1,3 @@
+optGoal,maxBPK,maxLookupTime,m1,m2,m3,t1,t2,t3
+t_lookup,inf,inf,25,25,25,128,128,128
+bpk_total,inf,inf,15,21,25,32,64,128

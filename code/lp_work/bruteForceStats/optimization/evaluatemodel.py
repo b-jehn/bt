@@ -125,7 +125,7 @@ for sequence_name in GENOMES:
                                                             forcedThresholds)
             
             print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
-            predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
+            predictedSpace, predictedTimes, info, solution, elapsed_seconds, optimal_parameters = MINLP(
                 optimization_goal="t_lookup",
                 max_lookup_time=MAX_LOOKUP_TIME,
                 max_bpk_total=MAX_BPK_TOTAL,

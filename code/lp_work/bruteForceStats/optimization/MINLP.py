@@ -288,4 +288,9 @@ def MINLP(
     info.append("\n")
     info.append(f"=> bpk_total: {format(sol[bpk_total])}\n\n")
     
-    return space, times, info, sol, elapsed_seconds
+    optimal_parameters = {}
+    for l in range(no_levels):
+        optimal_parameters[f"m{l+1}"] = sol[m_vars[l]]
+        optimal_parameters[f"t{l+1}"] = sol[t_vars[l]]
+    
+    return space, times, info, sol, elapsed_seconds, optimal_parameters

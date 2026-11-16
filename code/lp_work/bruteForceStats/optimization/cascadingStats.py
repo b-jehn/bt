@@ -23,6 +23,7 @@ class operationTimes_Stats:
     Haccess: float = field(default_factory=float)
     LookupTime: float = field(default_factory=float)
 
+
 field_name_to_tex = {
     "bpkT":"$bpk_T$",
     "bpkH":"$bpk_H$",

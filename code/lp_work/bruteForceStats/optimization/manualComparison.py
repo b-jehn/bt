@@ -80,7 +80,7 @@ for forcedMinimizerLengths, forcedThresholds in product(setOfMinimizerLengths, s
                                                     forcedMinimizerLengths,
                                                     forcedThresholds)
     
-    predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
+    predictedSpace, predictedTimes, info, solution, elapsed_seconds, optimal_parameters = MINLP(
         optimization_goal="t_lookup",
         max_lookup_time=math.inf,
         max_bpk_total=math.inf,

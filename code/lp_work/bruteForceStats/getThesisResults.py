@@ -285,7 +285,7 @@ def writeSortedLookupTimes(stats_directory: Path, result_path: Path, start_slice
                                                 forcedThresholds)
             
             print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
-            predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
+            predictedSpace, predictedTimes, info, solution, elapsed_seconds, optimal_parameters = MINLP(
                 optimization_goal="t_lookup",
                 max_lookup_time=np.inf,
                 max_bpk_total=np.inf,
@@ -338,7 +338,7 @@ def writeHashSetSizes(stats_directory: Path, result_path: Path, start_slice_geno
                                                 forcedThresholds)
             
             print(f"running MINLP with forced minimizer lengths: {forcedMinimizerLengths} and thresholds: {forcedThresholds}")
-            predictedSpace, predictedTimes, info, solution, elapsed_seconds = MINLP(
+            predictedSpace, predictedTimes, info, solution, elapsed_seconds, optimal_parameters = MINLP(
                 optimization_goal="t_lookup",
                 max_lookup_time=np.inf,
                 max_bpk_total=np.inf,
