@@ -17,11 +17,14 @@ from MINLP import MINLP
 K = 31  #kmer length that is/was used to gain minimizer_stats
 LOAD_FACTOR = 0.75  #of the hash table
 
-GENOMES = ["Falco_tinnunculus.FalTin1.0.dna.toplevel",
-            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
-            "Gadus_morhua.gadMor3.0.dna.toplevel",
-            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
-            "Homo_sapiens.GRCh38.dna.toplevel",
+#GENOMES = ["Falco_tinnunculus.FalTin1.0.dna.toplevel",
+#            "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
+#            "Gadus_morhua.gadMor3.0.dna.toplevel",
+#            "Gadus_morhua.gadMor3.0.dna.toplevel.fa.unitigs",
+#            "Homo_sapiens.GRCh38.dna.toplevel",
+#            "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
+
+GENOMES = [ "Falco_tinnunculus.FalTin1.0.dna.toplevel.fa.unitigs",
             "Homo_sapiens.GRCh38.dna.toplevel.fa.unitigs"]
 
 MINIMIZER_LENGTHS_CONSIDERED = [m for m in range(15,26,2)]
@@ -65,7 +68,7 @@ def optimize(log_sequence_length: float, genome_stats: Distribution_Stats,  logP
         values = [opt_goal, max_bpkTotal, max_lookupTime]
         values += [int(round(optimal_parameters[f"m{l}"])) for l in range(1, NO_LEVELS + 1)]
         values += [int(round(optimal_parameters[f"t{l}"]))for l in range(1, NO_LEVELS + 1)]
-        values += [modeledSpace.bpkTotal, modeledTimes.LookupTime]
+        values += [modeledSpace.bpkTotal, modeledTimes.LookupTime, f"{elapsed_seconds:.6f}"]
         writer.writerow(values)
         
     return modeledSpace.bpkTotal, modeledTimes.LookupTime
@@ -99,7 +102,7 @@ def main():
         with open(logPath, 'w') as file:
             pass
         with open(csvPath, "w") as f:
-            headers = ["optGoal", "maxBPK", "maxLookupTime", "m1", "m2", "m3", "t1", "t2", "t3","modeledBPK","modeledLookupTime"]
+            headers = ["minimize", "maxBPK", "maxLookupTime", "m1", "m2", "m3", "t1", "t2", "t3","modeledBPK","modeledLookupTime","secondsToOptimize"]
             writer = csv.writer(f)
             writer.writerow(headers)
     
