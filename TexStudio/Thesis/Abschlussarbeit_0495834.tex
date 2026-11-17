@@ -317,7 +317,7 @@ Let $\kmer \in \Sigma^{k}$ be a $k$-mer. The computation of its minimizer $\mini
 Let $B \in \{0,1\}^n$ be a one-indexed bitvector. For an index $i \in \NN^+$ with $i \leq n$, the vectors rank $\rank_B(i) = \sum_{j=1}^{i} B[j]$ tells the number of ones in $B$ up to index $i$. The select operation $\select_S(r) = min\{i \mid \rank_B(i) = r\}$ tells the index of the $r$-th $1$ in $B$.
 
 \chapter{Sequence Statistics}\label{chap:sequenceStatistics}
-As outlined in the \cref{chap:previousWork}, the space consumption and query time of RSHash are highly dependent on the choice of level parameters as those influence the distributions of minimizers on all levels. We specify properties of the minimizer distribution which are needed for modeling the space consumption and lookup time in \cref{chap:minlp}. Particularly relevant to this are the distributions of minimizers across several levels, which are unique to the approach proposed by \citet{schulte-mattler_rshash_2026} and therefore not considered in previous works.
+As outlined in the \cref{chap:previousWork}, the space consumption and query time of RSHash are highly dependent on the choice of level parameters. We specify properties of input sequences that are needed for modeling the space consumption and lookup time in \cref{chap:minlp}. Namely those are the distributions of minimizers (\cref{sec:minimizerDistribution_severalLevels}), the average of frequencies of minimizers (\cref{sec:averagefrequencies}) and the number of distinct \infrequent minimizers (\cref{sec:nDIM}). Specifying these properties across several levels and dependent of level parameters is unique to the approach introduced by \citet{schulte-mattler_rshash_2026} and therefore not considered in previous works.
 
 \section{Minimizer Distribution} \label{sec:minimizerDistribution_severalLevels}
 \newcommand{\distinctMinimizers}[1]{\mathcal{M}_{\levelParameters{#1-1}, \minimizerLength^{#1}}}
@@ -450,7 +450,7 @@ Even though, the recursion is faster in practice, its runtime is still exponenti
 \end{algorithm}
 
 \chapter{Mixed Integer Non Linear Program}\label{chap:minlp}
-We model the optimization problem as a Mixed Integer Non Linear Programming (MINLP). In \cref{sec:minlp_oneLevel} we model the lookup time and space needed by RSHash on one level in dependence of the level parameters and minimizers distribution. We then extend this to the case of several levels in \cref{sec:minlp_severalLevels}.\\
+We model the optimization problem as a Mixed Integer Non Linear Program (MINLP). In \cref{sec:minlp_oneLevel} we model the lookup time and space needed by RSHash on one level in dependence of the level parameters and minimizers distribution. We then extend this to the case of several levels in \cref{sec:minlp_severalLevels}.\\
 In \cref{chap:experiments} we describe how to find the optimal level parameters for a given sequence using the MINLP.
 
 \section{Model Input}\label{sec:minlp_modelInput}
