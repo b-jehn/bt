@@ -12,7 +12,7 @@
 		
 		% First panel
 		\nextgroupplot[
-			title={Kestrel},
+			title={Kestrel (raw)},
 			ylabel={$F_M$},
 			legend to name=sharedlegend,
 			legend columns=3,
@@ -28,7 +28,7 @@
 		\addlegendentry{Level $3$}
 		
 		% Second panel
-		\nextgroupplot[title={Cod}]
+		\nextgroupplot[title={Cod (raw)}]
 		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_1]
 		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
 		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_2]
@@ -37,7 +37,7 @@
 		{./data/F_M_Gadus_morhua.gadMor3.0.dna.toplevel.csv};
 		
 		% Third panel
-		\nextgroupplot[title={Human}]
+		\nextgroupplot[title={Human (raw)}]
 		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_1]
 		{./data/F_M_Homo_sapiens.GRCh38.dna.toplevel.csv};
 		\addplot+[only marks, mark=*, mark size=1.5pt] table[col sep=comma, x=frequency, y=F_M_2]
