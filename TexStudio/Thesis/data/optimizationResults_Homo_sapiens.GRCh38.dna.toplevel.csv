@@ -1,0 +1,5 @@
+$\optGoal{}$,$\minimizerLength^1$,$\minimizerLength^2$,$\minimizerLength^3$,$\threshold^1$,$\threshold^2$,$\threshold^3$,$bpk_{total}$,$\timeForOperationOnStructure{lookup}{}$
+$\optGoal{1}$,25,25,25,128,128,128,21.8107,192.9928
+$\optGoal{2}$,15,21,25,32,64,128,15.4287,240.3965
+$\optGoal{fast}$,25,25,25,128,128,128,21.8107,192.9928
+$\optGoal{compact}$,15,21,25,32,64,128,15.4287,240.3965

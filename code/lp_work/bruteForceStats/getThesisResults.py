@@ -9,7 +9,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 
 from optimization.cascadingStats import *
-from optimization.MINLP import *
+#from optimization.MINLP import *
 
 
 DATA_DIRECTORY = Path(f"../../rshash/DNA_datasets")
@@ -360,6 +360,119 @@ def writeHashSetSizes(stats_directory: Path, result_path: Path, start_slice_geno
             writer.writerow(headers)
             writer.writerows(row for row in hashSetSizes)
             
+def convert_csv_files(thesis_result_paths):
+    LATEX_HEADERS = [
+        r"$\optGoal{}$",
+        r"$\minimizerLength^1$",
+        r"$\minimizerLength^2$",
+        r"$\minimizerLength^3$",
+        r"$\threshold^1$",
+        r"$\threshold^2$",
+        r"$\threshold^3$",
+        r"$bpk_{total}$",
+        r"$\timeForOperationOnStructure{lookup}{}$",
+    ]
+    for genome, genome_name in zip(GENOMES, GENOME_NAMES):
+        source_path = Path(f"./optimization/optimizationResults/optimizationResults_{genome}.csv")
+        result_path = thesis_result_paths / f"optimizationResults_{genome}.csv"
+        with open(source_path, newline="", encoding="utf-8") as source_file:
+            rows = csv.reader(source_file)
+            next(rows, None)  # Discard the source header
+
+            output_rows = []
+            for i, row in enumerate(rows, start=1):
+                if len(row) < 11:
+                    raise ValueError(f"Unexpected row in {source_path}: {row}")
+
+                optGoal = i
+                if i == 3:
+                    optGoal = "fast"
+                if i == 4:
+                    optGoal = "compact"
+                # Keep the minimizer lengths, thresholds, and predicted values.
+                output_rows.append([
+                    rf"$\optGoal{{{optGoal}}}$",
+                    *row[3:9],
+                    f"{float(row[9]):.4f}",
+                    f"{float(row[10]):.4f}",
+                ])
+                
+        Path(result_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(result_path, "w", newline="", encoding="utf-8") as result_file:
+            writer = csv.writer(result_file)
+            writer.writerow(LATEX_HEADERS)
+            writer.writerows(output_rows)
+            
+import csv
+
+def make_parameter_table(path_kestrel, path_cod, path_human, result_path):
+    """Return LaTeX for a table of the fast and compact parameters in three CSVs."""
+
+    genomes = [
+        ("Kestrel", path_kestrel),
+        ("Cod", path_cod),
+        ("Human", path_human),
+    ]
+    m_columns = [
+        r"$\minimizerLength^1$",
+        r"$\minimizerLength^2$",
+        r"$\minimizerLength^3$",
+    ]
+    t_columns = [
+        r"$\threshold^1$",
+        r"$\threshold^2$",
+        r"$\threshold^3$",
+    ]
+
+    # Read the rows for each optimization goal from each CSV.
+    data = {}
+    for genome, path in genomes:
+        with open(path, newline="", encoding="utf-8") as csvfile:
+            print("file opened")
+            rows = csv.DictReader(csvfile)
+            data[genome] = {
+                row[r"$\optGoal{}$"]: row
+                for row in rows
+            }
+
+    lines = [
+        r"\begin{table}[h]",
+        r"    \centering",
+        r"    \begin{tabular}{lc|lll}",
+        r"        \toprule",
+        r"        $\optGoal{}$ & & Kestrel & Cod & Human \\",
+        r"        \midrule",
+    ]
+
+    for goal in ("compact", "fast"):
+        for parameter, columns in (("m", m_columns), ("t", t_columns)):
+            cells = []
+            for genome, _ in genomes:
+                row = data[genome][rf"$\optGoal{{{goal}}}$"]
+                cells.append(",".join(row[column] for column in columns))
+
+            version_cell = rf"$\optGoal{{{goal}}}$" if parameter == "m" else ""
+            lines.append(
+                f"        {version_cell} & {parameter} & "
+                + " & ".join(cells)
+                + r" \\"
+            )
+
+        if goal == "compact":
+            lines.append(r"        \midrule")
+
+    lines.extend([
+        r"        \bottomrule",
+        r"    \end{tabular}",
+        r"    \caption{Parameter configurations for the fast or compact version.}",
+        r"    \label{tab:MINLPOptimalParameters}",
+        r"\end{table}",
+    ])
+
+    with (result_path).open("w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+        
+
 def main() -> None:
     thesis_results_path = Path("thesis_results")
     thesis_results_path.mkdir(parents=True, exist_ok=True)
@@ -369,28 +482,32 @@ def main() -> None:
         return
     #getAllOperationTimes(stats_directory, thesis_results_path)
     
-    variables = [
-        r"$\timeForOperationOnStructure{lookup}{}$",
-        r"$bpk_{total}$",
-    ]
-    writeModelErrorOverview((thesis_results_path / "modelErrorOverview.tex"), variables, columns=1)
-    
-    variables = [
-        r"$\timeForOperationOnStructure{lookup}{}$",
-    ]
-    writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
-    
-    variables = [
-        "$bpk_T$",
-        "$bpk_H$",
-    ]
-    writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
+    #variables = [
+    #    r"$\timeForOperationOnStructure{lookup}{}$",
+    #    r"$bpk_{total}$",
+    #]
+    #writeModelErrorOverview((thesis_results_path / "modelErrorOverview.tex"), variables, columns=1)
+    #
+    #variables = [
+    #    r"$\timeForOperationOnStructure{lookup}{}$",
+    #]
+    #writeModelErrorOverview((thesis_results_path / "WITH_MEASURED_OPERATION_TIMES_lookupTimeOverview.tex"), variables, columns=1, withMeasuredOperationTimes=True)
+    #
+    #variables = [
+    #    "$bpk_T$",
+    #    "$bpk_H$",
+    #]
+    #writeModelErrorOverview((thesis_results_path / "bpk_T_H_Overview.tex"), variables, columns=1)
     
     #writeSortedLookupTimes(stats_directory, thesis_results_path, start_slice_genomes=4)
     
     #writeHashSetSizes(stats_directory, thesis_results_path, start_slice_genomes=2, end_slice_genomes=4)
     
-    
+    #convert_csv_files(thesis_results_path)
+    make_parameter_table(path_kestrel=Path(f"thesis_results/optimizationResults_{GENOMES[0]}.csv"), 
+                        path_cod=Path(f"thesis_results/optimizationResults_{GENOMES[2]}.csv"), 
+                        path_human=Path(f"thesis_results/optimizationResults_{GENOMES[4]}.csv"),
+                        result_path=Path("thesis_results/modeledParameterChoices.tex"))
 
 if __name__ == '__main__':
     main()
